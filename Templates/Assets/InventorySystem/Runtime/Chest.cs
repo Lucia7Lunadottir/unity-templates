@@ -6,12 +6,12 @@ namespace PG.InventorySystem
     {
         private const string _PLAYER_TAG = "Player";
         [Header("Inventories")]
-        public Inventory chestInventory;    // Inventory этого сундука
-        public Inventory playerInventory;   // Inventory игрока
+        public Inventory chestInventory;    // Chest inventory
+        public Inventory playerInventory;   // Player inventory
 
         [Header("UI")]
-        public GameObject chestPanel;       // UI-панель сундука (контейнер ячеек)
-        public GameObject playerPanel;      // UI-панель инвентаря игрока
+        public GameObject chestPanel;       // UI panel of the chest (nested panel)
+        public GameObject playerPanel;      // UI panel of the player inventory
 
         private bool _isOpen = false;
 
@@ -22,8 +22,10 @@ namespace PG.InventorySystem
             chestPanel.SetActive(true);
             playerPanel.SetActive(true);
 
-            // Можно фокусировать UI, блокировать движение игрока и т.д.
+            // Can update UI, play open animation, etc.
+#if UNITY_EDITOR
             Debug.Log("Chest is open!");
+#endif
         }
 
         public void CloseChest()
@@ -33,14 +35,16 @@ namespace PG.InventorySystem
             chestPanel.SetActive(false);
             playerPanel.SetActive(false);
 
-            // Разблокировать управление игроком и т.д.
+            // Can play additional audio, etc.
+#if UNITY_EDITOR
             Debug.Log("Chest is closed!");
+#endif
         }
 
-        // Можно добавить удобный вызов из триггера/кнопки:
+        // Open/close the chest via trigger/collision:
         private void OnTriggerEnter(Collider other)
         {
-            // Например, если у тебя 3D, а у игрока тег "Player"
+            // Relevant if the scene is 3D and the tag is "Player"
             if (other.CompareTag(_PLAYER_TAG))
             {
                 OpenChest();

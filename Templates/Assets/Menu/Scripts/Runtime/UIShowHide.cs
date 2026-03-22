@@ -27,7 +27,7 @@ namespace PG.MenuManagement
         [SerializeField] private bool _deactivateAfterHide = true;
         [SerializeField] private bool _lockInteractionDuringTween = true;
         [SerializeField] private bool _useIgnoreTimeScale = true;
-        [Tooltip("Остановить все активные твины через PGTween перед стартом новой анимации.")]
+        [Tooltip("Stop all active tweens via PGTween before starting a new animation.")]
         [SerializeField] private bool _stopExistingTweens = false;
 
         [Header("Timing")]
@@ -45,14 +45,14 @@ namespace PG.MenuManagement
         [SerializeField] private ExitMode _exit = ExitMode.PopOut;
 
         [Header("Offscreen math")]
-        [Tooltip("Насколько уезжать за предел экрана.")]
+        [Tooltip("How far to go beyond the screen edge.")]
         [SerializeField] private float _offscreenMargin = 32f;
 
         private RectTransform _rt;
         private RectTransform _rootRect;
         private CanvasGroup _cg;
         private Vector2 _onScreenAnchored;
-        private bool _isInitialized = false; // Флаг, чтобы инициализировать только 1 раз
+        private bool _isInitialized = false; // Flag to initialize only once
 
         private void EnsureInitialized()
         {
@@ -62,9 +62,9 @@ namespace PG.MenuManagement
             _cg = GetComponent<CanvasGroup>();
             if (!_cg) _cg = gameObject.AddComponent<CanvasGroup>();
 
-            // Запоминаем исходную позицию ТОЛЬКО ЗДЕСЬ
-            // Это гарантирует, что мы запомним позицию из редактора,
-            // а не позицию "за экраном" после предыдущего Hide.
+            // Store the original position ONLY HERE
+            // This guarantees we remember the position from the editor,
+            // not the off-screen position after a previous Hide.
             if (_rt != null)
             {
                 _onScreenAnchored = _rt.anchoredPosition;
@@ -72,8 +72,10 @@ namespace PG.MenuManagement
 
             var canvas = GetRootCanvas(_rt);
             if (!canvas)
-                // Можно оставить Warning, чтобы не спамило Error, если тестируешь префаб без канваса
-                Debug.LogWarning("[UIShowHide] Root Canvas не найден (возможно, объект не под Canvas).");
+                // Use Warning instead of Error to avoid spam when testing a prefab without a canvas
+#if UNITY_EDITOR
+                Debug.LogWarning("[UIShowHide] Root Canvas not found (object may not be under a Canvas).");
+#endif
             else
                 _rootRect = canvas.GetComponent<RectTransform>();
 
@@ -94,10 +96,10 @@ namespace PG.MenuManagement
             }
         }
 
-        // ========== Публичный API ==========
+        // ========== Public API ==========
         public void Show()
         {
-            EnsureInitialized(); // На случай если Awake еще не успел сработать
+            EnsureInitialized(); // In case Awake hasn't fired yet
             gameObject.SetActive(true);
             PrepareEnterState();
             PlayEnter();
@@ -127,13 +129,13 @@ namespace PG.MenuManagement
             });
         }
 
-        // ========== Логика подготовки ==========
+        // ========== Preparation logic ==========
         void PrepareEnterState()
         {
             EnsureInitialized();
 
-            // ВАЖНО: Убрал отсюда перезапись _onScreenAnchored = _rt.anchoredPosition;
-            // Иначе при повторном открытии мы запомним "спрятанную" позицию как целевую.
+            // IMPORTANT: Removed _onScreenAnchored = _rt.anchoredPosition overwrite from here;
+            // Otherwise on re-open we would remember the "hidden" position as the target.
 
             ForceLayoutNow();
 
@@ -151,14 +153,14 @@ namespace PG.MenuManagement
                 case EnterMode.FromTopAndFade:
                 case EnterMode.FromBottomAndFade:
                     {
-                        // Ставим в позицию ЗА экраном
+                        // Set to OFF-SCREEN position
                         _rt.anchoredPosition = GetOffscreenAnchoredPos(DirFromEnter(_enter));
                         _rt.localScale = Vector3.one;
                         _cg.alpha = _enter.ToString().EndsWith("AndFade") ? 0f : 1f;
                         break;
                     }
                 case EnterMode.ScaleIn:
-                    // Ставим в позицию НА экране (она сохранена в EnsureInitialized)
+                    // Set to ON-SCREEN position (saved in EnsureInitialized)
                     _rt.anchoredPosition = _onScreenAnchored;
                     _rt.localScale = Vector3.one * 0.1f;
                     _cg.alpha = 1f;
@@ -176,13 +178,13 @@ namespace PG.MenuManagement
             }
         }
 
-        // ========== Запуск входа ==========
+        // ========== Play enter ==========
         async void PlayEnter(Action endAnimation = null)
         {
             if (_delayIn > 0f)
                 await PGTween.Delay(_delayIn, _useIgnoreTimeScale);
 
-            // Позиция
+            // Position
             if (IsDirectionalEnter(_enter))
             {
                 PGTween.OnValueTween(
@@ -232,10 +234,10 @@ namespace PG.MenuManagement
             }
         }
 
-        // ========== Запуск выхода ==========
+        // ========== Play exit ==========
         async void PlayExit(Action onComplete)
         {
-            EnsureInitialized(); // На случай вызова Hide без предварительного Show
+            EnsureInitialized(); // In case Hide is called without a prior Show
 
             if (_stopExistingTweens) this.StopAllTweens();
             if (_lockInteractionDuringTween) _cg?.DisableUITween();
@@ -288,7 +290,7 @@ namespace PG.MenuManagement
             }
         }
 
-        // ========== Вычисление позиций ==========
+        // ========== Position calculation ==========
         enum Dir { Left, Right, Top, Bottom }
 
         bool IsDirectionalEnter(EnterMode m) =>
@@ -338,14 +340,14 @@ namespace PG.MenuManagement
         {
             if (!_rootRect) return _rt.anchoredPosition;
 
-            // Используем _onScreenAnchored вместо _rt.anchoredPosition как базу,
-            // чтобы дельта считалась всегда от "центра", а не от текущего положения
-            // (которое может быть уже смещено).
+            // Use _onScreenAnchored instead of _rt.anchoredPosition as the base,
+            // so the delta is always calculated from the "center", not the current position
+            // (which may already be offset).
             var currentPos = _onScreenAnchored;
 
             var bounds = RectTransformUtility.CalculateRelativeRectTransformBounds(_rootRect, _rt);
-            // Корректируем bounds на разницу между реальной позицией и сохраненной "базой",
-            // если вдруг UI смещен. Но для стабильности лучше считать от базы.
+            // Adjust bounds by the difference between the actual position and the saved "base",
+            // in case the UI is shifted. For stability it's better to calculate from the base.
 
             float rrMinX = _rootRect.rect.xMin;
             float rrMaxX = _rootRect.rect.xMax;
@@ -355,8 +357,8 @@ namespace PG.MenuManagement
             float dx = 0f, dy = 0f;
             switch (dir)
             {
-                // Тут bounds могут немного врать, если объект уже уехал, 
-                // но для простых меню это допустимая погрешность.
+                // Bounds may be slightly inaccurate if the object has already moved,
+                // but for simple menus this is an acceptable margin of error.
                 case Dir.Left: dx = (rrMinX - _offscreenMargin) - bounds.max.x; break;
                 case Dir.Right: dx = (rrMaxX + _offscreenMargin) - bounds.min.x; break;
                 case Dir.Top: dy = (rrMaxY + _offscreenMargin) - bounds.min.y; break;
@@ -373,7 +375,7 @@ namespace PG.MenuManagement
         }
 
 
-        // ========== Вспомогательные ==========
+        // ========== Helpers ==========
         static Canvas GetRootCanvas(Transform t)
         {
             Transform cur = t;

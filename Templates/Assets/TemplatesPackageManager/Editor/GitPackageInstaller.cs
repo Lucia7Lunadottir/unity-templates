@@ -27,7 +27,7 @@ namespace PG.TemplatesPackageManager
         void OnEnable()
         {
 
-            // раз инициализируем статусы
+            // Initialize statuses once
             foreach (var pkg in packages)
             {
                 pkg.status = "Checking…";
@@ -149,7 +149,7 @@ namespace PG.TemplatesPackageManager
             }
         }
 
-        // проверяем по точному packageId
+        // Check by exact packageId
         private async void CheckInstalledStatus(GitPackage pkg, Action onChanged)
         {
             var req = Client.List(true);

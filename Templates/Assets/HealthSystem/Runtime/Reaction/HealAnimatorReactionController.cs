@@ -9,14 +9,6 @@ namespace PG.HealthSystem
 
         [SerializeField] private GameObject _healableObject;
         public IHealable healable;
-        private void OnValidate()
-        {
-            if (_healableObject.GetComponent<IDamagable>() == null)
-            {
-                _healableObject = null;
-                Debug.LogError("DamagableObject haven't interface IDamagable!");
-            }
-        }
         private void Awake()
         {
             _healableObject.TryGetComponent(out healable);

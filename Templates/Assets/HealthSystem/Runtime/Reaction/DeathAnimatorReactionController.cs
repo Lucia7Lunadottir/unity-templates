@@ -12,14 +12,6 @@ namespace PG.HealthSystem
         [SerializeField] private GameObject _deathObject;
         public IDeath death;
 
-        private void OnValidate()
-        {
-            if (_deathObject.GetComponent<IDamagable>() == null)
-            {
-                _deathObject = null;
-                Debug.LogError("DamagableObject haven't interface IDamagable!");
-            }
-        }
         private void Awake()
         {
             _hashState = Animator.StringToHash(_deathState);

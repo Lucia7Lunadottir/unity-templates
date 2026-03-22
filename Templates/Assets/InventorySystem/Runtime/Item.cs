@@ -13,8 +13,10 @@ namespace PG.InventorySystem
         public bool isDropAfterInteract;
         public virtual void Use(Inventory inventory, int slot)
         {
+#if UNITY_EDITOR
             Debug.Log($"{nameItem} used!");
-            // По умолчанию ничего не делает, но потом — расширишь: хил, экипировка и т.д.
+#endif
+            // Override in subclasses for custom behavior: heal, add to inventory, etc.
         }
 
     }

@@ -7,12 +7,12 @@ namespace PG.Localization
     public class LocalizationSystem : MonoBehaviour
     {
         private Dictionary<string, string> localizedText = new Dictionary<string, string>();
-        private const char Delimiter = ','; // Разделитель для CSV
+        private const char Delimiter = ','; // Delimiter for CSV
         public enum TableType { CSV, TSV }
         [SerializeField] private TableType _tableType = TableType.CSV;
         public TableType tableType => _tableType;
 
-        [SerializeField] private TextAsset[] _localizationFiles; // Массив CSV файлов
+        [SerializeField] private TextAsset[] _localizationFiles; // Array of CSV files
         public string currentLanguage = "English";
 
         public event System.Action<string> localizationChanged;
@@ -72,13 +72,15 @@ namespace PG.Localization
             {
                 if (csvFile == null)
                 {
-                    Debug.LogError($"Один из файлов локализации не найден.");
+#if UNITY_EDITOR
+                    Debug.LogError($"One of the localization files was not found.");
+#endif
                     continue;
                 }
 
                 using (StringReader reader = new StringReader(csvFile.text))
                 {
-                    string headerLine = reader.ReadLine(); // Пропускаем заголовок
+                    string headerLine = reader.ReadLine(); // Skip the header
                     if (string.IsNullOrEmpty(headerLine)) continue;
 
                     string[] headers = new string[0];
@@ -104,7 +106,9 @@ namespace PG.Localization
 
                     if (languageIndex == -1)
                     {
-                        Debug.LogError($"Язык '{currentLanguage}' не найден в файле локализации {csvFile.name}.");
+#if UNITY_EDITOR
+                        Debug.LogError($"Language '{currentLanguage}' not found in localization file {csvFile.name}.");
+#endif
                         continue;
                     }
 
@@ -123,7 +127,9 @@ namespace PG.Localization
                             }
                             else
                             {
-                                Debug.LogWarning($"Ключ '{key}' из файла {csvFile.name} уже существует. Пропускается.");
+#if UNITY_EDITOR
+                                Debug.LogWarning($"Key '{key}' from file {csvFile.name} already exists. Skipping.");
+#endif
                             }
                         }
                     }
@@ -147,7 +153,7 @@ namespace PG.Localization
                     case TableType.CSV:
                         if (c == Delimiter && line[i + 1] == ' ')
                         {
-                            // Переключаем состояние кавычек
+                            // Toggle quote state
                             inQuotes = true;
                         }
                         else if (c == Delimiter && line[i + 1] != ' ')
@@ -164,18 +170,18 @@ namespace PG.Localization
                 }
                 if (c == Delimiter && !inQuotes)
                 {
-                    // Разделитель вне кавычек — завершение поля
+                    // Delimiter outside quotes вЂ” end of field
                     fields.Add(currentField.Trim());
                     currentField = "";
                 }
                 else
                 {
-                    // Добавляем символ в текущее поле
+                    // Append character to current field
                     currentField += c;
                 }
             }
 
-            // Добавляем последнее поле, если оно есть
+            // Add the last field if present
             if (!string.IsNullOrEmpty(currentField))
             {
                 fields.Add(currentField.Trim());
@@ -197,8 +203,10 @@ namespace PG.Localization
                 return value;
             }
 
-            Debug.LogWarning($"Ключ '{key}' не найден в локализации.");
-            return string.IsNullOrWhiteSpace(defaultValue) ? key : defaultValue; // Возвращаем ключ как fallback
+#if UNITY_EDITOR
+            Debug.LogWarning($"Key '{key}' not found in localization.");
+#endif
+            return string.IsNullOrWhiteSpace(defaultValue) ? key : defaultValue; // Return the key as a fallback
         }
     }
 }
