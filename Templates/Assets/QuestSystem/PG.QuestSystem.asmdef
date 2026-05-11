@@ -2,7 +2,11 @@
     "name": "PG.QuestSystem",
     "rootNamespace": "PG.QuestSystem",
     "references": [
-        "GUID:6055be8ebefd69e48b49212b09b47b2f"
+        "GUID:6055be8ebefd69e48b49212b09b47b2f",
+        "GUID:75469ad4d38634e559750d17036d5f7c",
+        "GUID:7d650ca8c00498842a2fa9e82e495b6c",
+        "GUID:a6850bf06e4cc274d95cec0470bd7189",
+        "GUID:202b437babb8345578105b370d3c4edd"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

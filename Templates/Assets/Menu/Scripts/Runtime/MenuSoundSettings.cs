@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.Audio;
 using UnityEngine.UI;
 
-public class MenuSoundSettings : MonoBehaviour, ISaveable
+public class MenuSoundSettings : MonoBehaviour
 {
     [SerializeField] private AudioMixer _audioMixer;
     [SerializeField] private SoundCell[] _soundCells;

@@ -16,9 +16,11 @@ namespace PG.MenuManagement
             public GameObject gameObject;
             public Selectable selectableObject;
         }
-        void Start()
+        void Awake()
         {
-        
+            for(int i = 0; i < _tabs.Length; i++){
+                tabs.Add(_tabs[i].name, _tabs[i]);
+            }
         }
         public void SelectTab(int index)
         {
