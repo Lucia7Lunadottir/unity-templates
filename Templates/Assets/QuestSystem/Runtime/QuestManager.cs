@@ -1,11 +1,13 @@
 using System.Collections.Generic;
 using System.IO;
+using Unity.Scripting.LifecycleManagement;
 using UnityEngine;
 
 namespace PG.QuestSystem
 {
-    public class QuestManager : MonoBehaviour, ISaveable
+    public partial class QuestManager : MonoBehaviour, ISaveable
     {
+        [AutoStaticsCleanup]
         public static QuestManager instance { get; private set; }
 
         [Header("Data")]

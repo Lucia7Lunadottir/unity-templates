@@ -6,8 +6,9 @@ namespace PG.MenuManagement
     public static class UIManager
     {
         private static GameObject _currentActivePanel;
-
-        // Событие, которое передает true, если открыта любая панель, и false, если всё закрыто
+        public static GameObject currentActivePanel;
+        
+        // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ true, пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ, пїЅ false, пїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
         public static event Action<bool> OnStateChanged;
 
         public static bool IsAnyPanelOpen => _currentActivePanel != null;
@@ -18,7 +19,7 @@ namespace PG.MenuManagement
                 return false;
 
             _currentActivePanel = panel;
-            OnStateChanged?.Invoke(true); // Оповещаем, что панель открыта
+            OnStateChanged?.Invoke(true); // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
             return true;
         }
 
@@ -27,7 +28,7 @@ namespace PG.MenuManagement
             if (_currentActivePanel == panel)
             {
                 _currentActivePanel = null;
-                OnStateChanged?.Invoke(false); // Оповещаем, что всё закрыто
+                OnStateChanged?.Invoke(false); // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
                 return true;
             }
             return false;

@@ -1,14 +1,15 @@
+using Unity.Scripting.LifecycleManagement;
 using UnityEngine;
 using UnityEngine.Audio; // Обязательно для AudioResource
 
 namespace PG.MenuManagement
 {
-    public class UIAudioManager : MonoBehaviour
+    public partial class UIAudioManager : MonoBehaviour
     {
+        [AutoStaticsCleanup]
         public static UIAudioManager Instance;
 
         [Header("Global UI Sounds")]
-        // Используем AudioResource, как вы просили (для Random Containers и т.д.)
         [SerializeField] private AudioResource _hoverClip;
         [SerializeField] private AudioResource _clickClip;
         [SerializeField] private AudioResource _selectClip;
@@ -37,9 +38,6 @@ namespace PG.MenuManagement
         {
             if (resource != null && _audioSource != null)
             {
-                // ИСПРАВЛЕНИЕ:
-                // AudioResource нельзя проиграть через PlayOneShot.
-                // Нужно назначить его в свойство .resource и вызвать .Play()
 
                 AudioSource audioSource = Instantiate(_audioSource);
 

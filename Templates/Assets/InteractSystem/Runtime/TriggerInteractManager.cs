@@ -1,13 +1,15 @@
 using System.Collections.Generic;
+using Unity.Scripting.LifecycleManagement;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 namespace PG.InteractSystem
 {
-    public class TriggerInteractManager : MonoBehaviour, IInteractVisible
+    public partial class TriggerInteractManager : MonoBehaviour, IInteractVisible
     {
         [SerializeField] private InputActionProperty _interactProperty;
         private List<IInteractable> _interactables = new List<IInteractable>();
+        [AutoStaticsCleanup]
         public static TriggerInteractManager instance;
         private void Awake()
         {

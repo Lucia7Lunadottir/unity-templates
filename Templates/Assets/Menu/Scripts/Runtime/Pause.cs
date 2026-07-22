@@ -10,10 +10,11 @@ namespace PG.MenuManagement
         [SerializeField] private InputActionProperty _key;
         [SerializeField] private Button _selectButton;
         [SerializeField] private CanvasGroup _panel;
+        public CanvasGroup panel => _panel;
 
         private UIShowHide _uiShowHide;
 
-        // УБРАНО static: теперь у каждой панели своя переменная состояния
+        // пїЅпїЅпїЅпїЅпїЅпїЅ static: пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
         private bool _isCurrentPanelActive;
 
         public static bool isPauseEnable { set; get; } = true;
@@ -30,7 +31,7 @@ namespace PG.MenuManagement
 
         private void OnDestroy()
         {
-            // Если объект удален, принудительно очищаем регистрацию в менеджере
+            // пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
             if (_isCurrentPanelActive)
             {
                 UIManager.RegisterClose(_panel.gameObject);
@@ -43,22 +44,22 @@ namespace PG.MenuManagement
         {
             if (!isPauseEnable) return;
 
-            // Логика открытия
+            // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
             if (!_isCurrentPanelActive)
             {
-                // Если какая-то ДРУГАЯ панель уже открыта — игнорируем ввод
+                // пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ-пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ
                 if (UIManager.IsAnyPanelOpen) return;
 
-                // Пытаемся занять место в UIManager
+                // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅ UIManager
                 if (UIManager.RequestOpen(_panel.gameObject))
                 {
                     OpenPause();
                 }
             }
-            // Логика закрытия
+            // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
             else
             {
-                // Закрываем, только если мы сами открыты
+                // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
                 if (UIManager.RegisterClose(_panel.gameObject))
                 {
                     ClosePause();
@@ -69,7 +70,7 @@ namespace PG.MenuManagement
         private void OpenPause()
         {
             _isCurrentPanelActive = true;
-            _standardTime = Time.timeScale;
+            //_standardTime = Time.timeScale;
             Time.timeScale = 0f;
 
             Menu.OnChangeCursorVisible(true);
@@ -86,7 +87,7 @@ namespace PG.MenuManagement
             _panel.OnAlphaTween(1f, 0.25f, true);
         }
 
-        private void ClosePause()
+        public void ClosePause()
         {
             _isCurrentPanelActive = false;
             Time.timeScale = _standardTime;

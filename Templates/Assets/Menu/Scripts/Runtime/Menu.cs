@@ -4,15 +4,16 @@ using UnityEngine.SceneManagement;
 
 namespace PG.MenuManagement
 {
+    
     public class Menu : MonoBehaviour
     {
         [SerializeField] private bool _cursorVisibleOnAwake;
         [SerializeField] private MenuSceneManager _menuSceneManager;
-        [SerializeField] private string[] _savefiles;
+        [SerializeField] private MenuSaveContainer _menuSaveContainer;
         public static bool CursorVeisible {  get; private set; }
         string GetSaveFilePath(int index)
         {
-             return Path.Combine(Application.persistentDataPath, _savefiles[index]);
+             return Path.Combine(Application.persistentDataPath, _menuSaveContainer.savefiles[index]);
         }
         // Start is called before the first frame update
         void Awake()
@@ -34,7 +35,7 @@ namespace PG.MenuManagement
         }
         public void ClearSave()
         {
-            for (int i = 0; i < _savefiles.Length; i++)
+            for (int i = 0; i < _menuSaveContainer.savefiles.Length; i++)
             {
                 if (File.Exists(GetSaveFilePath(i)))
                 {
@@ -74,7 +75,7 @@ namespace PG.MenuManagement
         {
             Cursor.visible = visible;
             Cursor.lockState = visible ? CursorLockMode.None : CursorLockMode.Locked;
-            CursorVeisible = visible; // Обновляем значение переменной CursorVeisible
+            CursorVeisible = visible; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ CursorVeisible
         }
 
     }

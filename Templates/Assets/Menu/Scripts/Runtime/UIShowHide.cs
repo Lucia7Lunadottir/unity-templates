@@ -53,17 +53,45 @@ namespace PG.MenuManagement
         private CanvasGroup _cg;
         private int _tweenGen;
 
-        void Awake()
+        // Позиция «на экране» — захватывается один раз в Awake (до любых анимаций).
+        // Используется как цель Enter-анимации и как точка восстановления после Hide.
+        private Vector2 _restPosition;
+
+        // Позиция «за экраном» для текущего режима Enter — кешируется в Awake,
+        // чтобы первый Show() не считал её в момент когда layout ещё не готов.
+        private Vector2 _outsidePosition;
+        private bool _outsidePositionReady;   // true = _outsidePosition уже посчитана
+
+        void EnsureInit()
         {
+            if (_rt) return; // уже готово
             _rt = GetComponent<RectTransform>();
             var canvas = GetRootCanvas(_rt);
             if (!canvas)
-                Debug.LogError("[UIShowHide] Root Canvas не найден. Компонент требует нахождения внутри Canvas.");
+                Debug.LogError("[UIShowHide] Root Canvas не найден.");
             else
                 _rootRect = canvas.GetComponent<RectTransform>();
 
             _cg = GetComponent<CanvasGroup>();
             if (!_cg) _cg = gameObject.AddComponent<CanvasGroup>();
+        }
+
+        void Awake()
+        {
+            EnsureInit();
+
+            // Запоминаем «родную» позицию сразу в Awake — даже если объект выключен.
+            // Это единственный момент, когда anchoredPosition гарантированно отражает
+            // позицию из редактора, а не результат половинчатой анимации.
+            _restPosition = _rt.anchoredPosition;
+
+            // Кешируем offscreen-позицию сразу, пока layout ещё не трогали.
+            // Если rootRect недоступен прямо сейчас — посчитаем лениво в PrepareEnterState.
+            if (_rootRect)
+            {
+                _outsidePosition = GetOffscreenAnchoredPos(DirFromEnter(_enter));
+                _outsidePositionReady = true;
+            }
         }
 
         private Vector2 _onScreenAnchored;
@@ -80,6 +108,15 @@ namespace PG.MenuManagement
                 PlayEnter(cb);
             }
         }
+        
+        void OnDisable()
+        {
+            // Если объект деактивировали снаружи (не через Hide),
+            // позиция могла остаться dirty — сбрасываем принудительно
+            if (_positionIsDirty)
+                RestoreOnScreenState();
+        }
+        
 
         // ========== Публичный API ==========
         public void Show()
@@ -133,7 +170,10 @@ namespace PG.MenuManagement
         {
             if (_rt)
             {
-                _rt.anchoredPosition = _onScreenAnchored;
+                // _restPosition — позиция из редактора, захваченная один раз в Awake.
+                // Используем её, а не _onScreenAnchored, чтобы дрейф от нескольких
+                // последовательных анимаций никогда не накапливался.
+                _rt.anchoredPosition = _restPosition;
                 _rt.localScale = Vector3.one;
             }
             if (_cg) _cg.alpha = 1f;
@@ -145,12 +185,18 @@ namespace PG.MenuManagement
         {
             ForceLayoutNow();
 
-            // Захватываем только когда позиция "чистая" (до первой анимации
-            // или после RestoreOnScreenState). Если элемент сейчас в середине
-            // анимации — используем уже сохранённый _onScreenAnchored.
-            if (!_positionIsDirty)
-                _onScreenAnchored = _rt.anchoredPosition;
+            // _restPosition захвачена в Awake и является единственным источником правды
+            // о «домашней» позиции элемента. Используем её напрямую — не перезахватываем
+            // из anchoredPosition, которая может быть грязной после предыдущей анимации.
+            _onScreenAnchored = _restPosition;
             _positionIsDirty = true;
+
+            // Если при Awake rootRect ещё не был доступен — считаем offscreen лениво.
+            if (!_outsidePositionReady && _rootRect)
+            {
+                _outsidePosition = GetOffscreenAnchoredPos(DirFromEnter(_enter));
+                _outsidePositionReady = true;
+            }
 
             if (_stopExistingTweens) this.StopAllTweens();
             if (_lockInteractionDuringTween) _cg?.DisableUITween();
@@ -166,7 +212,11 @@ namespace PG.MenuManagement
                 case EnterMode.FromTopAndFade:
                 case EnterMode.FromBottomAndFade:
                 {
-                    _rt.anchoredPosition = GetOffscreenAnchoredPos(DirFromEnter(_enter));
+                    // Используем кешированную позицию из Awake — она считалась когда
+                    // layout ещё не был сдвинут анимацией, поэтому надёжнее пересчёта здесь.
+                    _rt.anchoredPosition = _outsidePositionReady
+                        ? _outsidePosition
+                        : GetOffscreenAnchoredPos(DirFromEnter(_enter));
                     _rt.localScale = Vector3.one;
                     _cg.alpha = _enter.ToString().EndsWith("AndFade") ? 0f : 1f;
                     break;
@@ -250,6 +300,14 @@ namespace PG.MenuManagement
         // ========== Запуск выхода ==========
         async void PlayExit(Action onComplete)
         {
+            // FIX: If the component hasn't initialized (Awake not called) or was destroyed, _rt is null.
+            // We invoke the callback and exit early to prevent NullReferenceExceptions and soft-locks.
+            if (this == null || !_rt)
+            {
+                onComplete?.Invoke();
+                return;
+            }
+
             int gen = ++_tweenGen;
 
             if (_stopExistingTweens) this.StopAllTweens();
@@ -263,18 +321,18 @@ namespace PG.MenuManagement
 
             if (IsDirectionalExit(_exit))
             {
-                if (!_rt) return;
+                // Note: Removed the redundant 'if (!_rt) return;' from here since we safely check it at the top.
                 var to = GetOffscreenAnchoredPos(DirFromExit(_exit));
                 PGTween.OnValueTween(
                     _rt.anchoredPosition, to, _durationOut,
                     _useIgnoreTimeScale,
                     v => { if (this != null && gen == _tweenGen) _rt.anchoredPosition = v; },
-                    _easeOut,
-                    () => {
-                        if (this == null || gen != _tweenGen) return;
-                        if (_lockInteractionDuringTween) _cg?.EnableUITween();
-                        onComplete?.Invoke();
-                    }
+                                     _easeOut,
+                                     () => {
+                                         if (this == null || gen != _tweenGen) return;
+                                         if (_lockInteractionDuringTween) _cg?.EnableUITween();
+                                         onComplete?.Invoke();
+                                     }
                 );
 
                 if (_exit.ToString().EndsWith("AndFade"))
@@ -283,28 +341,28 @@ namespace PG.MenuManagement
             else if (_exit == ExitMode.ScaleOut)
             {
                 _rt.transform.OnTransformScaleTween(Vector3.one * 0.1f, _durationOut, _useIgnoreTimeScale, _easeOut,
-                    () => {
-                        if (this == null || gen != _tweenGen) return;
-                        if (_lockInteractionDuringTween) _cg?.EnableUITween();
-                        onComplete?.Invoke();
-                    });
+                                                    () => {
+                                                        if (this == null || gen != _tweenGen) return;
+                                                        if (_lockInteractionDuringTween) _cg?.EnableUITween();
+                                                        onComplete?.Invoke();
+                                                    });
             }
             else if (_exit == ExitMode.FadeOut)
             {
                 _cg?.OnAlphaTween(0f, _durationOut, _useIgnoreTimeScale, _easeOut,
-                    () => {
-                        if (this == null || gen != _tweenGen) return;
-                        if (_lockInteractionDuringTween) _cg?.EnableUITween();
-                        onComplete?.Invoke();
-                    });
+                                  () => {
+                                      if (this == null || gen != _tweenGen) return;
+                                      if (_lockInteractionDuringTween) _cg?.EnableUITween();
+                                      onComplete?.Invoke();
+                                  });
             }
             else if (_exit == ExitMode.PopOut)
             {
                 _rt.transform.OnTransformScaleTween(Vector3.one * 0.85f, _durationOut, _useIgnoreTimeScale, _easeOut,
-                    () => {
-                        if (this == null || gen != _tweenGen) return;
-                        onComplete?.Invoke();
-                    });
+                                                    () => {
+                                                        if (this == null || gen != _tweenGen) return;
+                                                        onComplete?.Invoke();
+                                                    });
                 _cg?.OnAlphaTween(0f, _durationOut * 0.9f, _useIgnoreTimeScale, _easeOut);
             }
         }
@@ -404,7 +462,9 @@ namespace PG.MenuManagement
 
         void ForceLayoutNow()
         {
-            // Чтобы bounds были корректны для динамического UI
+            EnsureInit(); // гарантируем что _rt не null
+            if (!_rt) return; // на случай если всё равно не нашли
+
             var parent = _rt.parent as RectTransform;
             if (parent) LayoutRebuilder.ForceRebuildLayoutImmediate(parent);
             LayoutRebuilder.ForceRebuildLayoutImmediate(_rt);

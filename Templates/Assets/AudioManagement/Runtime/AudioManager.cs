@@ -1,16 +1,18 @@
+using Unity.Scripting.LifecycleManagement;
 using UnityEngine;
-public class AudioManager : MonoBehaviour
+public partial class AudioManager : MonoBehaviour
 {
     [field:SerializeField] public AudioManagerProfile profile {  get; private set; }
     [SerializeField] private AudioSource[] _audioSources;
 
+    [AutoStaticsCleanup]
     public static AudioManager instance;
     private void Awake()
     {
         if (instance == null)
         {
             instance = this;
-            transform.parent = null;
+            transformHandle.SetParent(default);
             DontDestroyOnLoad(gameObject);
         }
         else

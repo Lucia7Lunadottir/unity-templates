@@ -1,10 +1,11 @@
 using System.Collections.Generic;
 using System.IO;
+using Unity.Scripting.LifecycleManagement;
 using UnityEngine;
 
 namespace PG.Localization
 {
-    public class LocalizationSystem : MonoBehaviour
+    public partial class LocalizationSystem : MonoBehaviour
     {
         private Dictionary<string, string> localizedText = new Dictionary<string, string>();
         private const char Delimiter = ','; // Delimiter for CSV
@@ -17,6 +18,7 @@ namespace PG.Localization
 
         public event System.Action<string> localizationChanged;
 
+        [AutoStaticsCleanup]
         public static LocalizationSystem instance;
 
         private void Awake()

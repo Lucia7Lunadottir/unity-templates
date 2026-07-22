@@ -1,10 +1,12 @@
 using System.IO;
+using Unity.Scripting.LifecycleManagement;
 using UnityEngine;
 
 namespace PG.BattleSystem
 {
-    public class Statistics : MonoBehaviour
+    public partial class Statistics : MonoBehaviour
     {
+        [AutoStaticsCleanup]
         public static Statistics instance;
 
 

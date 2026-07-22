@@ -1,19 +1,21 @@
 using System.Collections.Generic;
+using Unity.Scripting.LifecycleManagement;
 using UnityEngine;
 
 namespace PG.NotificationManagement
 {
-    public class NotificationSystem : MonoBehaviour
+    public partial class NotificationSystem : MonoBehaviour
     {
         [Header("Settings")]
         [SerializeField] private Transform _cellContainer;
         [SerializeField] private NotificationView _prefab;
         [SerializeField] private float _duration = 2f;
-        [SerializeField] private int _initialPoolSize = 5; // Предзагрузка объектов
+        [SerializeField] private int _initialPoolSize = 5; 
 
-        // Стек для хранения неактивных объектов (наш Пул)
+        
         private Stack<NotificationView> _pool = new Stack<NotificationView>();
 
+        [AutoStaticsCleanup]
         public static NotificationSystem instance;
 
         void InitializeInstance()
@@ -23,7 +25,7 @@ namespace PG.NotificationManagement
                 Destroy(gameObject);
             }
             instance = this;
-            transform.parent = null;
+            transformHandle.SetParent(default);
             DontDestroyOnLoad(instance.gameObject);
         }
         private void Awake()
