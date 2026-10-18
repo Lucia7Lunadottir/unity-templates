@@ -1,9 +1,13 @@
 {
   "name": "com.pg.save-system",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "displayName": "Save System",
-  "description": "",
-  "unity": "2022.3",
+  "description": "Slot-based save system: ISaveable auto-discovery, atomic writes, checkpoints, guid-keyed object saves and save slot UI.",
+  "unity": "6000.5",
   "author": "Lucia Lunadottir",
-  "type": "assets"
+  "type": "assets",
+  "dependencies": {
+    "com.unity.inputsystem": "1.14.2",
+    "com.unity.ugui": "2.0.0"
+  }
 }

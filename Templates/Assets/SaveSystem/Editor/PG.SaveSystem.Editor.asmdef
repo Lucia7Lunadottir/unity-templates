@@ -1,0 +1,18 @@
+{
+    "name": "PG.SaveSystem.Editor",
+    "rootNamespace": "PG.SaveSystem.Editor",
+    "references": [
+        "GUID:202b437babb8345578105b370d3c4edd"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

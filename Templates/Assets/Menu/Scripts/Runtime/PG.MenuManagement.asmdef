@@ -6,7 +6,12 @@
         "GUID:2bafac87e7f4b9b418d9448d219b01ab",
         "GUID:75469ad4d38634e559750d17036d5f7c",
         "GUID:e4824691d3d0b0543a86af2a7867fc6e",
-        "GUID:15fc0a57446b3144c949da3e2b9737a9"
+        "GUID:15fc0a57446b3144c949da3e2b9737a9",
+        "GUID:4307f53044263cf4b835bd812fc161a4",
+        "GUID:df380645f10b7bc4b97d4f5eb6303d95",
+        "GUID:7d650ca8c00498842a2fa9e82e495b6c",
+        "GUID:4758a843682c7fb4ab97807e78fae809",
+        "GUID:202b437babb8345578105b370d3c4edd"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -15,6 +20,12 @@
     "precompiledReferences": [],
     "autoReferenced": true,
     "defineConstraints": [],
-    "versionDefines": [],
+    "versionDefines": [
+        {
+            "name": "com.unity.cinemachine",
+            "expression": "3.0.0",
+            "define": "PG_CINEMACHINE"
+        }
+    ],
     "noEngineReferences": false
 }

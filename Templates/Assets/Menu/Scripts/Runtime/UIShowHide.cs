@@ -2,6 +2,9 @@
 using UnityEngine.UI;
 using System;
 using PG.Tween;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace PG.MenuManagement
 {
@@ -100,6 +103,10 @@ namespace PG.MenuManagement
 
         void OnEnable()
         {
+#if UNITY_EDITOR
+            EditorApplication.playModeStateChanged -= HandlePlayModeStateChanged;
+            EditorApplication.playModeStateChanged += HandlePlayModeStateChanged;
+#endif
             if (_playOnEnable)
             {
                 PrepareEnterState();
@@ -108,15 +115,36 @@ namespace PG.MenuManagement
                 PlayEnter(cb);
             }
         }
-        
+
         void OnDisable()
         {
+#if UNITY_EDITOR
+            EditorApplication.playModeStateChanged -= HandlePlayModeStateChanged;
+#endif
             // Если объект деактивировали снаружи (не через Hide),
             // позиция могла остаться dirty — сбрасываем принудительно
             if (_positionIsDirty)
                 RestoreOnScreenState();
         }
-        
+
+#if UNITY_EDITOR
+        // Объекты с DontDestroyOnLoad переживают Stop и не попадают под откат Scene Reload —
+        // если твин застал их в промежуточном состоянии (сдвинуты/прозрачны), это состояние
+        // остаётся навсегда в редакторе. Явно возвращаем компонент в исходное "домашнее"
+        // состояние сразу после возврата в Edit Mode, не дожидаясь Reload.
+        void HandlePlayModeStateChanged(PlayModeStateChange state)
+        {
+            if (state != PlayModeStateChange.EnteredEditMode) return;
+            if (this == null || !_rt) return;
+
+            _tweenGen++; // обрывает вернувшиеся из Play async-твины, чтобы не перезаписали сброс
+            _rt.anchoredPosition = _restPosition;
+            _rt.localScale = Vector3.one;
+            if (_cg) _cg.alpha = 1f;
+            _positionIsDirty = false;
+        }
+#endif
+
 
         // ========== Публичный API ==========
         public void Show()

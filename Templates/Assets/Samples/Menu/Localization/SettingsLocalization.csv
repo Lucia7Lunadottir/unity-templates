@@ -1,26 +1,77 @@
-Key,English,Russian,Ukrainian
-sound,Sound,Звук,Звук
-graphics,Graphics,Графика,Графіка
-camera,Camera,Камера,Камера
-main-menu,Main Menu,Главное меню,Головне меню
-back,Back,Назад,Назад
-quit,Quit,Выйти,Вийти
-master_sound,Master Sound,Общий звук,Загальний звук
-enviroment,Environment,Окружение,Оточення
-music,Music,Музыка,Музика
-voice,Voice,Голос,Голос
-effects,Effects,Эффекты,Ефекти
-mouse-x-sensitive,Mouse X Sensitivity,Чувствительность мыши по X,Чутливість миші по X
-mouse-y-sensitive,Mouse Y Sensitivity,Чувствительность мыши по Y,Чутливість миші по Y
-gamepad-x-sensitive,Gamepad X Sensitivity,Чувствительность геймпада по X,Чутливість геймпада по X
-gamepad-y-sensitive,Gamepad Y Sensitivity,Чувствительность геймпада по Y,Чутливість геймпада по Y
-Fullscreen,Fullscreen,Полноэкранный режим,Повноекранний режим
-Screen Resolution,Screen Resolution,Разрешение экрана,Роздільна здатність екрана
-Texture Resolution,Texture Resolution,Разрешение текстур,Роздільна здатність текстур
-anti-aliasing,Anti-Aliasing,Сглаживание,Згладжування
-Render Scale,Render Scale,Масштаб рендера,Масштаб рендера
-LOD,Level of Detail (LOD),Уровень детализации (LOD),Рівень деталізації (LOD)
-post-processing,Post-Processing,Постобработка,Постобробка
-shadow-distance,Shadow Distance,Дистанция теней,Дистанція тіней
-shadow-quality,Shadow Quality,Качество теней,Якість тіней
-v-sync,V-Sync,Вертикальная синхронизация,Вертикальна синхронізація
+Key,English,Russian,Ukrainian,Spanish,German,French,Italian,Portuguese,Japanese,ChineseSimplified,Korean,Polish,Turkish
+sound,Sound,Звук,Звук,Sonido,Sound,Son,Audio,Som,サウンド,声音,사운드,Dźwięk,Ses
+graphics,Graphics,Графика,Графіка,Gráficos,Grafik,Graphismes,Grafica,Gráficos,グラフィック,画面,그래픽,Grafika,Grafik
+camera,Camera,Камера,Камера,Cámara,Kamera,Caméra,Telecamera,Câmera,カメラ,镜头,카메라,Kamera,Kamera
+main-menu,Main Menu,Главное меню,Головне меню,Menú principal,Hauptmenü,Menu principal,Menu principale,Menu principal,メインメニュー,主菜单,메인 메뉴,Menu główne,Ana Menü
+back,Back,Назад,Назад,Atrás,Zurück,Retour,Indietro,Voltar,戻る,返回,뒤로,Wstecz,Geri
+quit,Quit,Выйти,Вийти,Salir,Beenden,Quitter,Esci,Sair,終了,退出,종료,Wyjście,Çıkış
+master_sound,Master Sound,Общий звук,Загальний звук,Volumen general,Gesamtlautstärke,Volume principal,Volume generale,Som principal,マスター音量,主音量,마스터 볼륨,Głośność ogólna,Ana Ses
+enviroment,Environment,Окружение,Оточення,Entorno,Umgebung,Environnement,Ambiente,Ambiente,環境音,环境音,환경음,Otoczenie,Çevre
+music,Music,Музыка,Музика,Música,Musik,Musique,Musica,Música,BGM,音乐,배경음악,Muzyka,Müzik
+voice,Voice,Голос,Голос,Voz,Stimme,Voix,Voce,Voz,ボイス,语音,음성,Głos,Seslendirme
+effects,Effects,Эффекты,Ефекти,Efectos,Effekte,Effets,Effetti,Efeitos,効果音,音效,효과음,Efekty,Efektler
+mouse-x-sensitive,Mouse X Sensitivity,Чувствительность мыши по X,Чутливість миші по X,Sensibilidad del ratón X,Mausempfindlichkeit X,Sensibilité souris X,Sensibilità mouse X,Sensibilidade do mouse X,マウス感度 X,鼠标 X 轴灵敏度,마우스 X축 감도,Czułość myszy X,Fare X Hassasiyeti
+mouse-y-sensitive,Mouse Y Sensitivity,Чувствительность мыши по Y,Чутливість миші по Y,Sensibilidad del ratón Y,Mausempfindlichkeit Y,Sensibilité souris Y,Sensibilità mouse Y,Sensibilidade do mouse Y,マウス感度 Y,鼠标 Y 轴灵敏度,마우스 Y축 감도,Czułość myszy Y,Fare Y Hassasiyeti
+gamepad-x-sensitive,Gamepad X Sensitivity,Чувствительность геймпада по X,Чутливість геймпада по X,Sensibilidad del mando X,Gamepad-Empfindlichkeit X,Sensibilité manette X,Sensibilità gamepad X,Sensibilidade do controle X,ゲームパッド感度 X,手柄 X 轴灵敏度,게임패드 X축 감도,Czułość kontrolera X,Gamepad X Hassasiyeti
+gamepad-y-sensitive,Gamepad Y Sensitivity,Чувствительность геймпада по Y,Чутливість геймпада по Y,Sensibilidad del mando Y,Gamepad-Empfindlichkeit Y,Sensibilité manette Y,Sensibilità gamepad Y,Sensibilidade do controle Y,ゲームパッド感度 Y,手柄 Y 轴灵敏度,게임패드 Y축 감도,Czułość kontrolera Y,Gamepad Y Hassasiyeti
+Fullscreen,Fullscreen,Полноэкранный режим,Повноекранний режим,Pantalla completa,Vollbild,Plein écran,Schermo intero,Tela cheia,フルスクリーン,全屏,전체 화면,Pełny ekran,Tam Ekran
+Screen Resolution,Screen Resolution,Разрешение экрана,Роздільна здатність екрана,Resolución de pantalla,Bildschirmauflösung,Résolution d'écran,Risoluzione schermo,Resolução da tela,画面解像度,屏幕分辨率,화면 해상도,Rozdzielczość ekranu,Ekran Çözünürlüğü
+Texture Resolution,Texture Resolution,Разрешение текстур,Роздільна здатність текстур,Resolución de texturas,Texturauflösung,Résolution des textures,Risoluzione texture,Resolução de texturas,テクスチャ解像度,纹理分辨率,텍스처 해상도,Rozdzielczość tekstur,Kaplama Çözünürlüğü
+anti-aliasing,Anti-Aliasing,Сглаживание,Згладжування,Anti-aliasing,Anti-Aliasing,Anti-aliasing,Anti-aliasing,Anti-aliasing,アンチエイリアス,抗锯齿,안티앨리어싱,Wygładzanie krawędzi,Kenar Yumuşatma
+Render Scale,Render Scale,Масштаб рендера,Масштаб рендера,Escala de renderizado,Renderskalierung,Échelle de rendu,Scala di rendering,Escala de renderização,レンダリングスケール,渲染比例,렌더링 스케일,Skalowanie renderowania,İşleme Ölçeği
+LOD,Level of Detail (LOD),Уровень детализации (LOD),Рівень деталізації (LOD),Nivel de detalle (LOD),Detailstufe (LOD),Niveau de détail (LOD),Livello di dettaglio (LOD),Nível de detalhe (LOD),詳細レベル (LOD),细节级别 (LOD),세부 수준 (LOD),Poziom szczegółów (LOD),Detay Seviyesi (LOD)
+post-processing,Post-Processing,Постобработка,Постобробка,Postprocesado,Post-Processing,Post-traitement,Post-processing,Pós-processamento,ポストプロセス,后期处理,후처리,Postprocessing,Görüntü İşleme
+shadow-distance,Shadow Distance,Дистанция теней,Дистанція тіней,Distancia de sombras,Schattendistanz,Distance des ombres,Distanza ombre,Distância das sombras,影の描画距離,阴影距离,그림자 거리,Zasięg cieni,Gölge Mesafesi
+shadow-quality,Shadow Quality,Качество теней,Якість тіней,Calidad de sombras,Schattenqualität,Qualité des ombres,Qualità ombre,Qualidade das sombras,影の品質,阴影质量,그림자 품질,Jakość cieni,Gölge Kalitesi
+v-sync,V-Sync,Вертикальная синхронизация,Вертикальна синхронізація,Sincronización vertical,V-Sync,V-Sync,V-Sync,V-Sync,垂直同期,垂直同步,수직 동기화,Synchronizacja pionowa,Dikey Eşitleme
+volumetric-fog,Volumetric Fog,Объёмный туман,Об'ємний туман,Niebla volumétrica,Volumetrischer Nebel,Brouillard volumétrique,Nebbia volumetrica,Névoa volumétrica,ボリュメトリックフォグ,体积雾,볼륨 안개,Mgła wolumetryczna,Hacimsel Sis
+presets,Presets,Пресеты,Пресети,Ajustes preestablecidos,Voreinstellungen,Préréglages,Preimpostazioni,Predefinições,プリセット,预设,프리셋,Ustawienia wstępne,Hazır Ayarlar
+reset-input,Reset Input,Сбросить управление,Скинути керування,Restablecer controles,Steuerung zurücksetzen,Réinitialiser les commandes,Ripristina comandi,Redefinir controles,操作設定をリセット,重置按键,조작키 초기화,Resetuj sterowanie,Kontrolleri Sıfırla
+dark-form,Dark Form,Темная форма,Темна форма,Forma oscura,Dunkle Form,Forme sombre,Forma oscura,Forma sombria,ダークフォーム,暗黑形态,다크 폼,Mroczna forma,Karanlık Form
+fly-in-glide,Fly in Glide,Полет в планировании,Політ у плануванні,Vuelo en planeo,Gleitflug,Vol en planer,Volo in planata,Voar em planio,滑空飛行,滑翔飞行,글라이드 비행,Lot szybujący,Süzülerek Uçuş
+dash-down,Dash Down,Рывок вниз,Ривок вниз,Impulso hacia abajo,Sturzdurchbruch,Ruée vers le bas,Scatto verso il basso,Impulso para baixo,急降下ダッシュ,向下俯冲,하강 대시,Szybki spadek,Aşağı Atılma
+sprint,Sprint,Спринт,Спринт,Esprintar,Sprinten,Sprint,Scatto,Correr,スプリント,疾跑,달리기,Sprint,Depar
+magic,Magic,Магия,Магія,Magia,Magie,Magie,Magia,Magia,魔法,魔法,마법,Magia,Büyü
+attack,Attack,Атака,Атака,Ataque,Angriff,Attaque,Attacco,Ataque,攻撃,攻击,공격,Atak,Saldırı
+jump,Jump,Прыжок,Стрибок,Salto,Springen,Sauter,Salto,Pular,ジャンプ,跳跃,점프,Skok,Zıplama
+look,Look,Обзор,Огляд,Mirar,Umschauen,Regarder,Guarda,Olhar,視点移動,视角,시선,Rozglądanie,Bakış
+move,Move,Движение,Рух,Moverse,Bewegen,Déplacer,Muoviti,Mover,移動,移动,이동,Ruch,Hareket
+Input,Input,Управление,Керування,Controles,Steuerung,Commandes,Comandi,Controles,操作設定,按键设置,조작 설정,Sterowanie,Kontroller
+restart,Restart,Перезапуск,Перезапуск,Reiniciar,Neustart,Redémarrer,Riavvia,Reiniciar,リスタート,重新开始,재시작,Restart,Yeniden Başlat
+dodge,Barrier,Барьер,Бар'єр,Barrera,Barriere,Barrière,Barriera,Barreira,バリア,结界,배리어,Bariera,Bariyer
+interact,Interact,Взаимодействие,Взаємодія,Interactuar,Interagieren,Interagir,Interagisci,Interagir,調べる,互动,상호작용,Interakcja,Etkileşim
+take-item,Take item in telekinesis,Подобрать предмет в телекинезе,Підібрати предмет у телекінезі,Recoger objeto con telequinesis,Objekt mit Telekinese aufheben,Prendre l'objet par télékinésie,Raccogli oggetto con telecinesi,Pegar item na telecinese,念力でアイテムを取る,心灵遥控拾取物品,염력으로 아이템 줍기,Podnieś przedmiot telekinezą,Telekineziyle nesne al
+day-night-mode-title,Day-Night Mode,Режим дня и ночи,Режим дня и ночі,Modo día и noche,Tag-Nacht-Modus,Mode Jour/Nuit,Modalità giorno/notte,Modo dia e noite,昼夜モード,昼夜模式,주야간 모드,Tryb dnia i nocy,Gece-Gündüz Modu
+colorblind-mode,Colorblind,Дальтонизм,Дальтонізм,Daltonismo,Farbenfehlsichtigkeit,Daltonisme,Daltonismo,Daltonismo,色覚サポート,色盲模式,색맹 모드,Tryb dla daltonistów,Renk Körlüğü Modu
+brightness,Brightness,Яркость,Яскравість,Brillo,Helligkeit,Luminosité,Luminosità,Brilho,明るさ,亮度,밝기,Jasność,Parlaklık
+subtitle-size,Subtitle size,Размер субтитров,Розмір субтитрів,Tamaño de subtítulos,Untertitelgröße,Taille des sous-titres,Dimensione sottotitoli,Tamanho das legendas,字幕サイズ,字幕大小,자막 크기,Rozmiar napisów,Altyazı Boyutu
+show-game-hud-title,Show Game HUD,Показывать игровой HUD,Показувати ігровий HUD,Mostrar HUD del juego,Spiel-HUD anzeigen,Afficher le HUD du jeu,Mostra HUD di gioco,Mostrar HUD do jogo,ゲームHUDを表示,显示游戏HUD,게임 HUD 표시,Pokaż HUD gry,Oyun HUD'unu Göster
+contrast,Contrast,Контрастность,Контрастність,Contraste,Kontrast,Contraste,Contrasto,Contraste,コントラスト,对比度,대비,Kontrast,Karşıtlık
+game,Game,Игра,Гра,Juego,Spiel,Jeu,Gioco,Jogo,ゲーム,游戏,게임,Gra,Oyun
+camera-shake-enable,Enable camera shake effect,Включить эффект тряски камеры,Увімкнути ефект трясіння камери,Activar sacudida de cámara,Kamerawackeln aktivieren,Activer las secousses de caméra,Attiva oscillazione fotocamera,Ativar tremor de câmera,画面の揺れを有効化,开启镜头震动,카메라 흔들림 활성화,Włącz efekt wstrząsów kamery,Kamera Sallanmasını Etkinleştir
+sleep,Sleep,Спать,Спати,Dormir,Schlafen,Dormir,Dormi,Dormir,眠る,睡觉,수면,Sen,Uyu
+colorblind-intensity,Colorblind Intensity,Интенсивность дальтонизма,Інтенсивність дальтонізму,Intensidad de daltonismo,Intensität der Farbenfehlsichtigkeit,Intensité du daltonisme,Intensità daltonismo,Intensidade do daltonismo,色覚サポート強度,色盲模式强度,색맹 모드 강도,Intensywność trybu dla daltonistów,Renk Körlüğü Yoğunluğu
+show-game-fps-title,Show FPS,Показывать FPS,Показувати FPS,Mostrar FPS,FPS anzeigen,Afficher les FPS,Mostra FPS,Mostrar FPS,FPSを表示,显示FPS,FPS 표시,Pokaż FPS,FPS'yi Göster
+none,None,Нет,Немає,Ninguno,Keine,Aucun,Nessuno,Nenhum,なし,无,없음,Brak,Yok
+protanomaly,Protanomaly,Протаномалия,Протаномалія,Protanomalía,Protanomalie,Protanomalie,Protanomalia,Protanomalia,1型3色覚,红色盲变色,1형 3색각,Protanomalia,Protanomali
+deuteranomaly,Deuteranomaly,Дейтераномалия,Дейтераномалія,Deuteranomalía,Deuteranomalie,Déutéranomalie,Deuteranomalia,Deuteranomalia,2型3色覚,绿色盲变色,2형 3색각,Deuteranomalia,Deuteranomali
+tritanomaly,Tritanomaly,Тританомалия,Тританомалія,Tritanomalía,Tritanomalie,Tritanomalie,Tritanomalia,Tritanomalia,3型3色覚,蓝色盲变色,3형 3색각,Tritanomalia,Tritanomali
+protanopia,Protanopia,Протанопия,Протанопія,Protanopía,Protanopie,Protanopie,Protanopia,Protanopia,1型2色覚,红色盲,1형 2색각,Protanopia,Protanopi
+deuteranopia,Deuteranopia,Дейтеранопия,Дейтеранопія,Deuteranopía,Deuteranopie,Déutéranopie,Deuteranopia,Deuteranopia,2型2色覚,绿色盲,2형 2색각,Deuteranopia,Deuteranopi
+tritanopia,Tritanopia,Тританопия,Тританопія,Tritanopía,Tritanopie,Tritanopie,Tritanopia,Tritanopia,3型2色覚,蓝色盲,3형 2색각,Tritanopia,Tritanopi
+achromatopsia,Achromatopsia,Ахроматопсия,Ахроматопсія,Acromatopsia,Achromatopsie,Achromatopsie,Acromatopsia,Acromatopsia,1色覚,全色盲,1색각,Achromatopsja,Akromatopsi
+blue_cone_monochromacy,BlueConeMonochromacy,Монохромазия синих колбочек,Монохромазія синіх колбочок,Monocromatismo de conos azules,Blauzapfen-Monochromasie,Monochromatie des cônes bleus,Monocromatismo dei coni blu,Monocromatismo de cones azuis,青錐体一色覚,蓝锥形色盲,청색원추세포 단색각,Monochromatyzm niebieskich czopków,Mavi koni monokromasisi
+inactive,Inactive,Неактивно,Неактивно,Inactivo,Inaktiv,Inactif,Inattivo,Inativo,無効,未激活,비활성,Nieaktywny,Pasif
+active,Active,Активно,Активно,Activo,Aktiv,Actif,Attivo,Ativo,有効,激活,활성,Aktywny,Aktif
+very_small,Very Small,Очень маленький,Дуже малий,Muy pequeño,Sehr klein,Très petit,Molto piccolo,Muito pequeno,極小,特小,매우 작음,Bardzo mały,Çok küçük
+small,Small,Маленький,Малий,Pequeño,Klein,Petit,Piccolo,Pequeno,小,小,작음,Mały,Küçük
+medium,Medium,Средний,Середній,Mediano,Mittel,Moyen,Medio,Médio,中,中,보통,Średni,Orta
+large,Large,Большой,Великий,Grande,Groß,Grand,Grande,Grande,大,大,큼,Duży,Büyük
+very_large,Very Large,Очень большой,Дуже великий,Muy grande,Sehr groß,Très grand,Molto grande,Muito grande,極大,特大,매우 큼,Bardzo duży,Çok büyük
+config-day-night,Day and Night,День и ночь,День і ніч,Día y noche,Tag und Nacht,Jour et nuit,Giorno e notte,Dia e noite,昼夜,昼夜,낮과 밤,Dzień i noc,Gece ve Gündüz
+config-only-day,Day only,Только день,Тільки день,Solo día,Nur Tag,Jour uniquement,Solo giorno,Apenas dia,昼のみ,仅白天,낮 dedicated,Tylko dzień,Sadece Gündüz
+config-only-night,Night only,Только ночь,Тільки ніч,Solo noche,Nur Nacht,Nuit uniquement,Solo notte,Apenas noite,夜のみ,仅夜晚,밤 dedicated,Tylko noc,Sadece Gece
+config-only-night-without-temp,Night only (no temp),Только ночь (без температуры),Тільки ніч (без температури),Solo noche (sin temp.),Nur Nacht (ohne Temp.),Nuit uniquement (sans temp.),Solo notte (senza temp.),Apenas noite (sem temp.),夜のみ (温度なし),仅夜晚 (无温度),밤 dedicated (온도 없음),Tylko noc (bez temp.),Sadece Gece (sıcaklıksız)
+config-only-day-with-night-temp,Day only (night temp),Только день (ночная температура),Тільки день (нічна температура),Solo día (temp. nocturna),Nur Tag (Nacht-Temp.),Jour uniquement (temp. nuit),Solo giorno (temp. notturna),Apenas dia (temp. noturna),昼のみ (夜間温度),仅白天 (夜间温度),낮 dedicated (야간 온도),Tylko dzień (nocna temp.),Sadece Gündüz (gece sıcaklığı)
+config-day-night-with-night-temp,Day & night (night temp),День и ночь (ночная температура),День і ніч (нічна температура),Día y noche (temp. nocturna),Tag & Nacht (Nacht-Temp.),Jour & nuit (temp. nuit),Giorno e notte (temp. notturna),Dia e noite (temp. noturna),昼夜 (夜間温度),昼夜 (夜间温度),낮과 밤 (야간 온도),Dzień i noc (nocna temp.),Gece ve Gündüz (gece sıcaklığı)
+config-day-night-without-temp,Day & night (no temp),День и ночь (без температуры),День і ніч (без температури),Día y noche (sin temp.),Tag & Nacht (ohne Temp.),Jour & nuit (sans temp.),Giorno e notte (senza temp.),Dia e noite (sem temp.),昼夜 (温度なし),昼夜 (无温度),낮과 밤 (온도 없음),Dzień i noc (bez temp.),Gece ve Gündüz (sıcaklıksız)
