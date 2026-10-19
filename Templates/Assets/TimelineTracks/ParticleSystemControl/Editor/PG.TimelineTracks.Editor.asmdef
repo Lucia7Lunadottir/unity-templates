@@ -1,0 +1,23 @@
+{
+    "name": "PG.TimelineTracks.Editor",
+    "rootNamespace": "",
+    "references": [
+        "PG.TimelineTracks",
+        "Unity.Timeline",
+        "Unity.TextMeshPro",
+        "UnityEngine.UI",
+        "PG.Localization",
+        "Unity.Timeline.Editor"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

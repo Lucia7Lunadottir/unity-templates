@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Обзор — Graphics.RenderMeshIndirect</title>
+<style>
+:root {
+  --base: #1e1e2e; --mantle: #181825; --crust: #11111b;
+  --surface0: #313244; --surface1: #45475a; --surface2: #585b70;
+  --overlay0: #6c7086; --overlay1: #7f849c;
+  --text: #cdd6f4; --subtext1: #bac2de; --subtext0: #a6adc8;
+  --rosewater: #f5e0dc; --flamingo: #f2cdcd; --pink: #f5c2e7; --mauve: #cba6f7;
+  --red: #f38ba8; --maroon: #eba0ac; --peach: #fab387; --yellow: #f9e2af;
+  --green: #a6e3a1; --teal: #94e2d5; --sky: #89dceb; --sapphire: #74c7ec;
+  --blue: #89b4fa; --lavender: #b4befe;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0; background: var(--base); color: var(--text);
+  font-family: -apple-system, "Segoe UI", "Noto Sans", "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.7; font-size: 16px;
+}
+.layout {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr) 220px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+.sidebar {
+  position: sticky; top: 0; align-self: start; height: 100vh; overflow-y: auto;
+  padding: 1.8rem 1.2rem; border-right: 1px solid var(--surface1);
+}
+.sidebar .brand {
+  font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--crust); background: var(--mauve); display: inline-block;
+  padding: 0.15rem 0.6rem; border-radius: 999px; font-weight: 700; margin-bottom: 1.4rem;
+}
+.sidebar nav a {
+  display: block; padding: 0.5rem 0.7rem; margin: 0.1rem 0; border-radius: 7px;
+  color: var(--subtext1); text-decoration: none; font-size: 0.92rem; border-bottom: none;
+  transition: background 0.12s, color 0.12s;
+}
+.sidebar nav a:hover { background: var(--surface0); color: var(--text); }
+.sidebar nav a.active { background: var(--mauve); color: var(--crust); font-weight: 700; }
+.sidebar nav .part-label {
+  font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--overlay0);
+  margin: 1.1rem 0 0.3rem 0.7rem;
+}
+.content { padding: 2.6rem 2.6rem 5rem; min-width: 0; }
+.onpage {
+  position: sticky; top: 0; align-self: start; height: 100vh; overflow-y: auto;
+  padding: 2.6rem 1.2rem;
+}
+.onpage .label {
+  font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--overlay0);
+  margin-bottom: 0.6rem;
+}
+.onpage a {
+  display: block; padding: 0.28rem 0; color: var(--subtext0); text-decoration: none;
+  font-size: 0.86rem; border-bottom: none; border-left: 2px solid transparent; padding-left: 0.7rem;
+}
+.onpage a.h3 { padding-left: 1.4rem; font-size: 0.82rem; }
+.onpage a:hover { color: var(--sapphire); border-left-color: var(--sapphire); }
+
+h1, h2, h3 { font-weight: 700; line-height: 1.3; scroll-margin-top: 1.5rem; }
+h1 { font-size: 2rem; color: var(--mauve); margin: 0 0 0.6rem; }
+.page-kicker {
+  font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--peach);
+  font-weight: 700; margin-bottom: 0.5rem;
+}
+h2 { font-size: 1.4rem; color: var(--blue); margin: 2.4rem 0 1rem; padding-bottom: 0.4rem; border-bottom: 1px solid var(--surface1); }
+h3 { font-size: 1.1rem; color: var(--sky); margin: 1.8rem 0 0.8rem; }
+p { margin: 0.9rem 0; color: var(--text); }
+a { color: var(--sapphire); text-decoration: none; border-bottom: 1px solid rgba(116, 199, 236, 0.35); }
+a:hover { color: var(--lavender); border-bottom-color: var(--lavender); }
+strong { color: var(--peach); font-weight: 700; }
+code {
+  font-family: "JetBrains Mono", "Fira Code", Consolas, "Liberation Mono", monospace;
+  font-size: 0.86em; background: var(--surface0); color: var(--peach);
+  padding: 0.15em 0.4em; border-radius: 5px;
+}
+pre.code {
+  background: var(--mantle); border: 1px solid var(--surface1); border-radius: 10px;
+  padding: 1rem 1.2rem; overflow-x: auto; margin: 1.1rem 0;
+}
+pre.code code { background: none; color: var(--text); padding: 0; font-size: 0.85em; border-radius: 0; }
+.tok-kw { color: var(--mauve); font-weight: 600; }
+.tok-type { color: var(--yellow); }
+.tok-str { color: var(--green); }
+.tok-com { color: var(--overlay0); font-style: italic; }
+blockquote {
+  margin: 1.1rem 0; padding: 0.15rem 1.1rem; border-left: 3px solid var(--peach);
+  background: var(--surface0); border-radius: 0 8px 8px 0; color: var(--subtext1);
+}
+blockquote p { margin: 0.6rem 0; }
+ul, ol { padding-left: 1.4rem; margin: 0.9rem 0; }
+li { margin: 0.45rem 0; }
+hr { border: none; border-top: 1px solid var(--surface1); margin: 2.2rem 0; }
+.table-wrap { overflow-x: auto; margin: 1.1rem 0; }
+table { border-collapse: collapse; width: 100%; font-size: 0.92em; }
+th, td { border: 1px solid var(--surface1); padding: 0.55rem 0.8rem; text-align: left; vertical-align: top; }
+th { background: var(--surface0); color: var(--lavender); }
+tbody tr:nth-child(odd) { background: rgba(49, 50, 68, 0.35); }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+.card {
+  display: block; padding: 1.1rem 1.2rem; background: var(--mantle); border: 1px solid var(--surface1);
+  border-radius: 12px; text-decoration: none; border-bottom: 1px solid var(--surface1); transition: border-color 0.12s, transform 0.12s;
+}
+.card:hover { border-color: var(--mauve); transform: translateY(-2px); }
+.card .card-title { color: var(--text); font-weight: 700; font-size: 1rem; margin-bottom: 0.3rem; display: block; }
+.card .card-desc { color: var(--subtext0); font-size: 0.86rem; }
+.pager { display: flex; justify-content: space-between; margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--surface1); gap: 1rem; }
+.pager a {
+  border: 1px solid var(--surface1); border-radius: 10px; padding: 0.8rem 1.1rem; flex: 1;
+  border-bottom: 1px solid var(--surface1); color: var(--text);
+}
+.pager a:hover { border-color: var(--mauve); }
+.pager .dir { font-size: 0.72rem; text-transform: uppercase; color: var(--overlay0); display: block; margin-bottom: 0.2rem; }
+.pager .next { text-align: right; }
+::selection { background: var(--surface2); color: var(--rosewater); }
+@media (max-width: 1100px) {
+  .layout { grid-template-columns: 220px minmax(0, 1fr); }
+  .onpage { display: none; }
+}
+@media (max-width: 760px) {
+  .layout { grid-template-columns: 1fr; }
+  .sidebar { position: relative; height: auto; border-right: none; border-bottom: 1px solid var(--surface1); }
+  .content { padding: 1.6rem 1.2rem 3rem; }
+}
+</style>
+</head>
+<body>
+<div class="layout">
+<aside class="sidebar">
+  <span class="brand">Catppuccin Mocha</span>
+  <nav><div class="part-label">Начало</div>
+<a class="active" href="index.html">Обзор</a>
+<a class="" href="00-basics.html">Основы (CPU/GPU, буферы, шейдеры)</a>
+<div class="part-label">Часть 1 — практика</div>
+<a class="" href="01-quickstart.html">Быстрый старт</a>
+<div class="part-label">Часть 2 — устройство</div>
+<a class="" href="02-architecture.html">Архитектура</a>
+<a class="" href="02b-compute-shaders.html">Свои ComputeShader</a>
+<a class="" href="03-culling.html">GPU-culling</a>
+<a class="" href="04-diagnostics.html">Диагностика и биты</a>
+<a class="" href="06-lod.html">LOD</a>
+<div class="part-label">Справочник</div>
+<a class="" href="05-gotchas.html">Грабли и шейдеры</a></nav>
+</aside>
+<main class="content">
+<div class="page-kicker">Начало</div>
+<h1 id="graphicsrendermeshindirect-практическое-руководство-и-разбор-механики">Graphics.RenderMeshIndirect: практическое руководство и разбор механики</h1>
+<p>Учебный, но полностью рабочий пример GPU-driven рендеринга без Entities/ECS — чистый <code>UnityEngine.Graphics</code> + обычный <code>ComputeShader</code>. Тысячи инстансов рисуются одним draw call'ом, а видимость (дистанция, конус обзора камеры, перекрытие другой геометрией) и уровень детализации считает GPU, а не CPU.</p>
+<p>Документация разбита на страницы — слева навигация, справа на каждой странице список её разделов для быстрого перехода. Читать по порядку не обязательно: если вы уже настроили компонент и просто ищете, почему что-то не работает — идите сразу в <a href="04-diagnostics.html">Диагностику</a> или <a href="05-gotchas.html">Грабли</a>.</p>
+<h2 id="с-чего-начать">С чего начать</h2>
+<ul><li><strong>Не уверены, что такое draw call, буфер, шейдер или compute shader?</strong> Начните с <a href="00-basics.html">Основ</a> — без этого дальше будет непонятно, а не потому что там что-то сложное.</li><li><strong>Термины понятны, но конкретно этот компонент видите первый раз?</strong> Начните с <a href="01-quickstart.html">Быстрого старта</a> — как повесить компонент, что настраивать, как включить culling.</li><li><strong>Хотите понять, ПОЧЕМУ это работает</strong>, а не просто скопировать настройки? Идите в <a href="02-architecture.html">Архитектуру</a> и <a href="03-culling.html">GPU-culling</a>.</li><li><strong>Что-то пропадает/мигает/не рисуется?</strong> <a href="04-diagnostics.html">Диагностика</a> — инструменты для поиска, какая именно стадия виновата, плюс объяснение битовых масок, которые эти инструменты печатают в консоль.</li><li><strong>Хотите разные уровни детализации по дистанции?</strong> <a href="06-lod.html">LOD</a> — как это устроено поверх той же архитектуры буферов.</li><li><strong>Собираете справочник по частым ошибкам</strong> — <a href="05-gotchas.html">Грабли и шейдеры</a>.</li></ul>
+<h2 id="кто-за-что-отвечает">Кто за что отвечает</h2>
+<p>В системе пять слоёв, и <strong>каждый не знает о существовании остальных</strong> — кроме имени буфера, через который они связаны. Это специально: можно поменять один слой, не трогая остальные (например, переписать шейдер на Shader Graph, ничего не меняя в C#).</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Слой</th><th>Файл</th><th>Отвечает за</th></tr></thead>
+<tbody>
+<tr><td>C#, оркестратор</td><td><code>IndirectMeshRenderer.cs</code></td><td><code>MonoBehaviour</code>: Inspector-поля, генерирует данные инстансов, каждый кадр запускает culling (если включён) и сам draw call. Тонкий - не хранит буферы напрямую, использует два класса ниже</td></tr>
+<tr><td>C#, данные инстансов</td><td><code>InstanceBuffer.cs</code></td><td>Владеет GPU-буфером позиций/масштаба/поворота, минимальный API для их правки (<code>SetPosition</code>/<code>Offset</code>). Не знает про culling/рендер - переиспользуем отдельно</td></tr>
+<tr><td>C#, culling + LOD</td><td><code>GpuIndirectCuller.cs</code> + <code>GpuIndirectCullerHelpers.cs</code></td><td>Диспетчит <code>IndirectCulling.compute</code>, владеет буферами выживших/аргументов на каждый LOD-уровень. Тоже не завязан на <code>IndirectMeshRenderer</code></td></tr>
+<tr><td>Отбраковка (опционально)</td><td><code>IndirectCulling.compute</code></td><td>Решает на GPU, какие инстансы попадут в текущий кадр — по дистанции, по конусу обзора камеры (frustum) и по тому, что перекрыто другой геометрией (occlusion). Ничего не рисует сам — только фильтрует</td></tr>
+<tr><td>Отрисовка</td><td><code>IndirectCube.shader</code> или Shader Graph + <code>IndirectInstancing.hlsl</code></td><td>Читает финальный буфер (после culling'а или без него) и превращает данные инстанса в вершину на экране</td></tr>
+</tbody></table></div>
+<p>Если что-то не работает — сначала определите, <strong>в каком из пяти слоёв</strong> проблема, прежде чем читать код. Это экономит время: подавляющее большинство багов в этой механике — рассинхрон между C#-стороной и шейдером/compute-шейдером (см. <a href="05-gotchas.html">Грабли</a>).</p>
+<div class="cards"><a class="card" href="00-basics.html"><span class="card-title">Основы</span><span class="card-desc">CPU vs GPU, что такое draw call/буфер/шейдер/compute shader - с нуля, без предположений о том, что вы уже знаете.</span></a><a class="card" href="01-quickstart.html"><span class="card-title">Быстрый старт</span><span class="card-desc">Настройка с нуля, включение culling, как двигать инстансы, короткая версия про Shader Graph.</span></a><a class="card" href="02-architecture.html"><span class="card-title">Архитектура</span><span class="card-desc">Три буфера, MaterialPropertyBlock, расстановка и поворот инстансов, путь от буфера до пикселя.</span></a><a class="card" href="02b-compute-shaders.html"><span class="card-title">Свои ComputeShader</span><span class="card-desc">Как писать ComputeShader с нуля - kernel'ы, numthreads, Dispatch, типы буферов, свой мини-пример.</span></a><a class="card" href="03-culling.html"><span class="card-title">GPU-culling</span><span class="card-desc">Дистанция, frustum, occlusion — как устроен каждый из трёх тестов внутри compute shader'а.</span></a><a class="card" href="04-diagnostics.html"><span class="card-title">Диагностика и биты</span><span class="card-desc">Инструменты поиска багов culling'а + объяснение битовых масок и побитовых операторов.</span></a><a class="card" href="06-lod.html"><span class="card-title">LOD</span><span class="card-desc">Несколько уровней детализации по дистанции поверх той же архитектуры буферов.</span></a><a class="card" href="05-gotchas.html"><span class="card-title">Грабли и шейдеры</span><span class="card-desc">Частые ошибки, требования к камере, какие материалы поддерживаются, подключение к Shader Graph.</span></a></div>
+<div class="pager"><div></div><a class="next" href="00-basics.html"><span class="dir">Дальше</span>Основы (CPU/GPU, буферы, шейдеры)</a></div>
+</main>
+<aside class="onpage">
+  <div class="label">На этой странице</div>
+  <a class="" href="#с-чего-начать">С чего начать</a>
+<a class="" href="#кто-за-что-отвечает">Кто за что отвечает</a>
+</aside>
+</div>
+</body>
+</html>

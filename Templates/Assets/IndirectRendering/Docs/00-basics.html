@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Основы (CPU/GPU, буферы, шейдеры) — Graphics.RenderMeshIndirect</title>
+<style>
+:root {
+  --base: #1e1e2e; --mantle: #181825; --crust: #11111b;
+  --surface0: #313244; --surface1: #45475a; --surface2: #585b70;
+  --overlay0: #6c7086; --overlay1: #7f849c;
+  --text: #cdd6f4; --subtext1: #bac2de; --subtext0: #a6adc8;
+  --rosewater: #f5e0dc; --flamingo: #f2cdcd; --pink: #f5c2e7; --mauve: #cba6f7;
+  --red: #f38ba8; --maroon: #eba0ac; --peach: #fab387; --yellow: #f9e2af;
+  --green: #a6e3a1; --teal: #94e2d5; --sky: #89dceb; --sapphire: #74c7ec;
+  --blue: #89b4fa; --lavender: #b4befe;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0; background: var(--base); color: var(--text);
+  font-family: -apple-system, "Segoe UI", "Noto Sans", "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.7; font-size: 16px;
+}
+.layout {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr) 220px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+.sidebar {
+  position: sticky; top: 0; align-self: start; height: 100vh; overflow-y: auto;
+  padding: 1.8rem 1.2rem; border-right: 1px solid var(--surface1);
+}
+.sidebar .brand {
+  font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--crust); background: var(--mauve); display: inline-block;
+  padding: 0.15rem 0.6rem; border-radius: 999px; font-weight: 700; margin-bottom: 1.4rem;
+}
+.sidebar nav a {
+  display: block; padding: 0.5rem 0.7rem; margin: 0.1rem 0; border-radius: 7px;
+  color: var(--subtext1); text-decoration: none; font-size: 0.92rem; border-bottom: none;
+  transition: background 0.12s, color 0.12s;
+}
+.sidebar nav a:hover { background: var(--surface0); color: var(--text); }
+.sidebar nav a.active { background: var(--mauve); color: var(--crust); font-weight: 700; }
+.sidebar nav .part-label {
+  font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--overlay0);
+  margin: 1.1rem 0 0.3rem 0.7rem;
+}
+.content { padding: 2.6rem 2.6rem 5rem; min-width: 0; }
+.onpage {
+  position: sticky; top: 0; align-self: start; height: 100vh; overflow-y: auto;
+  padding: 2.6rem 1.2rem;
+}
+.onpage .label {
+  font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--overlay0);
+  margin-bottom: 0.6rem;
+}
+.onpage a {
+  display: block; padding: 0.28rem 0; color: var(--subtext0); text-decoration: none;
+  font-size: 0.86rem; border-bottom: none; border-left: 2px solid transparent; padding-left: 0.7rem;
+}
+.onpage a.h3 { padding-left: 1.4rem; font-size: 0.82rem; }
+.onpage a:hover { color: var(--sapphire); border-left-color: var(--sapphire); }
+
+h1, h2, h3 { font-weight: 700; line-height: 1.3; scroll-margin-top: 1.5rem; }
+h1 { font-size: 2rem; color: var(--mauve); margin: 0 0 0.6rem; }
+.page-kicker {
+  font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--peach);
+  font-weight: 700; margin-bottom: 0.5rem;
+}
+h2 { font-size: 1.4rem; color: var(--blue); margin: 2.4rem 0 1rem; padding-bottom: 0.4rem; border-bottom: 1px solid var(--surface1); }
+h3 { font-size: 1.1rem; color: var(--sky); margin: 1.8rem 0 0.8rem; }
+p { margin: 0.9rem 0; color: var(--text); }
+a { color: var(--sapphire); text-decoration: none; border-bottom: 1px solid rgba(116, 199, 236, 0.35); }
+a:hover { color: var(--lavender); border-bottom-color: var(--lavender); }
+strong { color: var(--peach); font-weight: 700; }
+code {
+  font-family: "JetBrains Mono", "Fira Code", Consolas, "Liberation Mono", monospace;
+  font-size: 0.86em; background: var(--surface0); color: var(--peach);
+  padding: 0.15em 0.4em; border-radius: 5px;
+}
+pre.code {
+  background: var(--mantle); border: 1px solid var(--surface1); border-radius: 10px;
+  padding: 1rem 1.2rem; overflow-x: auto; margin: 1.1rem 0;
+}
+pre.code code { background: none; color: var(--text); padding: 0; font-size: 0.85em; border-radius: 0; }
+.tok-kw { color: var(--mauve); font-weight: 600; }
+.tok-type { color: var(--yellow); }
+.tok-str { color: var(--green); }
+.tok-com { color: var(--overlay0); font-style: italic; }
+blockquote {
+  margin: 1.1rem 0; padding: 0.15rem 1.1rem; border-left: 3px solid var(--peach);
+  background: var(--surface0); border-radius: 0 8px 8px 0; color: var(--subtext1);
+}
+blockquote p { margin: 0.6rem 0; }
+ul, ol { padding-left: 1.4rem; margin: 0.9rem 0; }
+li { margin: 0.45rem 0; }
+hr { border: none; border-top: 1px solid var(--surface1); margin: 2.2rem 0; }
+.table-wrap { overflow-x: auto; margin: 1.1rem 0; }
+table { border-collapse: collapse; width: 100%; font-size: 0.92em; }
+th, td { border: 1px solid var(--surface1); padding: 0.55rem 0.8rem; text-align: left; vertical-align: top; }
+th { background: var(--surface0); color: var(--lavender); }
+tbody tr:nth-child(odd) { background: rgba(49, 50, 68, 0.35); }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+.card {
+  display: block; padding: 1.1rem 1.2rem; background: var(--mantle); border: 1px solid var(--surface1);
+  border-radius: 12px; text-decoration: none; border-bottom: 1px solid var(--surface1); transition: border-color 0.12s, transform 0.12s;
+}
+.card:hover { border-color: var(--mauve); transform: translateY(-2px); }
+.card .card-title { color: var(--text); font-weight: 700; font-size: 1rem; margin-bottom: 0.3rem; display: block; }
+.card .card-desc { color: var(--subtext0); font-size: 0.86rem; }
+.pager { display: flex; justify-content: space-between; margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--surface1); gap: 1rem; }
+.pager a {
+  border: 1px solid var(--surface1); border-radius: 10px; padding: 0.8rem 1.1rem; flex: 1;
+  border-bottom: 1px solid var(--surface1); color: var(--text);
+}
+.pager a:hover { border-color: var(--mauve); }
+.pager .dir { font-size: 0.72rem; text-transform: uppercase; color: var(--overlay0); display: block; margin-bottom: 0.2rem; }
+.pager .next { text-align: right; }
+::selection { background: var(--surface2); color: var(--rosewater); }
+@media (max-width: 1100px) {
+  .layout { grid-template-columns: 220px minmax(0, 1fr); }
+  .onpage { display: none; }
+}
+@media (max-width: 760px) {
+  .layout { grid-template-columns: 1fr; }
+  .sidebar { position: relative; height: auto; border-right: none; border-bottom: 1px solid var(--surface1); }
+  .content { padding: 1.6rem 1.2rem 3rem; }
+}
+</style>
+</head>
+<body>
+<div class="layout">
+<aside class="sidebar">
+  <span class="brand">Catppuccin Mocha</span>
+  <nav><div class="part-label">Начало</div>
+<a class="" href="index.html">Обзор</a>
+<a class="active" href="00-basics.html">Основы (CPU/GPU, буферы, шейдеры)</a>
+<div class="part-label">Часть 1 — практика</div>
+<a class="" href="01-quickstart.html">Быстрый старт</a>
+<div class="part-label">Часть 2 — устройство</div>
+<a class="" href="02-architecture.html">Архитектура</a>
+<a class="" href="02b-compute-shaders.html">Свои ComputeShader</a>
+<a class="" href="03-culling.html">GPU-culling</a>
+<a class="" href="04-diagnostics.html">Диагностика и биты</a>
+<a class="" href="06-lod.html">LOD</a>
+<div class="part-label">Справочник</div>
+<a class="" href="05-gotchas.html">Грабли и шейдеры</a></nav>
+</aside>
+<main class="content">
+<div class="page-kicker">Начало</div>
+<h1 id="основы-что-вообще-происходит-когда-unity-рисует-кадр">Основы: что вообще происходит, когда Unity рисует кадр</h1>
+<p>Эта страница — для того, чтобы дальше не спотыкаться на словах "draw call", "буфер", "шейдер", "compute shader". Если вы уже уверенно с этим работаете — смело переходите сразу к <a href="01-quickstart.html">Быстрому старту</a>. Если нет — читайте по порядку, дальше в документации эти слова используются без повторных объяснений.</p>
+<h2 id="два-разных-процессора-cpu-и-gpu">Два разных процессора: CPU и GPU</h2>
+<p>В компьютере (и в консоли, и в телефоне) есть не один процессор, а как минимум два, которые работают ОДНОВРЕМЕННО и по-разному:</p>
+<ul><li><strong>CPU</strong> (обычный процессор) — хорош в последовательной логике: "сделай A, потом B, потом, если условие, C". Ваш игровой код (<code>MonoBehaviour.Update()</code>, физика, ИИ) выполняется на CPU.</li><li><strong>GPU</strong> (видеокарта) — устроен принципиально иначе: у него тысячи маленьких простых ядер, каждое из которых умеет делать одну и ту же несложную операцию (посчитать позицию точки, посчитать цвет пикселя) — но зато <strong>все тысячи ядер делают это ОДНОВРЕМЕННО</strong>, параллельно. GPU плохо подходит для "если A то B, иначе C" (ветвления замедляют параллельную работу), зато для "сделай одно и то же действие с 10 000 объектов" — он на порядки быстрее CPU.</li></ul>
+<p>Отсюда главный вопрос этой документации: <strong>кто решает, что рисовать — CPU или GPU?</strong> Обычный рендер в Unity — CPU решает всё заранее (сколько объектов, где они, видны ли они) и просто отдаёт GPU готовый список команд. <code>RenderMeshIndirect</code> — это способ переложить часть этого решения (в первую очередь "что вообще видно") на сам GPU, задействуя его сильную сторону — параллельную обработку тысяч объектов одновременно.</p>
+<h2 id="что-такое-draw-call">Что такое draw call</h2>
+<p><strong>Draw call</strong> — это одна команда от CPU к GPU: "нарисуй вот этот меш, вот этим материалом, вот столько раз". Каждый такой вызов имеет накладные расходы на стороне CPU (нужно подготовить команду, проверить состояние, отправить в очередь GPU) — поэтому "1000 отдельных draw call'ов на 1000 кубов" заметно медленнее, чем "1 draw call на 1000 кубов сразу". Именно ради уменьшения числа draw call'ов и существует <strong>инстансинг</strong> (instancing) — техника "нарисуй один и тот же меш много раз одним вызовом, у каждой копии — своя позиция/масштаб/поворот". <code>Graphics.RenderMeshIndirect</code>, <code>Graphics.RenderMeshInstanced</code> и старый компонентный "Enable GPU Instancing" — это три РАЗНЫХ способа сделать именно это, с разными компромиссами (подробнее — <a href="02-architecture.html">Архитектура</a>).</p>
+<h2 id="что-такое-буфер-graphicsbuffer">Что такое буфер (<code>GraphicsBuffer</code>)</h2>
+<p><strong>Буфер</strong> — это просто кусок памяти НА ВИДЕОКАРТЕ (не в оперативной памяти компьютера, а именно в памяти самой GPU), в который можно записать произвольные байты с CPU-стороны, а потом прочитать эти байты на GPU-стороне (в шейдере или compute shader'е). Это как обычный массив (<code>array</code>/<code>List&lt;T&gt;</code> в C#), только физически он лежит на видеокарте, а не в RAM, и записывать в него нужно явно, отдельным вызовом (<code>GraphicsBuffer.SetData(...)</code>) — CPU и GPU не делят одну и ту же память автоматически.</p>
+<p>В этом проекте буфер, например, хранит позицию/масштаб/поворот каждого из тысяч кубов — вместо тысячи отдельных <code>Transform</code>-компонентов на CPU-стороне, один компактный массив байт на GPU-стороне.</p>
+<h2 id="что-такое-шейдер">Что такое шейдер</h2>
+<p><strong>Шейдер</strong> — это программа, которая выполняется НА GPU, а не на CPU. У обычного (не compute) шейдера есть как минимум две части:</p>
+<ul><li><strong>Vertex shader</strong> — выполняется один раз на каждую вершину меша. Его задача — посчитать, где эта вершина окажется на экране (в какой конкретно точке 2D-изображения).</li><li><strong>Fragment/pixel shader</strong> — выполняется один раз на каждый пиксель, который эта геометрия покрывает на экране. Его задача — посчитать цвет этого пикселя (учитывая освещение, текстуры и т.п.).</li></ul>
+<p>Оба выполняются параллельно, тысячами/миллионами копий одновременно — в этом вся сила GPU.</p>
+<h2 id="что-такое-clip-space-и-почему-это-не-мировые-координаты">Что такое clip space (и почему это не "мировые координаты")</h2>
+<p>Когда vertex shader считает "где эта вершина окажется на экране", он не сразу получает пиксельные координаты — сначала мировая позиция вершины (X, Y, Z в мировых единицах, как в обычном <code>Transform.position</code>) переводится через умножение на специальные матрицы в <strong>clip space</strong> — промежуточную систему координат, из которой GPU уже сам вычисляет, попадает ли точка вообще в видимую пирамиду камеры (frustum) и куда именно на экране она ляжет.</p>
+<p>Практически важное свойство clip space: точка описывается ЧЕТЫРЬМЯ числами (x, y, z, w), а не тремя — и <code>w</code> здесь не какое-то экзотическое измерение, а по сути глубина точки относительно камеры, нормированная особым образом. GPU потом делит x/y/z на w (это называется "перспективное деление") и получает уже привычные экранные координаты. В этом проекте frustum-тест (<a href="03-culling.html#тест-2-frustum-culling">GPU-culling</a>) использует эти x/y/z/w НАПРЯМУЮ, до деления — поэтому там встречаются условия вида <code>-w &lt;= x &lt;= w</code> вместо привычных "экран от -1 до 1".</p>
+<h2 id="что-такое-compute-shader-и-чем-он-отличается-от-обычного">Что такое compute shader — и чем он отличается от обычного</h2>
+<p>Обычный шейдер (vertex+fragment) всегда рисует что-то на экран (или в текстуру) — у него жёстко заданная роль. <strong>Compute shader</strong> — это программа для GPU БЕЗ привязки к рисованию вообще: просто "выполни вот эту функцию параллельно N раз, каждый раз с разным номером (<code>id</code>), и запиши результат куда скажу" — куда угодно, в любой буфер. Ничего не рисуется на экран напрямую.</p>
+<p>В этом проекте compute shader (<code>IndirectCulling.compute</code>) не рисует ни одного пикселя — он только <strong>решает</strong>, какие из тысяч инстансов стоит вообще передать дальше на отрисовку, и записывает получившийся укороченный список в буфер. Сама отрисовка (реальные draw call'ы) происходит уже отдельно, обычным шейдером, но только для того, что compute shader счёл видимым.</p>
+<h2 id="как-эти-кусочки-складываются-в-rendermeshindirect">Как эти кусочки складываются в <code>RenderMeshIndirect</code></h2>
+<p>Коротко, без деталей (детали — на следующих страницах):</p>
+<ol><li>CPU кладёт данные всех инстансов (позиция/масштаб/поворот) в буфер на GPU — один раз, не каждый кадр.</li><li>(Опционально) Compute shader каждый кадр параллельно проверяет каждый инстанс — виден ли он — и складывает выживших в новый, более короткий буфер.</li><li>CPU говорит GPU "нарисуй вот этот меш N раз" — но само число N GPU в конце концов берёт из буфера, а не из C#-кода: сколько инстансов реально прошло проверку, столько и нарисуется. CPU этого числа может даже не знать.</li><li>Обычный шейдер (vertex+fragment) читает буфер выживших и рисует каждый инстанс на своём месте.</li></ol>
+<p>Дальше — <a href="01-quickstart.html">Быстрый старт</a>: как это всё настроить и включить на практике.</p>
+<div class="pager"><a class="prev" href="index.html"><span class="dir">Назад</span>Обзор</a><a class="next" href="01-quickstart.html"><span class="dir">Дальше</span>Быстрый старт</a></div>
+</main>
+<aside class="onpage">
+  <div class="label">На этой странице</div>
+  <a class="" href="#два-разных-процессора-cpu-и-gpu">Два разных процессора: CPU и GPU</a>
+<a class="" href="#что-такое-draw-call">Что такое draw call</a>
+<a class="" href="#что-такое-буфер-graphicsbuffer">Что такое буфер (GraphicsBuffer)</a>
+<a class="" href="#что-такое-шейдер">Что такое шейдер</a>
+<a class="" href="#что-такое-clip-space-и-почему-это-не-мировые-координаты">Что такое clip space (и почему это не &quot;мировые координаты&quot;)</a>
+<a class="" href="#что-такое-compute-shader-и-чем-он-отличается-от-обычного">Что такое compute shader — и чем он отличается от обычного</a>
+<a class="" href="#как-эти-кусочки-складываются-в-rendermeshindirect">Как эти кусочки складываются в RenderMeshIndirect</a>
+</aside>
+</div>
+</body>
+</html>

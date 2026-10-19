@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LOD — Graphics.RenderMeshIndirect</title>
+<style>
+:root {
+  --base: #1e1e2e; --mantle: #181825; --crust: #11111b;
+  --surface0: #313244; --surface1: #45475a; --surface2: #585b70;
+  --overlay0: #6c7086; --overlay1: #7f849c;
+  --text: #cdd6f4; --subtext1: #bac2de; --subtext0: #a6adc8;
+  --rosewater: #f5e0dc; --flamingo: #f2cdcd; --pink: #f5c2e7; --mauve: #cba6f7;
+  --red: #f38ba8; --maroon: #eba0ac; --peach: #fab387; --yellow: #f9e2af;
+  --green: #a6e3a1; --teal: #94e2d5; --sky: #89dceb; --sapphire: #74c7ec;
+  --blue: #89b4fa; --lavender: #b4befe;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0; background: var(--base); color: var(--text);
+  font-family: -apple-system, "Segoe UI", "Noto Sans", "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.7; font-size: 16px;
+}
+.layout {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr) 220px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+.sidebar {
+  position: sticky; top: 0; align-self: start; height: 100vh; overflow-y: auto;
+  padding: 1.8rem 1.2rem; border-right: 1px solid var(--surface1);
+}
+.sidebar .brand {
+  font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--crust); background: var(--mauve); display: inline-block;
+  padding: 0.15rem 0.6rem; border-radius: 999px; font-weight: 700; margin-bottom: 1.4rem;
+}
+.sidebar nav a {
+  display: block; padding: 0.5rem 0.7rem; margin: 0.1rem 0; border-radius: 7px;
+  color: var(--subtext1); text-decoration: none; font-size: 0.92rem; border-bottom: none;
+  transition: background 0.12s, color 0.12s;
+}
+.sidebar nav a:hover { background: var(--surface0); color: var(--text); }
+.sidebar nav a.active { background: var(--mauve); color: var(--crust); font-weight: 700; }
+.sidebar nav .part-label {
+  font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--overlay0);
+  margin: 1.1rem 0 0.3rem 0.7rem;
+}
+.content { padding: 2.6rem 2.6rem 5rem; min-width: 0; }
+.onpage {
+  position: sticky; top: 0; align-self: start; height: 100vh; overflow-y: auto;
+  padding: 2.6rem 1.2rem;
+}
+.onpage .label {
+  font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--overlay0);
+  margin-bottom: 0.6rem;
+}
+.onpage a {
+  display: block; padding: 0.28rem 0; color: var(--subtext0); text-decoration: none;
+  font-size: 0.86rem; border-bottom: none; border-left: 2px solid transparent; padding-left: 0.7rem;
+}
+.onpage a.h3 { padding-left: 1.4rem; font-size: 0.82rem; }
+.onpage a:hover { color: var(--sapphire); border-left-color: var(--sapphire); }
+
+h1, h2, h3 { font-weight: 700; line-height: 1.3; scroll-margin-top: 1.5rem; }
+h1 { font-size: 2rem; color: var(--mauve); margin: 0 0 0.6rem; }
+.page-kicker {
+  font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--peach);
+  font-weight: 700; margin-bottom: 0.5rem;
+}
+h2 { font-size: 1.4rem; color: var(--blue); margin: 2.4rem 0 1rem; padding-bottom: 0.4rem; border-bottom: 1px solid var(--surface1); }
+h3 { font-size: 1.1rem; color: var(--sky); margin: 1.8rem 0 0.8rem; }
+p { margin: 0.9rem 0; color: var(--text); }
+a { color: var(--sapphire); text-decoration: none; border-bottom: 1px solid rgba(116, 199, 236, 0.35); }
+a:hover { color: var(--lavender); border-bottom-color: var(--lavender); }
+strong { color: var(--peach); font-weight: 700; }
+code {
+  font-family: "JetBrains Mono", "Fira Code", Consolas, "Liberation Mono", monospace;
+  font-size: 0.86em; background: var(--surface0); color: var(--peach);
+  padding: 0.15em 0.4em; border-radius: 5px;
+}
+pre.code {
+  background: var(--mantle); border: 1px solid var(--surface1); border-radius: 10px;
+  padding: 1rem 1.2rem; overflow-x: auto; margin: 1.1rem 0;
+}
+pre.code code { background: none; color: var(--text); padding: 0; font-size: 0.85em; border-radius: 0; }
+.tok-kw { color: var(--mauve); font-weight: 600; }
+.tok-type { color: var(--yellow); }
+.tok-str { color: var(--green); }
+.tok-com { color: var(--overlay0); font-style: italic; }
+blockquote {
+  margin: 1.1rem 0; padding: 0.15rem 1.1rem; border-left: 3px solid var(--peach);
+  background: var(--surface0); border-radius: 0 8px 8px 0; color: var(--subtext1);
+}
+blockquote p { margin: 0.6rem 0; }
+ul, ol { padding-left: 1.4rem; margin: 0.9rem 0; }
+li { margin: 0.45rem 0; }
+hr { border: none; border-top: 1px solid var(--surface1); margin: 2.2rem 0; }
+.table-wrap { overflow-x: auto; margin: 1.1rem 0; }
+table { border-collapse: collapse; width: 100%; font-size: 0.92em; }
+th, td { border: 1px solid var(--surface1); padding: 0.55rem 0.8rem; text-align: left; vertical-align: top; }
+th { background: var(--surface0); color: var(--lavender); }
+tbody tr:nth-child(odd) { background: rgba(49, 50, 68, 0.35); }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+.card {
+  display: block; padding: 1.1rem 1.2rem; background: var(--mantle); border: 1px solid var(--surface1);
+  border-radius: 12px; text-decoration: none; border-bottom: 1px solid var(--surface1); transition: border-color 0.12s, transform 0.12s;
+}
+.card:hover { border-color: var(--mauve); transform: translateY(-2px); }
+.card .card-title { color: var(--text); font-weight: 700; font-size: 1rem; margin-bottom: 0.3rem; display: block; }
+.card .card-desc { color: var(--subtext0); font-size: 0.86rem; }
+.pager { display: flex; justify-content: space-between; margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--surface1); gap: 1rem; }
+.pager a {
+  border: 1px solid var(--surface1); border-radius: 10px; padding: 0.8rem 1.1rem; flex: 1;
+  border-bottom: 1px solid var(--surface1); color: var(--text);
+}
+.pager a:hover { border-color: var(--mauve); }
+.pager .dir { font-size: 0.72rem; text-transform: uppercase; color: var(--overlay0); display: block; margin-bottom: 0.2rem; }
+.pager .next { text-align: right; }
+::selection { background: var(--surface2); color: var(--rosewater); }
+@media (max-width: 1100px) {
+  .layout { grid-template-columns: 220px minmax(0, 1fr); }
+  .onpage { display: none; }
+}
+@media (max-width: 760px) {
+  .layout { grid-template-columns: 1fr; }
+  .sidebar { position: relative; height: auto; border-right: none; border-bottom: 1px solid var(--surface1); }
+  .content { padding: 1.6rem 1.2rem 3rem; }
+}
+</style>
+</head>
+<body>
+<div class="layout">
+<aside class="sidebar">
+  <span class="brand">Catppuccin Mocha</span>
+  <nav><div class="part-label">Начало</div>
+<a class="" href="index.html">Обзор</a>
+<a class="" href="00-basics.html">Основы (CPU/GPU, буферы, шейдеры)</a>
+<div class="part-label">Часть 1 — практика</div>
+<a class="" href="01-quickstart.html">Быстрый старт</a>
+<div class="part-label">Часть 2 — устройство</div>
+<a class="" href="02-architecture.html">Архитектура</a>
+<a class="" href="02b-compute-shaders.html">Свои ComputeShader</a>
+<a class="" href="03-culling.html">GPU-culling</a>
+<a class="" href="04-diagnostics.html">Диагностика и биты</a>
+<a class="active" href="06-lod.html">LOD</a>
+<div class="part-label">Справочник</div>
+<a class="" href="05-gotchas.html">Грабли и шейдеры</a></nav>
+</aside>
+<main class="content">
+<div class="page-kicker">Часть 2 — устройство</div>
+<h1 id="lod-несколько-уровней-детализации-по-дистанции">LOD: несколько уровней детализации по дистанции</h1>
+<p>Реализовано поверх той же архитектуры буферов — не новая система, а расширение существующей. Требует включённого <a href="03-culling.html">GPU-culling</a> (<code>_useComputeCulling</code>) — LOD-роутинг сделан поверх Теста 1 (дистанция), без culling'а нет дешёвого способа решить на GPU, в какой бакет детализации попадает инстанс.</p>
+<h2 id="идея-в-двух-словах">Идея в двух словах</h2>
+<p><code>RenderParams.camera</code> мы уже видели — у <code>RenderParams</code> (Unity 6) есть ещё поле <code>forceMeshLod</code>, которое заставляет <code>Graphics.RenderMeshIndirect</code> рисовать конкретный, явно указанный уровень детализации меша. Ограничение: это поле — на весь <code>RenderParams</code>, то есть на весь draw call целиком, <strong>не на отдельный инстанс внутри него</strong>. Один вызов <code>RenderMeshIndirect</code> = один уровень LOD для ВСЕХ инстансов, которые он рисует.</p>
+<p>Значит, чтобы разные инстансы одного рендерера рисовались с разной детализацией, нужно <strong>несколько отдельных draw call'ов</strong> — по одному на уровень, каждый со своим списком "каких именно инстансов сюда, в этот уровень, включить". Это ровно то, что уже даёт архитектура буферов из <a href="02-architecture.html#три-буфера-которые-нужно-понимать">Три буфера, которые нужно понимать</a>: свой <code>AppendStructuredBuffer</code> (список выживших) + свой буфер аргументов на каждый уровень, вместо одного общего.</p>
+<h2 id="настройка-_lodlevels">Настройка: <code>_lodLevels</code></h2>
+<p>Массив <code>LodLevel</code> в инспекторе, пустой по умолчанию (LOD выключен, поведение как раньше — один <code>_mesh</code>, один draw call). Каждый элемент:</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Поле</th><th>Смысл</th></tr></thead>
+<tbody>
+<tr><td><code>maxDistance</code></td><td>Инстанс попадает в этот уровень, если расстояние до камеры <code>&lt;= maxDistance</code> (и больше <code>maxDistance</code> предыдущего уровня по порядку). Массив сортируется по возрастанию автоматически — порядок ввода в инспекторе не важен.</td></tr>
+<tr><td><code>meshOverride</code></td><td><strong>Надёжный вариант.</strong> Отдельный, самостоятельный <code>Mesh</code> для этого уровня — свой упрощённый low-poly меш и т.п. Если задан — <code>meshLodIndex</code> игнорируется.</td></tr>
+<tr><td><code>meshLodIndex</code></td><td><strong>Экспериментальный вариант</strong> (см. предупреждение ниже). Индекс встроенного Mesh LOD внутри базового <code>_mesh</code>, выбирается через <code>RenderParams.forceMeshLod</code>. Используется, только если <code>meshOverride</code> не задан.</td></tr>
+</tbody></table></div>
+<p>Последний уровень массива (с самым большим <code>maxDistance</code>) одновременно становится общим пределом "дальше вообще не рисовать" — при активном LOD поле <code>_cullRadius</code> для самого культинга не используется (каждый бакет получает свой диапазон дистанции вместо одного общего радиуса).</p>
+<h2 id="два-способа-получить-меш-для-уровня">Два способа получить меш для уровня</h2>
+<h3 id="способ-1-свой-mesh-на-уровень-meshoverride-рекомендуется">Способ 1 — свой Mesh на уровень (<code>meshOverride</code>, рекомендуется)</h3>
+<p>Простой и предсказуемый: для каждого LOD-уровня — отдельный, полностью самостоятельный <code>Mesh</code> asset (например, экспортированный из Blender с меньшим числом полигонов, или через любой LOD- генератор). У каждого своя собственная геометрия (<code>indexCountPerInstance</code>/<code>startIndex</code>/ <code>baseVertexIndex</code> в буфере аргументов считаются с нуля, из ЭТОГО меша) — никакой зависимости от того, как устроен базовый <code>_mesh</code>.</p>
+<h3 id="способ-2-встроенный-mesh-lod-meshlodindex-экспериментально">Способ 2 — встроенный Mesh LOD (<code>meshLodIndex</code>, экспериментально)</h3>
+<p>Unity 6.5 умеет "запекать" несколько уровней детализации ПРЯМО В один Mesh asset — при импорте модели включите <strong>Model Import Settings → Mesh LODs → Generate mesh LODs</strong>, Unity сам сгенерирует упрощённые версии и сохранит их в индексном буфере того же меша. Тогда не нужны отдельные Mesh asset'ы на каждый уровень — один <code>_mesh</code>, разные <code>meshLodIndex</code> на разных уровнях <code>_lodLevels</code>, выбор конкретного LOD идёт через <code>RenderParams.forceMeshLod</code> при рендере этого бакета.</p>
+<blockquote><p><strong>Важно, честно предупреждаем</strong>: этот путь не проверен эмпирически в этом проекте. Официальная документация Unity подтверждает, что <code>Graphics.RenderMeshIndirect</code> не поддерживает автоматический выбор Mesh LOD и требует явного <code>forceMeshLod</code> — то, что здесь и сделано. Но осталось непроверенным, корректно ли <code>IndirectDrawIndexedArgs.indexCountPerInstance</code>/<code>startIndex</code>/<code>baseVertexIndex</code> (посчитанные по LOD0 меша через <code>mesh.GetIndexCount(0)</code> и т.п.) продолжают быть верными для ДРУГИХ <code>forceMeshLod</code>-индексов того же меша, или для не-нулевых LOD нужно считать их иначе. <strong>Проверьте на своих данных</strong> — если увидите артефакты, "дыры" в геометрии или неполную отрисовку у уровней с <code>meshLodIndex &gt; 0</code>, переключитесь на <code>meshOverride</code> (способ 1), он однозначно надёжен, т.к. у каждого меша там свой собственный, самодостаточный буфер индексов.</p></blockquote>
+<h2 id="как-это-устроено-внутри">Как это устроено внутри</h2>
+<p>Сама логика LOD-бакетов живёт не в <code>IndirectMeshRenderer</code>, а в переиспользуемом <a href="03-culling.html"><code>GpuIndirectCuller</code></a> — том же классе, что делает дистанцию/frustum/occlusion. <code>IndirectMeshRenderer.BuildLevels()</code> только переводит Inspector-массив <code>LodLevel[]</code> в GPU-agnostic <code>MeshLevel[]</code> (сортирует по дистанции, решает <code>meshOverride</code> или <code>meshLodIndex</code>):</p>
+<pre class="code lang-csharp"><code><span class="tok-kw">private</span> <span class="tok-type">MeshLevel</span>[] <span class="tok-type">BuildLevels</span>()
+{
+    <span class="tok-kw">if</span> (_lodLevels.<span class="tok-type">Length</span> == 0)
+        <span class="tok-kw">return</span> <span class="tok-kw">new</span>[] { <span class="tok-kw">new</span> <span class="tok-type">MeshLevel</span> { <span class="tok-type">Mesh</span> = _mesh, <span class="tok-type">MaxDistance</span> = _cullRadius, <span class="tok-type">ForceMeshLod</span> = 0 } };
+
+    <span class="tok-kw">var</span> sorted = (<span class="tok-type">LodLevel</span>[])_lodLevels.<span class="tok-type">Clone</span>();
+    <span class="tok-type">Array</span>.<span class="tok-type">Sort</span>(sorted, (a, b) =&gt; a.maxDistance.<span class="tok-type">CompareTo</span>(b.maxDistance));
+
+    <span class="tok-kw">var</span> levels = <span class="tok-kw">new</span> <span class="tok-type">MeshLevel</span>[sorted.<span class="tok-type">Length</span>];
+    <span class="tok-kw">for</span> (<span class="tok-kw">int</span> i = 0; i &lt; sorted.<span class="tok-type">Length</span>; i++)
+    {
+        <span class="tok-kw">bool</span> useOverride = sorted[i].meshOverride != <span class="tok-kw">null</span>;
+        levels[i] = <span class="tok-kw">new</span> <span class="tok-type">MeshLevel</span>
+        {
+            <span class="tok-type">Mesh</span> = useOverride ? sorted[i].meshOverride : _mesh,
+            <span class="tok-type">MaxDistance</span> = sorted[i].maxDistance,
+            <span class="tok-type">ForceMeshLod</span> = useOverride ? 0 : sorted[i].meshLodIndex
+        };
+    }
+    <span class="tok-kw">return</span> levels;
+}</code></pre>
+<p>Этот массив передаётся в конструктор <code>GpuIndirectCuller</code>, который сам строит по одному <code>Level</code> (публичная readonly-структура внутри <code>GpuIndirectCuller</code>) на каждый <code>MeshLevel</code> — со своим <code>VisibleBuffer</code>/<code>CommandBuffer</code>:</p>
+<pre class="code lang-csharp"><code>_levels = <span class="tok-kw">new</span> <span class="tok-type">Level</span>[levels.<span class="tok-type">Count</span>];
+<span class="tok-kw">float</span> prevMax = 0f;
+<span class="tok-kw">for</span> (<span class="tok-kw">int</span> i = 0; i &lt; levels.<span class="tok-type">Count</span>; i++)
+{
+    <span class="tok-type">MeshLevel</span> level = levels[i];
+    _levels[i] = <span class="tok-kw">new</span> <span class="tok-type">Level</span>(level.<span class="tok-type">Mesh</span>, level.<span class="tok-type">ForceMeshLod</span>, prevMax, level.<span class="tok-type">MaxDistance</span>,
+        <span class="tok-kw">new</span> <span class="tok-type">GraphicsBuffer</span>(<span class="tok-type">GraphicsBuffer</span>.<span class="tok-type">Target</span>.<span class="tok-type">Append</span>, instanceCount, <span class="tok-type">InstanceData</span>.<span class="tok-type">Stride</span>),
+        <span class="tok-type">GpuIndirectCullerHelpers</span>.<span class="tok-type">BuildCommandBuffer</span>(level.<span class="tok-type">Mesh</span>, instanceCount));
+    prevMax = level.<span class="tok-type">MaxDistance</span>;
+}</code></pre>
+<p><code>GpuIndirectCuller.Dispatch()</code> при нескольких уровнях не делает один compute-dispatch, а по разу на каждый <code>Level</code> — тот же самый kernel <code>CSMain</code>, но каждый раз с разными <code>_LodMinDistance</code>/<code>_CullRadius</code>:</p>
+<pre class="code lang-csharp"><code><span class="tok-kw">foreach</span> (<span class="tok-type">Level</span> level <span class="tok-kw">in</span> _levels)
+    <span class="tok-type">DispatchLevel</span>(level, camera, settings, viewProjection);</code></pre>
+<p>Дистанция (Тест 1, самый дешёвый — см. <a href="03-culling.html#тест-1-дистанция">GPU-culling</a>) в этой конфигурации одновременно служит и culling'ом, и роутером — определяет, в какой конкретно уровень попадёт инстанс. Дороже пути без LOD в N раз по инстансам (N = число уровней), но N обычно 2-4, а инстансов на каждый отдельный уровень всегда МЕНЬШЕ полного <code>_instanceCount</code> (они не пересекаются).</p>
+<p>Рендер — на стороне <code>IndirectMeshRenderer.DispatchAndRenderWithCulling()</code>, тоже по разу на уровень, читая <code>_culler.Levels</code>:</p>
+<pre class="code lang-csharp"><code><span class="tok-kw">foreach</span> (<span class="tok-type">GpuIndirectCuller</span>.<span class="tok-type">Level</span> level <span class="tok-kw">in</span> _culler.<span class="tok-type">Levels</span>)
+{
+    _propertyBlock.<span class="tok-type">SetBuffer</span>(<span class="tok-type">InstanceBufferId</span>, level.<span class="tok-type">VisibleBuffer</span>);
+    <span class="tok-type">RenderParams</span> rparams = <span class="tok-type">BuildRenderParams</span>();
+    rparams.forceMeshLod = level.<span class="tok-type">ForceMeshLod</span>;
+    <span class="tok-type">Graphics</span>.<span class="tok-type">RenderMeshIndirect</span>(rparams, level.<span class="tok-type">Mesh</span>, level.<span class="tok-type">CommandBuffer</span>);
+}</code></pre>
+<p>Один и тот же <code>_propertyBlock</code> переиспользуется на все уровни — переключение буфера прямо перед каждым <code>RenderMeshIndirect</code> безопасно: вызов синхронный по CPU-стороне, GPU видит property block таким, каким он был в момент issue'а конкретного draw call'а.</p>
+<h2 id="требования-и-предупреждения">Требования и предупреждения</h2>
+<ul><li><strong>LOD требует <code>_useComputeCulling</code>.</strong> Если <code>_lodLevels</code> заполнен, а culling не готов (нет <code>_cullingShader</code>/камеры/галочки) — LOD молча выключается, рисуется только базовый <code>_mesh</code>, в консоль пишется предупреждение.</li><li><strong>LOD требует <code>_enableDistanceCulling</code>.</strong> Если его выключить при активном LOD — все бакеты получат ВСЕ инстансы одновременно (наложение геометрии друг на друга), потому что дистанция — это и есть механизм роутинга по бакетам. Предупреждение в консоль при <code>OnEnable</code>.</li><li><strong><code>_boundsRadiusOverride</code>/<code>_boundsExtentsOverride</code> общие на все уровни</strong> — считаются один раз от базового <code>_mesh</code>, не пересчитываются отдельно на <code>meshOverride</code>-мешы уровней. Обычно нормально (LOD-мешы сохраняют силуэт/пропорции оригинала), но если ваши "уровни" — это на деле совсем разные по форме proxy-объекты, radius/extents могут не подойти для дальних уровней.</li><li><strong>Диагностика (<code>_debugInstanceIndex</code>) при LOD печатает данные последнего за кадр бакета</strong>, не всех сразу — см. <a href="04-diagnostics.html#_debuginstanceindex-построчный-разбор-одного-инстанса">Диагностика</a>.</li></ul>
+<div class="pager"><a class="prev" href="04-diagnostics.html"><span class="dir">Назад</span>Диагностика и биты</a><a class="next" href="05-gotchas.html"><span class="dir">Дальше</span>Грабли и шейдеры</a></div>
+</main>
+<aside class="onpage">
+  <div class="label">На этой странице</div>
+  <a class="" href="#идея-в-двух-словах">Идея в двух словах</a>
+<a class="" href="#настройка-_lodlevels">Настройка: _lodLevels</a>
+<a class="" href="#два-способа-получить-меш-для-уровня">Два способа получить меш для уровня</a>
+<a class="h3" href="#способ-1-свой-mesh-на-уровень-meshoverride-рекомендуется">Способ 1 — свой Mesh на уровень (meshOverride, рекомендуется)</a>
+<a class="h3" href="#способ-2-встроенный-mesh-lod-meshlodindex-экспериментально">Способ 2 — встроенный Mesh LOD (meshLodIndex, экспериментально)</a>
+<a class="" href="#как-это-устроено-внутри">Как это устроено внутри</a>
+<a class="" href="#требования-и-предупреждения">Требования и предупреждения</a>
+</aside>
+</div>
+</body>
+</html>

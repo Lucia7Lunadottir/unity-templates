@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Архитектура — Graphics.RenderMeshIndirect</title>
+<style>
+:root {
+  --base: #1e1e2e; --mantle: #181825; --crust: #11111b;
+  --surface0: #313244; --surface1: #45475a; --surface2: #585b70;
+  --overlay0: #6c7086; --overlay1: #7f849c;
+  --text: #cdd6f4; --subtext1: #bac2de; --subtext0: #a6adc8;
+  --rosewater: #f5e0dc; --flamingo: #f2cdcd; --pink: #f5c2e7; --mauve: #cba6f7;
+  --red: #f38ba8; --maroon: #eba0ac; --peach: #fab387; --yellow: #f9e2af;
+  --green: #a6e3a1; --teal: #94e2d5; --sky: #89dceb; --sapphire: #74c7ec;
+  --blue: #89b4fa; --lavender: #b4befe;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0; background: var(--base); color: var(--text);
+  font-family: -apple-system, "Segoe UI", "Noto Sans", "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.7; font-size: 16px;
+}
+.layout {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr) 220px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+.sidebar {
+  position: sticky; top: 0; align-self: start; height: 100vh; overflow-y: auto;
+  padding: 1.8rem 1.2rem; border-right: 1px solid var(--surface1);
+}
+.sidebar .brand {
+  font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--crust); background: var(--mauve); display: inline-block;
+  padding: 0.15rem 0.6rem; border-radius: 999px; font-weight: 700; margin-bottom: 1.4rem;
+}
+.sidebar nav a {
+  display: block; padding: 0.5rem 0.7rem; margin: 0.1rem 0; border-radius: 7px;
+  color: var(--subtext1); text-decoration: none; font-size: 0.92rem; border-bottom: none;
+  transition: background 0.12s, color 0.12s;
+}
+.sidebar nav a:hover { background: var(--surface0); color: var(--text); }
+.sidebar nav a.active { background: var(--mauve); color: var(--crust); font-weight: 700; }
+.sidebar nav .part-label {
+  font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--overlay0);
+  margin: 1.1rem 0 0.3rem 0.7rem;
+}
+.content { padding: 2.6rem 2.6rem 5rem; min-width: 0; }
+.onpage {
+  position: sticky; top: 0; align-self: start; height: 100vh; overflow-y: auto;
+  padding: 2.6rem 1.2rem;
+}
+.onpage .label {
+  font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--overlay0);
+  margin-bottom: 0.6rem;
+}
+.onpage a {
+  display: block; padding: 0.28rem 0; color: var(--subtext0); text-decoration: none;
+  font-size: 0.86rem; border-bottom: none; border-left: 2px solid transparent; padding-left: 0.7rem;
+}
+.onpage a.h3 { padding-left: 1.4rem; font-size: 0.82rem; }
+.onpage a:hover { color: var(--sapphire); border-left-color: var(--sapphire); }
+
+h1, h2, h3 { font-weight: 700; line-height: 1.3; scroll-margin-top: 1.5rem; }
+h1 { font-size: 2rem; color: var(--mauve); margin: 0 0 0.6rem; }
+.page-kicker {
+  font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--peach);
+  font-weight: 700; margin-bottom: 0.5rem;
+}
+h2 { font-size: 1.4rem; color: var(--blue); margin: 2.4rem 0 1rem; padding-bottom: 0.4rem; border-bottom: 1px solid var(--surface1); }
+h3 { font-size: 1.1rem; color: var(--sky); margin: 1.8rem 0 0.8rem; }
+p { margin: 0.9rem 0; color: var(--text); }
+a { color: var(--sapphire); text-decoration: none; border-bottom: 1px solid rgba(116, 199, 236, 0.35); }
+a:hover { color: var(--lavender); border-bottom-color: var(--lavender); }
+strong { color: var(--peach); font-weight: 700; }
+code {
+  font-family: "JetBrains Mono", "Fira Code", Consolas, "Liberation Mono", monospace;
+  font-size: 0.86em; background: var(--surface0); color: var(--peach);
+  padding: 0.15em 0.4em; border-radius: 5px;
+}
+pre.code {
+  background: var(--mantle); border: 1px solid var(--surface1); border-radius: 10px;
+  padding: 1rem 1.2rem; overflow-x: auto; margin: 1.1rem 0;
+}
+pre.code code { background: none; color: var(--text); padding: 0; font-size: 0.85em; border-radius: 0; }
+.tok-kw { color: var(--mauve); font-weight: 600; }
+.tok-type { color: var(--yellow); }
+.tok-str { color: var(--green); }
+.tok-com { color: var(--overlay0); font-style: italic; }
+blockquote {
+  margin: 1.1rem 0; padding: 0.15rem 1.1rem; border-left: 3px solid var(--peach);
+  background: var(--surface0); border-radius: 0 8px 8px 0; color: var(--subtext1);
+}
+blockquote p { margin: 0.6rem 0; }
+ul, ol { padding-left: 1.4rem; margin: 0.9rem 0; }
+li { margin: 0.45rem 0; }
+hr { border: none; border-top: 1px solid var(--surface1); margin: 2.2rem 0; }
+.table-wrap { overflow-x: auto; margin: 1.1rem 0; }
+table { border-collapse: collapse; width: 100%; font-size: 0.92em; }
+th, td { border: 1px solid var(--surface1); padding: 0.55rem 0.8rem; text-align: left; vertical-align: top; }
+th { background: var(--surface0); color: var(--lavender); }
+tbody tr:nth-child(odd) { background: rgba(49, 50, 68, 0.35); }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+.card {
+  display: block; padding: 1.1rem 1.2rem; background: var(--mantle); border: 1px solid var(--surface1);
+  border-radius: 12px; text-decoration: none; border-bottom: 1px solid var(--surface1); transition: border-color 0.12s, transform 0.12s;
+}
+.card:hover { border-color: var(--mauve); transform: translateY(-2px); }
+.card .card-title { color: var(--text); font-weight: 700; font-size: 1rem; margin-bottom: 0.3rem; display: block; }
+.card .card-desc { color: var(--subtext0); font-size: 0.86rem; }
+.pager { display: flex; justify-content: space-between; margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--surface1); gap: 1rem; }
+.pager a {
+  border: 1px solid var(--surface1); border-radius: 10px; padding: 0.8rem 1.1rem; flex: 1;
+  border-bottom: 1px solid var(--surface1); color: var(--text);
+}
+.pager a:hover { border-color: var(--mauve); }
+.pager .dir { font-size: 0.72rem; text-transform: uppercase; color: var(--overlay0); display: block; margin-bottom: 0.2rem; }
+.pager .next { text-align: right; }
+::selection { background: var(--surface2); color: var(--rosewater); }
+@media (max-width: 1100px) {
+  .layout { grid-template-columns: 220px minmax(0, 1fr); }
+  .onpage { display: none; }
+}
+@media (max-width: 760px) {
+  .layout { grid-template-columns: 1fr; }
+  .sidebar { position: relative; height: auto; border-right: none; border-bottom: 1px solid var(--surface1); }
+  .content { padding: 1.6rem 1.2rem 3rem; }
+}
+</style>
+</head>
+<body>
+<div class="layout">
+<aside class="sidebar">
+  <span class="brand">Catppuccin Mocha</span>
+  <nav><div class="part-label">Начало</div>
+<a class="" href="index.html">Обзор</a>
+<a class="" href="00-basics.html">Основы (CPU/GPU, буферы, шейдеры)</a>
+<div class="part-label">Часть 1 — практика</div>
+<a class="" href="01-quickstart.html">Быстрый старт</a>
+<div class="part-label">Часть 2 — устройство</div>
+<a class="active" href="02-architecture.html">Архитектура</a>
+<a class="" href="02b-compute-shaders.html">Свои ComputeShader</a>
+<a class="" href="03-culling.html">GPU-culling</a>
+<a class="" href="04-diagnostics.html">Диагностика и биты</a>
+<a class="" href="06-lod.html">LOD</a>
+<div class="part-label">Справочник</div>
+<a class="" href="05-gotchas.html">Грабли и шейдеры</a></nav>
+</aside>
+<main class="content">
+<div class="page-kicker">Часть 2 — устройство</div>
+<h1 id="архитектура">Архитектура</h1>
+<p>Как это устроено внутри — буферы, зачем нужен MaterialPropertyBlock, как расставляются и двигаются инстансы, путь одного инстанса от буфера до пикселя.</p>
+<h2 id="зачем-вообще-нужен-rendermeshindirect">Зачем вообще нужен RenderMeshIndirect</h2>
+<p>Обычный рендер в Unity — это одна пара (Transform, MeshRenderer) на один видимый объект. Даже <code>Graphics.RenderMeshInstanced</code> требует, чтобы CPU каждый кадр знал точное количество инстансов и передавал его в вызов явным числом.</p>
+<p><code>RenderMeshIndirect</code> убирает это ограничение: <strong>сколько инстансов рисовать — решает не CPU, а GPU</strong>, через данные, которые лежат в буфере на видеокарте. CPU-код просто говорит "вот меш, вот буфер с аргументами отрисовки, дуй" — и не знает (и не должен знать), сколько объектов реально нарисуется.</p>
+<blockquote><p><strong>На этом факте строится GPU-driven culling</strong>: compute shader сам решает, сколько инстансов видно, и переписывает <code>instanceCount</code> в буфере аргументов без единого readback на CPU. В этом проекте это реализовано, но <strong>опционально</strong> — включается галочкой <code>_useComputeCulling</code>, по умолчанию выключено. Без него <code>instanceCount</code> прописывается один раз руками и дальше не меняется — тоже рабочий вариант, просто без отбраковки невидимых инстансов. Полный разбор — <a href="03-culling.html">GPU-culling</a>.</p></blockquote>
+<h2 id="синтаксис-graphicsrendermeshindirect">Синтаксис <code>Graphics.RenderMeshIndirect</code></h2>
+<p>Прежде чем разбирать буферы под него — сама сигнатура метода (Unity Scripting API, <code>UnityEngine.Graphics</code>):</p>
+<pre class="code lang-csharp"><code><span class="tok-kw">public</span> <span class="tok-kw">static</span> <span class="tok-kw">void</span> <span class="tok-type">RenderMeshIndirect</span>(
+    <span class="tok-kw">ref</span> <span class="tok-type">RenderParams</span> rparams,
+    <span class="tok-type">Mesh</span> mesh,
+    <span class="tok-type">GraphicsBuffer</span> commandBuffer,
+    <span class="tok-kw">int</span> commandCount = 1,
+    <span class="tok-kw">int</span> startCommand = 0
+);</code></pre>
+<div class="table-wrap"><table>
+<thead><tr><th>Параметр</th><th>Тип</th><th>Что это</th></tr></thead>
+<tbody>
+<tr><td><code>rparams</code></td><td><code>RenderParams</code></td><td>Материал, bounds, тени, камера и т.д. — передаётся по <code>ref</code>, то есть метод МОЖЕТ изменить структуру на стороне вызывающего (на практике не делает, но это не <code>in</code>/<code>readonly</code>-параметр, помните об этом при чтении чужого кода)</td></tr>
+<tr><td><code>mesh</code></td><td><code>Mesh</code></td><td>Какой меш рисовать — один на весь вызов, один и тот же для всех инстансов в нём</td></tr>
+<tr><td><code>commandBuffer</code></td><td><code>GraphicsBuffer</code></td><td>Буфер аргументов отрисовки, <code>Target.IndirectArguments</code> — см. <a href="#2-буфер-аргументов-отрисовки-graphicsbuffertargetindirectarguments">ниже</a></td></tr>
+<tr><td><code>commandCount</code></td><td><code>int</code>, по умолчанию <code>1</code></td><td>Сколько КОМАНД выполнить из <code>commandBuffer</code> за этот вызов — да, можно упаковать НЕСКОЛЬКО разных draw-команд в один буфер и запустить их все одним вызовом (в этом проекте всегда <code>1</code>: один вызов = одна команда = один меш)</td></tr>
+<tr><td><code>startCommand</code></td><td><code>int</code>, по умолчанию <code>0</code></td><td>С какой команды в <code>commandBuffer</code> начать, если их там несколько</td></tr>
+</tbody></table></div>
+<p>Официальные правила/ограничения из документации Unity:</p>
+<ul><li><strong>Работает только на платформах с поддержкой compute shader'ов</strong> — если платформа их не поддерживает, метод недоступен в принципе, не только "работает медленно".</li><li><strong>Формат <code>commandBuffer</code> завязан на структуру <code>GraphicsBuffer.IndirectDrawIndexedArgs</code></strong> — именно её поля (<code>indexCountPerInstance</code>, <code>instanceCount</code> и т.д., см. <a href="#2-буфер-аргументов-отрисовки-graphicsbuffertargetindirectarguments">Буфер аргументов</a>) должны лежать в буфере в ожидаемом порядке — реальная бинарная раскладка может отличаться по платформам, поэтому обязательно собирайте буфер через саму структуру <code>IndirectDrawIndexedArgs</code>, а не руками считанными байтами.</li><li><strong><code>RenderParams.worldBounds</code></strong> — Unity использует его, чтобы отбраковать/отсортировать всю геометрию этого вызова КАК ОДНО ЦЕЛОЕ, до всякого GPU-culling'а внутри (см. <a href="05-gotchas.html#известные-грабли">Известные грабли</a>).</li><li><strong>Официальный шаблон вершинного шейдера</strong> для этой техники — три штуки: <code>#define UNITY_INDIRECT_DRAW_ARGS IndirectDrawIndexedArgs</code>, <code>#include "UnityIndirect.cginc"</code>, <code>InitIndirectDrawArgs(0)</code> в начале вершинной функции. <strong>В этом проекте их нет</strong> — <code>IndirectCube.shader</code> читает <code>SV_InstanceID</code> напрямую и без них, и это реально работает. Разница в том, что этот проект всегда вызывает <code>RenderMeshIndirect</code> с <code>commandCount = 1</code> (одна команда за вызов, без упаковки нескольких draw'ов в один буфер) — судя по всему, официальный шаблон нужен именно для случая <code>commandCount &gt; 1</code>, чтобы шейдер мог правильно посчитать номер инстанса С УЧЁТОМ того, из какой именно команды буфера он пришёл. Если когда-нибудь понадобится <code>commandCount &gt; 1</code> — добавьте эти три строки и проверьте, меняется ли что-то в номерах инстансов.</li></ul>
+<h2 id="синтаксис-renderparams">Синтаксис <code>RenderParams</code></h2>
+<p>Первый параметр <code>RenderMeshIndirect</code> — <code>RenderParams</code> (<code>UnityEngine</code>, <code>struct</code>). У неё один конструктор:</p>
+<pre class="code lang-csharp"><code><span class="tok-kw">public</span> <span class="tok-type">RenderParams</span>(<span class="tok-type">Material</span> material);</code></pre>
+<p>Конструктор задаёт только <code>material</code> — все остальные поля структуры получают тип-значения-по-умолчанию C# (<code>0</code>/<code>false</code>/<code>null</code> для соответствующих типов), и их нужно проставлять отдельно, через object-initializer или присваиванием после создания:</p>
+<pre class="code lang-csharp"><code><span class="tok-kw">var</span> rparams = <span class="tok-kw">new</span> <span class="tok-type">RenderParams</span>(material)
+{
+    worldBounds = someBounds,
+    camera = someCamera
+    <span class="tok-com">// остальные поля - по необходимости, ниже полный список</span>
+};</code></pre>
+<p>Полный список полей (Unity 6):</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Поле</th><th>Тип</th><th>Что это</th></tr></thead>
+<tbody>
+<tr><td><code>material</code></td><td><code>Material</code></td><td>Материал для рендера — единственное, что задаёт конструктор</td></tr>
+<tr><td><code>worldBounds</code></td><td><code>Bounds</code></td><td>Мировые границы геометрии — для culling/сортировки всего вызова как единого целого</td></tr>
+<tr><td><code>layer</code></td><td><code>int</code></td><td>Layer объекта (как <code>GameObject.layer</code>)</td></tr>
+<tr><td><code>camera</code></td><td><code>Camera</code></td><td>Какая камера рисует. <code>null</code> (значение по умолчанию!) — рисует <strong>на все камеры разом</strong>, см. <a href="05-gotchas.html#известные-грабли">Известные грабли</a></td></tr>
+<tr><td><code>shadowCastingMode</code></td><td><code>ShadowCastingMode</code></td><td>Отбрасывает ли геометрия тени</td></tr>
+<tr><td><code>receiveShadows</code></td><td><code>bool</code></td><td>Принимает ли геометрия тени от других объектов</td></tr>
+<tr><td><code>motionVectorMode</code></td><td><code>MotionVectorGenerationMode</code></td><td>Режим генерации motion vectors (для TAA/motion blur и т.п.)</td></tr>
+<tr><td><code>reflectionProbeUsage</code></td><td><code>ReflectionProbeUsage</code></td><td>Как использовать reflection probes</td></tr>
+<tr><td><code>lightProbeUsage</code></td><td><code>LightProbeUsage</code></td><td>Как использовать light probes</td></tr>
+<tr><td><code>renderingLayerMask</code></td><td><code>uint</code></td><td>Маска rendering layers (для URP/HDRP light layers и подобного)</td></tr>
+<tr><td><code>rendererPriority</code></td><td><code>int</code></td><td>Приоритет рендерера</td></tr>
+<tr><td><code>instanceID</code></td><td><code>int</code></td><td>ID для picking'а в Scene view редактора; <code>0</code> (по умолчанию) — объект нельзя выбрать кликом</td></tr>
+<tr><td><code>matProps</code></td><td><code>MaterialPropertyBlock</code></td><td>Переопределения свойств материала на этот вызов — см. <a href="#materialpropertyblock-зачем-он-тут">MaterialPropertyBlock</a></td></tr>
+<tr><td><code>lightProbeProxyVolume</code></td><td><code>LightProbeProxyVolume</code></td><td>LPPV-компонент, если используется</td></tr>
+<tr><td><code>forceMeshLod</code></td><td><code>int</code></td><td>Принудительный уровень запечённого Mesh LOD — см. <a href="06-lod.html">LOD</a></td></tr>
+<tr><td><code>meshLodSelectionBias</code></td><td><code>float</code></td><td>Смещение при автоматическом выборе Mesh LOD (не актуально здесь — этот проект всегда задаёт LOD явно через <code>forceMeshLod</code>, не полагается на автовыбор)</td></tr>
+<tr><td><code>overrideSceneCullingMask</code> / <code>sceneCullingMask</code></td><td><code>bool</code> / <code>ulong</code></td><td>Только для редактора — переопределение маски видимости сцены</td></tr>
+</tbody></table></div>
+<p><strong>Что из этого реально используется в этом проекте</strong> (<code>IndirectMeshRenderer.BuildRenderParams()</code>, показан целиком в разделе <a href="#materialpropertyblock-зачем-он-тут">MaterialPropertyBlock</a> ниже): <code>material</code> (через конструктор), <code>worldBounds</code>, <code>shadowCastingMode</code>, <code>receiveShadows</code>, <code>matProps</code>, <code>camera</code>, и <code>forceMeshLod</code> — но только в LOD-пути (см. <a href="06-lod.html">LOD</a>), не в общем <code>BuildRenderParams()</code>. Остальные поля не заданы явно — значит, используются их дефолтные type-значения C# (<code>0</code>/<code>false</code> для соответствующих enum'ов и типов); если вам для своей задачи важно конкретное поведение одного из них — проверьте, что означает конкретно <code>0</code>/<code>false</code> для его типа (например, для <code>ShadowCastingMode</code> <code>0</code> — это <code>Off</code>), не полагайтесь на "наверное, разумно по умолчанию".</p>
+<h2 id="три-буфера-которые-нужно-понимать">Три буфера, которые нужно понимать</h2>
+<h3 id="1-instance-буфер-graphicsbuffertargetstructured">1. Instance-буфер (<code>GraphicsBuffer.Target.Structured</code>)</h3>
+<p>Это ядро всей техники, и оно не специфично для этого проекта — в ЛЮБОМ вашем <code>RenderMeshIndirect</code>-коде вам понадобится ровно то же самое: обычный <code>GraphicsBuffer</code> с типом <code>Structured</code>, куда с CPU кладётся массив ваших собственных данных инстансов (позиция/масштаб/поворот — или что угодно ещё, это всегда своя структура под вашу задачу):</p>
+<pre class="code lang-csharp"><code><span class="tok-kw">var</span> buffer = <span class="tok-kw">new</span> <span class="tok-type">GraphicsBuffer</span>(<span class="tok-type">GraphicsBuffer</span>.<span class="tok-type">Target</span>.<span class="tok-type">Structured</span>, data.<span class="tok-type">Length</span>, stride);
+buffer.<span class="tok-type">SetData</span>(data);</code></pre>
+<p><code>data.Length</code> — сколько элементов. <code>stride</code> — размер ОДНОГО элемента в байтах (для структуры из 3 float на позицию + 1 float на масштаб + 4 float на кватернион поворота — <code>sizeof(float) * 8</code> = 32 байта). Буфер хранит их в GPU-памяти одним плоским куском, <code>data.Length * stride</code> байт всего.</p>
+<p><strong>Это самый частый источник багов в этой механике</strong>: HLSL (<code>StructuredBuffer&lt;T&gt;</code> в шейдере) и C# (структура на CPU-стороне) описывают один и тот же байтовый layout полностью независимо друг от друга — компилятор никак не проверяет, что они совпадают. Переставили поле местами в одном описании и забыли во втором — получите тихо съехавшие/развёрнутые данные без единой ошибки компиляции или в консоли. Поэтому на C#-структуре явно нужен <code>[StructLayout(LayoutKind.Sequential)]</code> — без него CLR формально не обязан хранить поля в порядке объявления (на практике почти всегда хранит, но полагаться на "почти всегда" в GPU-коде не стоит). В этом правиле нет исключений независимо от проекта — держите в голове для любого своего буфера, не только <code>InstanceData</code>.</p>
+<p>Конкретно (реальный код из <code>InstanceData.cs</code>):</p>
+<pre class="code lang-csharp"><code>[<span class="tok-type">StructLayout</span>(<span class="tok-type">LayoutKind</span>.<span class="tok-type">Sequential</span>)]
+<span class="tok-kw">public</span> <span class="tok-kw">struct</span> <span class="tok-type">InstanceData</span>
+{
+    <span class="tok-kw">public</span> <span class="tok-type">Vector3</span> <span class="tok-type">Position</span>;   <span class="tok-com">// байты 0..11  (3 float)</span>
+    <span class="tok-kw">public</span> <span class="tok-kw">float</span> <span class="tok-type">Scale</span>;        <span class="tok-com">// байты 12..15 (1 float)</span>
+    <span class="tok-kw">public</span> <span class="tok-type">Quaternion</span> <span class="tok-type">Rotation</span>; <span class="tok-com">// байты 16..31 (4 float)</span>
+}</code></pre>
+<p>И зеркальная HLSL-структура — поля в ТОМ ЖЕ порядке, теми же по размеру типами:</p>
+<pre class="code lang-hlsl"><code><span class="tok-kw">struct</span> InstanceData
+{
+    <span class="tok-kw">float3</span> position; <span class="tok-com">// байты 0..11</span>
+    <span class="tok-kw">float</span> scale;      <span class="tok-com">// байты 12..15</span>
+    <span class="tok-kw">float4</span> rotation;  <span class="tok-com">// байты 16..31</span>
+};</code></pre>
+<p>Если в HLSL-версии, например, поменять местами <code>scale</code> и <code>position</code> (или забыть один из них при правке в будущем) — компиляция обеих сторон пройдёт без единой ошибки, но C# будет писать позицию инстанса в байты 0..11, а шейдер будет читать эти же байты 0..11 как что-то другое (в примере выше — начало <code>scale</code>, дальше поплывёт всё) — отсюда "тихо съехавшие данные" в описании ошибки: кубы разлетаются по случайным местам без единого сообщения в консоли, потому что с точки зрения компилятора всё синтаксически верно с обеих сторон.</p>
+<p><strong>Как это организовано именно в этом проекте</strong> (необязательно повторять в своём): владение этим буфером + такая структура (<code>InstanceData { Vector3 Position; float Scale; Quaternion Rotation; }</code>, <code>InstanceData.Stride = 32</code>) вынесены в отдельный переиспользуемый класс <code>InstanceBuffer</code> (<code>InstanceBuffer.cs</code>) — не завязанный на <code>IndirectMeshRenderer</code>, конструктор которого делает ровно два вызова выше:</p>
+<pre class="code lang-csharp"><code><span class="tok-kw">public</span> <span class="tok-type">InstanceBuffer</span>(<span class="tok-type">InstanceData</span>[] data)
+{
+    _data = data;
+    <span class="tok-type">Buffer</span> = <span class="tok-kw">new</span> <span class="tok-type">GraphicsBuffer</span>(<span class="tok-type">GraphicsBuffer</span>.<span class="tok-type">Target</span>.<span class="tok-type">Structured</span>, data.<span class="tok-type">Length</span>, <span class="tok-type">InstanceData</span>.<span class="tok-type">Stride</span>);
+    <span class="tok-type">Buffer</span>.<span class="tok-type">SetData</span>(data);
+}</code></pre>
+<blockquote><p><strong>Не перепутайте с <code>_InstanceBuffer</code></strong> (с подчёркиванием, внутри HLSL-кода) — это два РАЗНЫХ имени про разное: <code>InstanceBuffer</code> (класс без подчёркивания) — C#-обёртка вокруг <code>GraphicsBuffer</code> в этом проекте; <code>_InstanceBuffer</code> (с подчёркиванием) — имя свойства шейдера (строка, которую шейдер использует для чтения буфера, см. <a href="#путь-одного-инстанса-от-буфера-до-пикселя">Путь одного инстанса</a> ниже). Они связаны (одно передаётся в другое через <code>MaterialPropertyBlock.SetBuffer</code>), но это не один и тот же идентификатор, и в другом проекте класс с таким именем может вообще не существовать — а вот имя шейдерного свойства вы вольны назвать как угодно, оно ни от чего не зависит.</p></blockquote>
+<p><strong>Это самый частый источник багов в этой механике</strong>: HLSL (<code>StructuredBuffer&lt;InstanceData&gt;</code> в шейдере) и C# (<code>struct InstanceData</code> в скрипте) описывают один и тот же байтовый layout полностью независимо друг от друга — компилятор никак не проверяет, что они совпадают. Переставили поле местами в одном описании и забыли во втором — получите тихо съехавшие/развёрнутые данные без единой ошибки компиляции или в консоли. Поэтому на C#-структуре явно стоит <code>[StructLayout(LayoutKind.Sequential)]</code> — без него CLR формально не обязан хранить поля в порядке объявления (на практике почти всегда хранит, но полагаться на "почти всегда" в GPU-коде не стоит).</p>
+<h3 id="2-буфер-аргументов-отрисовки-graphicsbuffertargetindirectarguments">2. Буфер аргументов отрисовки (<code>GraphicsBuffer.Target.IndirectArguments</code>)</h3>
+<p>Тоже универсальная часть API, не специфичная для этого проекта. Это <strong>не</strong> данные инстансов — это буквально аргументы вызова <code>DrawIndexedInstanced</code> на видеокарте, той самой low-level команды, которую в обычном рендере Unity формирует сама, а тут вы обязаны собрать вручную:</p>
+<pre class="code lang-csharp"><code><span class="tok-kw">var</span> buffer = <span class="tok-kw">new</span> <span class="tok-type">GraphicsBuffer</span>(<span class="tok-type">GraphicsBuffer</span>.<span class="tok-type">Target</span>.<span class="tok-type">IndirectArguments</span>, 1,
+    <span class="tok-type">GraphicsBuffer</span>.<span class="tok-type">IndirectDrawIndexedArgs</span>.size);
+buffer.<span class="tok-type">SetData</span>(<span class="tok-kw">new</span>[]
+{
+    <span class="tok-kw">new</span> <span class="tok-type">GraphicsBuffer</span>.<span class="tok-type">IndirectDrawIndexedArgs</span>
+    {
+        indexCountPerInstance = mesh.<span class="tok-type">GetIndexCount</span>(0),
+        instanceCount = (uint)instanceCount,
+        startIndex = mesh.<span class="tok-type">GetIndexStart</span>(0),
+        baseVertexIndex = mesh.<span class="tok-type">GetBaseVertex</span>(0),
+        startInstance = 0
+    }
+});</code></pre>
+<div class="table-wrap"><table>
+<thead><tr><th>Поле</th><th>Смысл</th></tr></thead>
+<tbody>
+<tr><td><code>indexCountPerInstance</code></td><td>сколько индексов рисовать на один инстанс (обычно = все индексы меша)</td></tr>
+<tr><td><code>instanceCount</code></td><td>сколько инстансов рисовать. Без culling'а задаётся один раз с CPU и не меняется; с GPU-driven culling'ом — переписывается каждый кадр через <code>GraphicsBuffer.CopyCount</code> (см. <a href="03-culling.html">GPU-culling</a>)</td></tr>
+<tr><td><code>startIndex</code></td><td>смещение в index buffer меша (нужно для submesh'ей)</td></tr>
+<tr><td><code>baseVertexIndex</code></td><td>смещение в vertex buffer меша</td></tr>
+<tr><td><code>startInstance</code></td><td>с какого инстанса начинать (обычно 0)</td></tr>
+</tbody></table></div>
+<p>Один буфер аргументов = один draw call = одна пара (mesh, material). Для нескольких LOD-уровней нужен свой такой буфер на каждый уровень — см. <a href="06-lod.html">LOD</a>.</p>
+<p><strong>Как это организовано именно в этом проекте</strong>: построение такого буфера вынесено в переиспользуемый статический метод <code>GpuIndirectCullerHelpers.BuildCommandBuffer(Mesh mesh, int instanceCount)</code> (в точности код выше, обёрнутый в функцию) — общий и для пути без culling'а, и для каждого LOD-уровня отдельно.</p>
+<h3 id="3-меш">3. Меш</h3>
+<p>Обычный <code>Mesh</code> — источник вершин/индексов, ничего специального. В демо, если поле <code>_mesh</code> не назначено в инспекторе, скрипт сам временно создаёт <code>GameObject.CreatePrimitive(PrimitiveType.Cube)</code>, забирает его <code>sharedMesh</code> и уничтожает временный объект — это разовая операция в <code>OnEnable</code>, не имеет отношения к тому, что рисуется каждый кадр.</p>
+<h2 id="materialpropertyblock-зачем-он-тут">MaterialPropertyBlock: зачем он тут</h2>
+<p>Изначально буфер привязывался через <code>_material.SetBuffer(...)</code>. Это работает, но ломается в конкретный момент: если два <code>IndirectMeshRenderer</code> используют <strong>один и тот же</strong> Material asset, <code>SetBuffer</code> перезаписывает шейдерное свойство на самом asset'е — и оба компонента будут рисовать данные того, кто вызвал <code>SetBuffer</code> последним за кадр.</p>
+<p><code>MaterialPropertyBlock</code> — официальный механизм Unity для ровно этой ситуации: "один Material, но у каждого вызова отрисовки свои значения свойств поверх него". Минимальный общий паттерн, без привязки к конкретному проекту:</p>
+<pre class="code lang-csharp"><code><span class="tok-kw">var</span> propertyBlock = <span class="tok-kw">new</span> <span class="tok-type">MaterialPropertyBlock</span>();
+propertyBlock.<span class="tok-type">SetBuffer</span>(<span class="tok-type">Shader</span>.<span class="tok-type">PropertyToID</span>(<span class="tok-str">"_InstanceBuffer"</span>), yourGraphicsBuffer);
+
+<span class="tok-kw">var</span> rparams = <span class="tok-kw">new</span> <span class="tok-type">RenderParams</span>(material) { matProps = propertyBlock };
+<span class="tok-type">Graphics</span>.<span class="tok-type">RenderMeshIndirect</span>(rparams, mesh, commandBuffer);</code></pre>
+<p>В этом проекте те же самые вызовы разнесены по местам (кэш <code>Shader.PropertyToID</code> в статическое поле <code>InstanceBufferId</code>, сборка <code>RenderParams</code> в приватный метод <code>BuildRenderParams()</code>), но суть идентична. Вот он целиком, вместе с местом, откуда его реально вызывают (<code>IndirectMeshRenderer.cs</code>):</p>
+<pre class="code lang-csharp"><code><span class="tok-kw">private</span> <span class="tok-type">RenderParams</span> <span class="tok-type">BuildRenderParams</span>() =&gt; <span class="tok-kw">new</span>(_material)
+{
+    worldBounds = _bounds,
+    shadowCastingMode = <span class="tok-type">ShadowCastingMode</span>.<span class="tok-type">On</span>,
+    receiveShadows = <span class="tok-kw">true</span>,
+    matProps = _propertyBlock,
+    camera = _restrictRenderToTargetCamera ? _targetCamera : <span class="tok-kw">null</span>
+};
+
+<span class="tok-kw">private</span> <span class="tok-kw">void</span> <span class="tok-type">Update</span>()
+{
+    <span class="tok-kw">if</span> (_culler != <span class="tok-kw">null</span>)
+    {
+        <span class="tok-type">DispatchAndRenderWithCulling</span>(); <span class="tok-com">// свой путь, с culling'ом - см. GPU-culling</span>
+        <span class="tok-kw">return</span>;
+    }
+
+    <span class="tok-type">Graphics</span>.<span class="tok-type">RenderMeshIndirect</span>(<span class="tok-type">BuildRenderParams</span>(), _mesh, _legacyCommandBuffer);
+}</code></pre>
+<p>Поля <code>RenderParams</code>, если не встречали их раньше: <code>worldBounds</code> — грубые границы для встроенного Unity-culling'а (см. <a href="05-gotchas.html#известные-грабли">Известные грабли</a>, "Bounds всегда приблизительные"), <code>shadowCastingMode</code>/<code>receiveShadows</code> — обычные настройки теней, <code>matProps</code> — тот самый <code>MaterialPropertyBlock</code> с буфером, <code>camera</code> — кому конкретно рисовать (см. <a href="05-gotchas.html#камера-почему-rendermeshindirect-рисует-лишний-раз">Камера: почему RenderMeshIndirect рисует "лишний раз"</a>). Путь БЕЗ culling'а (<code>_culler == null</code>) — самый короткий возможный вызов <code>RenderMeshIndirect</code> во всём проекте, ради него стоит начинать читать код, если культинг вас пока не интересует.</p>
+<p>Материал теперь общий (<code>_sharedDefaultMaterial</code>, статик на класс) — Unity не создаёт под капотом <code>Material (Instance)</code>-копию, как это происходит при первом обращении к <code>renderer.material</code> в обычном рабочем процессе. Property Block живёт на стороне компонента и переопределяет буфер только для конкретного вызова отрисовки, материал остаётся один физический asset на сколько угодно компонентов.</p>
+<p><strong>Побочный эффект, который стоит держать в голове</strong>: MaterialPropertyBlock ломает совместимость с SRP Batcher (Unity не может закэшировать GPU-константы материала, если они переопределяются per-draw). Для одного indirect-вызова на всю "поляну" объектов это не имеет значения — SRP Batcher батчит *разные* материалы/объекты, а тут и так один draw call на всё.</p>
+<h2 id="как-расставляются-объекты">Как расставляются объекты</h2>
+<p>Вся расстановка происходит один раз в <code>GenerateInstanceData()</code> (вызывается из <code>OnEnable</code>), не каждый кадр — позже данные просто лежат в GPU-буфере и никак не пересчитываются.</p>
+<pre class="code lang-csharp"><code><span class="tok-kw">var</span> rng = <span class="tok-kw">new</span> <span class="tok-type">System</span>.<span class="tok-type">Random</span>(12345);
+<span class="tok-kw">for</span> (<span class="tok-kw">int</span> i = 0; i &lt; _instanceCount; i++)
+{
+    <span class="tok-type">Vector3</span> offset = <span class="tok-kw">new</span> <span class="tok-type">Vector3</span>(
+        (<span class="tok-kw">float</span>)(rng.<span class="tok-type">NextDouble</span>() * 2.0 - 1.0) * _spread,
+        0f,
+        (<span class="tok-kw">float</span>)(rng.<span class="tok-type">NextDouble</span>() * 2.0 - 1.0) * _spread);
+    ...
+    data[i].<span class="tok-type">Position</span> = transformHandle.position + offset;
+}</code></pre>
+<p>По шагам:</p>
+<ul><li><strong>Фиксированный seed (<code>12345</code>)</strong> — расстановка детерминированная: при каждом Play кубы окажутся ровно в тех же местах. Это осознанный выбор для отладки (сравнивать кадр к кадру, не гадать, баг это или просто новая случайность), а не случайная константа. Хотите другую расстановку при каждом запуске — замените на <code>new System.Random()</code> без аргумента (тогда seed берётся из системных часов).</li><li><strong>Область разброса</strong> — квадрат <code>2*_spread × 2*_spread</code> по осям X/Z с центром в <code>transformHandle.position</code>, <code>Y</code> всегда <code>0</code> относительно этого центра (кубы стоят на одной плоскости, не летают и не проваливаются).</li><li><strong><code>transformHandle.position</code></strong> — это позиция GameObject'а, на котором висит компонент, но прочитанная через <code>TransformHandle</code> (Unity 6.3+, полноценно с 6.5), а не через классический <code>Transform</code>. <code>TransformHandle</code> — unmanaged struct, совместимый с Burst, с тем же набором операций (<code>position</code>, <code>rotation</code>, <code>TransformPoint</code>, <code>GetChild</code> и т.д.), но без накладных расходов managed API. Практическое следствие: <strong>центр "поляны" кубов берётся из позиции GameObject'а, но только один раз, в момент запуска</strong> (см. следующий раздел про то, что будет, если подвинуть объект уже во время Play).</li><li><strong>Масштаб</strong> — <code>Mathf.Lerp(_minScale, _maxScale, random 0..1)</code>, равномерно по всем трём осям (кубы остаются кубами, не вытягиваются).</li></ul>
+<h3 id="как-это-заменить-на-реальные-данные-например-деревья-террейна">Как это заменить на реальные данные (например, деревья террейна)</h3>
+<p>Вся генерация — случайные позиции/масштаб/поворот — живёт <strong>только</strong> внутри цикла в <code>GenerateInstanceData()</code>. Всё остальное в системе (буферы, culling, шейдер) работает с готовым <code>InstanceData[]</code> и понятия не имеет, откуда взялись числа — случайные они или настоящие.</p>
+<p>Значит, чтобы вместо случайной "поляны" рисовать, например, реальные деревья террейна, меняется <strong>только</strong> тело цикла — не буферы, не шейдер, не culling:</p>
+<pre class="code lang-csharp"><code><span class="tok-type">TerrainData</span> terrainData = terrain.terrainData;
+<span class="tok-kw">var</span> data = <span class="tok-kw">new</span> <span class="tok-type">InstanceData</span>[terrainData.treeInstanceCount];
+<span class="tok-kw">for</span> (<span class="tok-kw">int</span> i = 0; i &lt; terrainData.treeInstanceCount; i++)
+{
+    <span class="tok-type">TreeInstance</span> tree = terrainData.<span class="tok-type">GetTreeInstance</span>(i);
+    <span class="tok-com">// TreeInstance.position - нормализованные 0..1 координаты внутри террейна, не мировые</span>
+    <span class="tok-type">Vector3</span> worldPos = terrain.transform.position + <span class="tok-type">Vector3</span>.<span class="tok-type">Scale</span>(tree.position, terrainData.size);
+
+    data[i] = <span class="tok-kw">new</span> <span class="tok-type">InstanceData</span>
+    {
+        <span class="tok-type">Position</span> = worldPos,
+        <span class="tok-type">Scale</span> = tree.widthScale, <span class="tok-com">// или heightScale - зависит от того, что для вас "масштаб"</span>
+        <span class="tok-type">Rotation</span> = <span class="tok-type">Quaternion</span>.<span class="tok-type">Euler</span>(0f, tree.rotation * <span class="tok-type">Mathf</span>.<span class="tok-type">Rad2Deg</span>, 0f)
+    };
+}</code></pre>
+<p>Это набросок направления, не готовый компонент — <code>TreeInstance.rotation</code> в Unity хранится в радианах (не в градусах, как остальной API), а <code>widthScale</code>/<code>heightScale</code> — это два разных числа, не одно, так что для настоящего дерева вам почти наверняка понадобится не <code>float Scale</code>, а <code>Vector3 Scale</code> в <code>InstanceData</code> (и, соответственно, в HLSL-структуре — не забудьте про правило про совпадающий layout из раздела про instance-буфер). Но сама архитектура — C# заполняет массив, остальное не меняется — рассчитана именно на такую замену источника данных.</p>
+<h2 id="как-менять-позицию-инстансов-общая-техника-не-два-конкретных-метода">Как менять позицию инстансов — общая техника, не два конкретных метода</h2>
+<p>Вся расстановка из раздела выше происходит <strong>один раз</strong>, в <code>OnEnable</code> → <code>GenerateInstanceData()</code>. После этого позиции лежат в GPU-буфере и никак сами не пересчитываются. Отсюда частый источник путаницы: <strong>если подвинуть GameObject со скриптом во время Play, кубы за ним не последуют</strong> — <code>transformHandle.position</code> был прочитан один раз, в момент создания буфера, и всё.</p>
+<p>Важно понимать не просто "какие два метода тут есть", а откуда они вообще берутся: раз данные инстанса — это байты в <code>GraphicsBuffer</code>, "подвинуть инстанс" технически всегда означает "записать в буфер новые байты по нужному смещению". Дальше — вопрос ОТКУДА эти байты берутся и КАК ЧАСТО записываются, и вариантов ровно три, каждый со своим честным компромиссом. Ниже — все три, не только те два, что реализованы в демо-компоненте.</p>
+<h3 id="техника-1-точечная-запись-с-cpu-graphicsbuffersetdata-один-элемент">Техника 1: точечная запись с CPU (<code>GraphicsBuffer.SetData</code>, один элемент)</h3>
+<pre class="code lang-csharp"><code><span class="tok-type">GraphicsBuffer</span>.<span class="tok-type">SetData</span>(data, index, index, 1);</code></pre>
+<p>Сигнатура <code>SetData(T[] source, int sourceStart, int destStart, int count)</code> — "возьми <code>count</code> элементов из массива <code>source</code>, начиная с <code>sourceStart</code>, и запиши их в буфер на GPU, начиная со смещения <code>destStart</code>".</p>
+<p>Почему это реально трогает только один элемент, а не весь буфер — дело в том, что сам GPU-буфер это плоский кусок байт, без понятия "элемент" внутри себя (это понятие есть только в вашем C#/HLSL-коде, через <code>stride</code>). <code>SetData</code> переводит (индекс, count) в конкретный <strong>диапазон байт</strong> и копирует ровно его, ничего больше. Для этого проекта <code>stride = 32</code> байта (<code>InstanceData.Stride</code>), значит вызов <code>SetData(data, 42, 42, 1)</code> копирует ровно байты <code>[42*32, 43*32)</code> = <code>[1344, 1376)</code> — 32 байта из позиции 42 массива <code>data</code> в те же 32 байта буфера на GPU. Байты до <code>1344</code> и после <code>1376</code> в этом вызове вообще не упоминаются — ни читаются, ни перезаписываются, ни сравниваются, GPU-драйвер их просто не видит в рамках этого конкретного вызова. Поэтому "не трогает остальные <code>_instanceCount - 1</code> инстансов" — не оптимизация "под капотом", а прямое следствие того, ЧТО именно вы попросили скопировать.</p>
+<p><strong>Когда уместно</strong>: событийные, нечастые изменения одного-двух инстансов — игрок взаимодействовал с конкретным объектом, скрипт телепортировал одно животное. <strong>Когда НЕ уместно</strong>: если вам нужно двигать ТЫСЯЧИ инстансов каждый кадр — да, технически можно вызвать это в цикле по всем инстансам каждый <code>Update()</code>, но тогда вы получаете тысячи отдельных вызовов <code>SetData</code> за кадр, каждый со своим API-оверхедом на CPU-стороне — то, ради чего вообще затевался GPU-driven рендер (минимум работы на CPU), при таком использовании теряется. В этом проекте цепочка вызовов — <code>IndirectMeshRenderer. SetInstancePosition(index, pos)</code> → <code>InstanceBuffer.SetPosition(index, pos)</code> (в <code>InstanceBuffer.cs</code>) → вот этот самый <code>Buffer.SetData(_data, index, index, 1)</code> — три строчки, ни одна не делает больше, чем описано выше, для нечастых точечных правок.</p>
+<h3 id="техника-2-полная-перезапись-с-cpu-graphicsbuffersetdata-весь-массив">Техника 2: полная перезапись с CPU (<code>GraphicsBuffer.SetData</code>, весь массив)</h3>
+<pre class="code lang-csharp"><code><span class="tok-type">GraphicsBuffer</span>.<span class="tok-type">SetData</span>(data); <span class="tok-com">// весь InstanceData[] целиком</span></code></pre>
+<p>Без смещений — весь массив разом. <strong>Когда уместно</strong>: редкое, но массовое изменение — все инстансы сразу должны сдвинуться/пересчитаться (например, "поляна" целиком переехала вслед за объектом). <strong>Когда НЕ уместно</strong>: каждый кадр для большого <code>_instanceCount</code> — весь буфер перезаливается целиком, и перед этим CPU должен сначала в цикле на C#-стороне пересчитать все элементы массива — двойная работа, которую GPU-driven архитектура как раз должна была устранить. Цепочка вызовов в этом проекте — <code>IndirectMeshRenderer.RecenterToTransform()</code> → <code>InstanceBuffer.Offset(delta)</code> → <code>Buffer.SetData(_data)</code> целиком — намеренно НЕ вызывается сама по себе каждый кадр, только по явному разовому событию.</p>
+<blockquote><p>После <code>RecenterToTransform()</code> не забывайте, что <code>RenderParams.worldBounds</code> тоже пересчитывается (<code>_bounds.center</code> обновляется внутри метода) — иначе Unity может отбраковать всю "поляну" по старым, неактуальным границам.</p></blockquote>
+<h3 id="техника-3-движение-прямо-на-gpu-без-участия-cpu-вообще">Техника 3: движение прямо на GPU, без участия CPU вообще</h3>
+<p>Это техника, которой в демо-компоненте этого проекта НЕТ, но именно она — правильный ответ на "как двигать тысячи инстансов каждый кадр" в духе всей этой архитектуры: <strong>не гонять данные через CPU каждый кадр вообще</strong>, а посчитать новые позиции ПРЯМО на GPU, отдельным compute shader'ом, который читает И ПИШЕТ тот же самый <code>_instances.Buffer</code> (реальный <code>GraphicsBuffer</code> внутри <code>InstanceBuffer</code>) на месте.</p>
+<p>Разница с culling-шейдером (<a href="03-culling.html">GPU-culling</a>) в одной детали объявления буфера:</p>
+<pre class="code lang-hlsl"><code><span class="tok-com">// Culling-шейдер ТОЛЬКО читает исходные данные:</span>
+StructuredBuffer&lt;InstanceData&gt; _AllInstances;
+
+<span class="tok-com">// Шейдер движения ЧИТАЕТ И ПИШЕТ один и тот же буфер:</span>
+RWStructuredBuffer&lt;InstanceData&gt; _AllInstances;</code></pre>
+<p><code>RWStructuredBuffer</code> (read-write) — то же самое хранилище, но с правом записи. Дальше — обычный compute shader, по потоку на инстанс, который вычисляет новую позицию и <strong>пишет её обратно в тот же элемент буфера</strong>, откуда только что прочитал:</p>
+<pre class="code lang-hlsl"><code>#pragma kernel CSMove
+
+RWStructuredBuffer&lt;InstanceData&gt; _AllInstances;
+<span class="tok-kw">uint</span> _InstanceCount;
+<span class="tok-kw">float</span> _DeltaTime;
+<span class="tok-kw">float</span> _WindSpeed;
+
+[numthreads(64, 1, 1)]
+<span class="tok-kw">void</span> CSMove(uint3 id : SV_DispatchThreadID)
+{
+    <span class="tok-kw">uint</span> index = id.x;
+    <span class="tok-kw">if</span> (index &gt;= _InstanceCount) <span class="tok-kw">return</span>;
+
+    InstanceData inst = _AllInstances[index];
+    inst.position.x += _WindSpeed * _DeltaTime; <span class="tok-com">// любая логика движения - ветер, гравитация, путь</span>
+    _AllInstances[index] = inst;
+}</code></pre>
+<p>C#-сторона каждый кадр передаёт только несколько чисел (не данные инстансов!) и один раз диспатчит:</p>
+<pre class="code lang-csharp"><code>_movementShader.<span class="tok-type">SetBuffer</span>(_moveKernel, <span class="tok-str">"_AllInstances"</span>, _instances.<span class="tok-type">Buffer</span>);
+_movementShader.<span class="tok-type">SetInt</span>(<span class="tok-str">"_InstanceCount"</span>, _instanceCount);
+_movementShader.<span class="tok-type">SetFloat</span>(<span class="tok-str">"_DeltaTime"</span>, <span class="tok-type">Time</span>.deltaTime);
+_movementShader.<span class="tok-type">SetFloat</span>(<span class="tok-str">"_WindSpeed"</span>, _windSpeed);
+_movementShader.<span class="tok-type">Dispatch</span>(_moveKernel, <span class="tok-type">Mathf</span>.<span class="tok-type">CeilToInt</span>(_instanceCount / 64f), 1, 1);</code></pre>
+<p>CPU тут не трогает ни один байт данных инстансов — ни разу не читает и не пишет <code>InstanceData[]</code> на своей стороне. Вся тысяча (или миллион) обновлений позиций считается параллельно на GPU, за один dispatch. Это и есть тот самый принцип "GPU решает, а не CPU", который уже применён к отбраковке (<a href="03-culling.html">GPU-culling</a>) — применённый теперь к самому движению.</p>
+<p><strong>Практические следствия, если будете писать такой шейдер сами</strong>:</p>
+<ul><li>Один и тот же <code>GraphicsBuffer</code> (<code>_instances.Buffer</code>) можно спокойно передавать И в шейдер движения (как <code>RWStructuredBuffer</code>, на запись), И в culling-шейдер (как <code>StructuredBuffer</code>, на чтение) — это один физический буфер на GPU, разные шейдеры просто по-разному объявляют доступ к нему.</li><li>Порядок в <code>Update()</code> имеет значение: если движение должно повлиять на то, что попадёт в этот же кадр culling'а — диспатчите шейдер движения ДО диспатча culling'а, не после.</li><li>Никакой синхронной блокировки/<code>GetData()</code> тут не нужно (в отличие от диагностики в <a href="04-diagnostics.html">Диагностике</a>) — данные остаются на GPU от записи до следующего чтения тем же или другим шейдером, CPU в этот обмен не вовлечён вообще.</li></ul>
+<h3 id="как-выбрать-технику">Как выбрать технику</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Сценарий</th><th>Техника</th></tr></thead>
+<tbody>
+<tr><td>Одно/несколько событийных изменений в кадр (не каждый кадр)</td><td>1 — точечная запись</td></tr>
+<tr><td>Редкое массовое изменение всех сразу (не каждый кадр)</td><td>2 — полная перезапись</td></tr>
+<tr><td>Много инстансов, движение каждый кадр (анимация, физика, ветер, путь)</td><td>3 — шейдер движения на GPU</td></tr>
+</tbody></table></div>
+<h3 id="откуда-брать-индекс-инстанса-и-как-на-него-посмотреть">Откуда брать индекс инстанса, и как на него посмотреть</h3>
+<p>Все техники выше требуют индекс — <code>SetInstancePosition(index, ...)</code>, <code>_AllInstances[index]</code> в шейдере. Индекс — это НЕ идентичность/имя инстанса, ничего похожего на GUID или ссылку на объект. Это буквально "какая по счёту позиция в массиве" — число от <code>0</code> до <code>_instanceCount - 1</code>, и только то, что вы сами туда положили в этой позиции, там и лежит.</p>
+<p><strong>Если вы сами создали инстанс</strong> — индекс у вас уже есть, это была переменная цикла в момент создания (<code>for (int i = 0; i &lt; _instanceCount; i++) data[i] = ...</code>). Дальше просто сохраните это число там, где храните остальное состояние вашей игровой сущности — например, в обычном C#-классе "мой логический медведь" (не <code>GameObject</code> — в этой технике инстансы физически не являются GameObject'ами, значит и обвязку для них нужно писать свою, тем же принципом "без GameObject на каждый инстанс"):</p>
+<pre class="code lang-csharp"><code><span class="tok-kw">public</span> <span class="tok-kw">class</span> <span class="tok-type">BearAgent</span>
+{
+    <span class="tok-kw">public</span> <span class="tok-kw">int</span> <span class="tok-type">InstanceIndex</span>; <span class="tok-com">// индекс в GPU-буфере IndirectMeshRenderer</span>
+    <span class="tok-kw">public</span> <span class="tok-kw">float</span> <span class="tok-type">Health</span>;
+    <span class="tok-com">// ... остальное состояние вашей игровой логики</span>
+}</code></pre>
+<p><strong>Если индекс неизвестен заранее</strong> — например, нужно найти "ближайшего к точке инстанса" или "инстанс под курсором" — у инстансов нет <code>Collider</code>'ов (GameObject'ов нет физически), поэтому <code>Physics.Raycast</code> их не увидит. Для небольшого/умеренного количества инстансов (десятки тысяч, поиск не каждый кадр, а по событию — клик, редкий AI-запрос) достаточно обычного линейного перебора по CPU-стороне буфера:</p>
+<pre class="code lang-csharp"><code><span class="tok-kw">int</span> <span class="tok-type">FindClosestIndex</span>(<span class="tok-type">InstanceBuffer</span> instances, <span class="tok-type">Vector3</span> point)
+{
+    <span class="tok-kw">int</span> closest = -1;
+    <span class="tok-kw">float</span> closestDistSq = <span class="tok-kw">float</span>.<span class="tok-type">MaxValue</span>;
+    <span class="tok-kw">for</span> (<span class="tok-kw">int</span> i = 0; i &lt; instances.<span class="tok-type">Count</span>; i++)
+    {
+        <span class="tok-kw">float</span> distSq = (instances.<span class="tok-type">Get</span>(i).<span class="tok-type">Position</span> - point).sqrMagnitude;
+        <span class="tok-kw">if</span> (distSq &lt; closestDistSq) { closestDistSq = distSq; closest = i; }
+    }
+    <span class="tok-kw">return</span> closest;
+}</code></pre>
+<p>Если такой поиск нужен каждый кадр и инстансов реально много (сотни тысяч+) — линейный перебор на CPU станет узким местом, и понадобится собственная пространственная структура (сетка/grid, kd-tree) или GPU-picking (рендер индексов вместо цвета в отдельный буфер, чтение под курсором) — за рамками этого демо, но это тот случай, когда наивный перебор перестаёт годиться.</p>
+<p><strong>Посмотреть, что реально лежит по конкретному индексу</strong> — <code>InstanceBuffer.Get(index)</code> возвращает данные без обращения к GPU (буфер хранит копию массива на CPU-стороне специально для этого). Но здесь есть ловушка, если вы используете Технику 3 (движение на GPU): та CPU-копия заполняется только при создании буфера/через <code>SetPosition</code>/<code>Offset</code> — если позиции меняются ПРЯМО НА GPU через свой compute shader, CPU-копия про это ничего не узнаёт и начинает врать. Для честного чтения текущих данных в этом случае нужен настоящий readback (<code>GraphicsBuffer.GetData</code>, синхронный, с задержкой кадра-двух) — тот же приём, что уже используется для диагностики culling'а, см. <a href="04-diagnostics.html">Диагностику</a>.</p>
+<p><strong>Посмотреть индексы визуально, в Scene view</strong> — уже есть гизмо <code>_debugShowAllFrustumStatus</code> (<a href="04-diagnostics.html">Диагностика</a>), но по умолчанию подписывает индексом только КРАСНЫЕ (отбракованные) сферы — иначе тысяча подписей друг на друге нечитаема. Если нужно увидеть индекс ЛЮБОГО инстанса, а не только отбракованных — в <code>IndirectMeshRenderer.OnDrawGizmos()</code> уберите условие <code>if (!inside)</code> перед вызовом <code>UnityEditor.Handles.Label(...)</code>, оставив только сам вызов (учитывайте, что подписи тысяч инстансов сразу забьют Scene view — включайте на небольшом <code>_instanceCount</code> или временно).</p>
+<h2 id="поворот-инстансов">Поворот инстансов</h2>
+<p>Добавлен <code>Quaternion Rotation</code> в <code>InstanceData</code> — поворот вокруг вертикальной оси (Y), диапазон настраивается полями <code>_minYRotation</code>/<code>_maxYRotation</code> (по умолчанию 0°..360°, то есть полностью случайный поворот на месте):</p>
+<pre class="code lang-csharp"><code><span class="tok-kw">float</span> yAngle = <span class="tok-type">Mathf</span>.<span class="tok-type">Lerp</span>(_minYRotation, _maxYRotation, (<span class="tok-kw">float</span>)rng.<span class="tok-type">NextDouble</span>());
+data[i].<span class="tok-type">Rotation</span> = <span class="tok-type">Quaternion</span>.<span class="tok-type">Euler</span>(0f, yAngle, 0f);</code></pre>
+<p>Почему именно Y, а не произвольный 3D-поворот: это стандартный паттерн для "объектов, стоящих на земле" (деревья, камни, трава) — им не нужно заваливаться на бок, только поворачиваться вокруг вертикали. Сам механизм ниже — универсальный кватернион, так что при желании ничто не мешает генерировать <code>Quaternion.Euler(x, y, z)</code> с произвольными углами по всем осям.</p>
+<p>В шейдере кватернион нужно применить к вершине <strong>до</strong> масштабирования и переноса, а также отдельно к нормали (иначе освещение будет вести себя так, будто куб не повернулся):</p>
+<pre class="code lang-hlsl"><code><span class="tok-kw">float3</span> RotateByQuaternion(<span class="tok-kw">float3</span> v, <span class="tok-kw">float4</span> q)
+{
+    <span class="tok-kw">return</span> v + 2.0 * cross(q.xyz, cross(q.xyz, v) + q.w * v);
+}
+
+<span class="tok-kw">float3</span> rotatedPositionOS = RotateByQuaternion(IN.positionOS, inst.rotation);
+<span class="tok-kw">float3</span> positionWS = rotatedPositionOS * inst.scale + inst.position;
+OUT.normalWS = RotateByQuaternion(IN.normalOS, inst.rotation);</code></pre>
+<p>Это стандартная формула поворота вектора кватернионом (без перехода через матрицу 3×3) — дешевле на GPU, чем собирать полную rotation-матрицу ради одного умножения.</p>
+<h2 id="путь-одного-инстанса-от-буфера-до-пикселя">Путь одного инстанса от буфера до пикселя</h2>
+<ol><li>GPU получает команду "нарисуй <code>instanceCount</code> копий меша" из буфера аргументов.</li><li>Для инстанса номер <code>i</code> в vertex shader аппаратно устанавливается <code>SV_InstanceID = i</code> — это чистый Direct3D/Vulkan механизм, он не имеет отношения к Unity-макросам вроде <code>UNITY_SETUP_INSTANCE_ID</code> (те нужны только для *классического* чекбокса "Enable GPU Instancing" и работают иначе — через per-instance-property массивы, а не произвольный буфер).</li><li>Шейдер читает <code>_InstanceBuffer[IN.instanceID]</code> — получает позицию, масштаб и поворот именно этого инстанса.</li><li>Вершина поворачивается кватернионом, масштабируется и сдвигается на мировую позицию инстанса — всё вручную, в самом шейдере.</li><li><code>TransformWorldToHClip(positionWS)</code> — сразу переводим в clip space, <strong>минуя</strong> <code>unity_ObjectToWorld</code>.</li></ol>
+<p>Пункт 5 — специфика ручного indirect-рендера: у вызова <code>RenderMeshIndirect</code> нет привязанного <code>Transform</code>, поэтому <code>unity_ObjectToWorld</code> для него не имеет смысла (в этом демо он не используется вообще внутри шейдера). Расстановка кубов относительно <code>transformHandle.position</code> (см. раздел выше) происходит на CPU при заполнении буфера, а не через стандартный механизм трансформации в шейдере — это два разных места, не перепутайте при отладке.</p>
+<div class="pager"><a class="prev" href="01-quickstart.html"><span class="dir">Назад</span>Быстрый старт</a><a class="next" href="02b-compute-shaders.html"><span class="dir">Дальше</span>Свои ComputeShader</a></div>
+</main>
+<aside class="onpage">
+  <div class="label">На этой странице</div>
+  <a class="" href="#зачем-вообще-нужен-rendermeshindirect">Зачем вообще нужен RenderMeshIndirect</a>
+<a class="" href="#синтаксис-graphicsrendermeshindirect">Синтаксис Graphics.RenderMeshIndirect</a>
+<a class="" href="#синтаксис-renderparams">Синтаксис RenderParams</a>
+<a class="" href="#три-буфера-которые-нужно-понимать">Три буфера, которые нужно понимать</a>
+<a class="h3" href="#1-instance-буфер-graphicsbuffertargetstructured">1. Instance-буфер (GraphicsBuffer.Target.Structured)</a>
+<a class="h3" href="#2-буфер-аргументов-отрисовки-graphicsbuffertargetindirectarguments">2. Буфер аргументов отрисовки (GraphicsBuffer.Target.IndirectArguments)</a>
+<a class="h3" href="#3-меш">3. Меш</a>
+<a class="" href="#materialpropertyblock-зачем-он-тут">MaterialPropertyBlock: зачем он тут</a>
+<a class="" href="#как-расставляются-объекты">Как расставляются объекты</a>
+<a class="h3" href="#как-это-заменить-на-реальные-данные-например-деревья-террейна">Как это заменить на реальные данные (например, деревья террейна)</a>
+<a class="" href="#как-менять-позицию-инстансов-общая-техника-не-два-конкретных-метода">Как менять позицию инстансов — общая техника, не два конкретных метода</a>
+<a class="h3" href="#техника-1-точечная-запись-с-cpu-graphicsbuffersetdata-один-элемент">Техника 1: точечная запись с CPU (GraphicsBuffer.SetData, один элемент)</a>
+<a class="h3" href="#техника-2-полная-перезапись-с-cpu-graphicsbuffersetdata-весь-массив">Техника 2: полная перезапись с CPU (GraphicsBuffer.SetData, весь массив)</a>
+<a class="h3" href="#техника-3-движение-прямо-на-gpu-без-участия-cpu-вообще">Техника 3: движение прямо на GPU, без участия CPU вообще</a>
+<a class="h3" href="#как-выбрать-технику">Как выбрать технику</a>
+<a class="h3" href="#откуда-брать-индекс-инстанса-и-как-на-него-посмотреть">Откуда брать индекс инстанса, и как на него посмотреть</a>
+<a class="" href="#поворот-инстансов">Поворот инстансов</a>
+<a class="" href="#путь-одного-инстанса-от-буфера-до-пикселя">Путь одного инстанса от буфера до пикселя</a>
+</aside>
+</div>
+</body>
+</html>

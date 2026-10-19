@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SwarmCrowd (Burst) — SwarmNav</title>
+<style>
+:root {
+  --base: #1e1e2e; --mantle: #181825; --crust: #11111b;
+  --surface0: #313244; --surface1: #45475a; --surface2: #585b70;
+  --overlay0: #6c7086; --overlay1: #7f849c;
+  --text: #cdd6f4; --subtext1: #bac2de; --subtext0: #a6adc8;
+  --rosewater: #f5e0dc; --flamingo: #f2cdcd; --pink: #f5c2e7; --mauve: #cba6f7;
+  --red: #f38ba8; --maroon: #eba0ac; --peach: #fab387; --yellow: #f9e2af;
+  --green: #a6e3a1; --teal: #94e2d5; --sky: #89dceb; --sapphire: #74c7ec;
+  --blue: #89b4fa; --lavender: #b4befe;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0; background: var(--base); color: var(--text);
+  font-family: -apple-system, "Segoe UI", "Noto Sans", "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.7; font-size: 16px;
+}
+.layout {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr) 220px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+.sidebar {
+  position: sticky; top: 0; align-self: start; height: 100vh; overflow-y: auto;
+  padding: 1.8rem 1.2rem; border-right: 1px solid var(--surface1);
+}
+.sidebar .brand {
+  font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--crust); background: var(--mauve); display: inline-block;
+  padding: 0.15rem 0.6rem; border-radius: 999px; font-weight: 700; margin-bottom: 1.4rem;
+}
+.sidebar nav a {
+  display: block; padding: 0.5rem 0.7rem; margin: 0.1rem 0; border-radius: 7px;
+  color: var(--subtext1); text-decoration: none; font-size: 0.92rem; border-bottom: none;
+  transition: background 0.12s, color 0.12s;
+}
+.sidebar nav a:hover { background: var(--surface0); color: var(--text); }
+.sidebar nav a.active { background: var(--mauve); color: var(--crust); font-weight: 700; }
+.sidebar nav .part-label {
+  font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--overlay0);
+  margin: 1.1rem 0 0.3rem 0.7rem;
+}
+.content { padding: 2.6rem 2.6rem 5rem; min-width: 0; }
+.onpage {
+  position: sticky; top: 0; align-self: start; height: 100vh; overflow-y: auto;
+  padding: 2.6rem 1.2rem;
+}
+.onpage .label {
+  font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--overlay0);
+  margin-bottom: 0.6rem;
+}
+.onpage a {
+  display: block; padding: 0.28rem 0; color: var(--subtext0); text-decoration: none;
+  font-size: 0.86rem; border-bottom: none; border-left: 2px solid transparent; padding-left: 0.7rem;
+}
+.onpage a.h3 { padding-left: 1.4rem; font-size: 0.82rem; }
+.onpage a:hover { color: var(--sapphire); border-left-color: var(--sapphire); }
+
+h1, h2, h3 { font-weight: 700; line-height: 1.3; scroll-margin-top: 1.5rem; }
+h1 { font-size: 2rem; color: var(--mauve); margin: 0 0 0.6rem; }
+.page-kicker {
+  font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--peach);
+  font-weight: 700; margin-bottom: 0.5rem;
+}
+h2 { font-size: 1.4rem; color: var(--blue); margin: 2.4rem 0 1rem; padding-bottom: 0.4rem; border-bottom: 1px solid var(--surface1); }
+h3 { font-size: 1.1rem; color: var(--sky); margin: 1.8rem 0 0.8rem; }
+p { margin: 0.9rem 0; color: var(--text); }
+a { color: var(--sapphire); text-decoration: none; border-bottom: 1px solid rgba(116, 199, 236, 0.35); }
+a:hover { color: var(--lavender); border-bottom-color: var(--lavender); }
+strong { color: var(--peach); font-weight: 700; }
+code {
+  font-family: "JetBrains Mono", "Fira Code", Consolas, "Liberation Mono", monospace;
+  font-size: 0.86em; background: var(--surface0); color: var(--peach);
+  padding: 0.15em 0.4em; border-radius: 5px;
+}
+pre.code {
+  background: var(--mantle); border: 1px solid var(--surface1); border-radius: 10px;
+  padding: 1rem 1.2rem; overflow-x: auto; margin: 1.1rem 0;
+}
+pre.code code { background: none; color: var(--text); padding: 0; font-size: 0.85em; border-radius: 0; }
+.tok-kw { color: var(--mauve); font-weight: 600; }
+.tok-type { color: var(--yellow); }
+.tok-str { color: var(--green); }
+.tok-com { color: var(--overlay0); font-style: italic; }
+blockquote {
+  margin: 1.1rem 0; padding: 0.15rem 1.1rem; border-left: 3px solid var(--peach);
+  background: var(--surface0); border-radius: 0 8px 8px 0; color: var(--subtext1);
+}
+blockquote p { margin: 0.6rem 0; }
+ul, ol { padding-left: 1.4rem; margin: 0.9rem 0; }
+li { margin: 0.45rem 0; }
+hr { border: none; border-top: 1px solid var(--surface1); margin: 2.2rem 0; }
+.table-wrap { overflow-x: auto; margin: 1.1rem 0; }
+table { border-collapse: collapse; width: 100%; font-size: 0.92em; }
+th, td { border: 1px solid var(--surface1); padding: 0.55rem 0.8rem; text-align: left; vertical-align: top; }
+th { background: var(--surface0); color: var(--lavender); }
+tbody tr:nth-child(odd) { background: rgba(49, 50, 68, 0.35); }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+.card {
+  display: block; padding: 1.1rem 1.2rem; background: var(--mantle); border: 1px solid var(--surface1);
+  border-radius: 12px; text-decoration: none; border-bottom: 1px solid var(--surface1); transition: border-color 0.12s, transform 0.12s;
+}
+.card:hover { border-color: var(--mauve); transform: translateY(-2px); }
+.card .card-title { color: var(--text); font-weight: 700; font-size: 1rem; margin-bottom: 0.3rem; display: block; }
+.card .card-desc { color: var(--subtext0); font-size: 0.86rem; }
+.pager { display: flex; justify-content: space-between; margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--surface1); gap: 1rem; }
+.pager a {
+  border: 1px solid var(--surface1); border-radius: 10px; padding: 0.8rem 1.1rem; flex: 1;
+  border-bottom: 1px solid var(--surface1); color: var(--text);
+}
+.pager a:hover { border-color: var(--mauve); }
+.pager .dir { font-size: 0.72rem; text-transform: uppercase; color: var(--overlay0); display: block; margin-bottom: 0.2rem; }
+.pager .next { text-align: right; }
+::selection { background: var(--surface2); color: var(--rosewater); }
+@media (max-width: 1100px) {
+  .layout { grid-template-columns: 220px minmax(0, 1fr); }
+  .onpage { display: none; }
+}
+@media (max-width: 760px) {
+  .layout { grid-template-columns: 1fr; }
+  .sidebar { position: relative; height: auto; border-right: none; border-bottom: 1px solid var(--surface1); }
+  .content { padding: 1.6rem 1.2rem 3rem; }
+}
+
+</style>
+</head>
+<body>
+<div class="layout">
+<aside class="sidebar">
+  <span class="brand">Catppuccin Mocha</span>
+  <nav><div class="part-label">SwarmNav</div>
+<a class="" href="index.html">Обзор</a>
+<a class="" href="01-quickstart.html">Быстрый старт</a>
+<a class="" href="02-swarm-agent.html">SwarmAgent (просто)</a>
+<a class="active" href="03-swarm-crowd.html">SwarmCrowd (Burst)</a>
+<a class="" href="04-how-it-works.html">Как это работает</a>
+<a class="" href="05-advanced.html">Расширенные темы</a>
+<a class="" href="06-SwarmNav-recipes.html">Рецепты</a>
+<a class="" href="07-performance.html">Производительность (GPU)</a>
+<a class="" href="08-behaviour-and-lod.html">Поведение и LOD</a>
+<a class="" href="09-ai-integration.html">Подключение ИИ</a>
+</nav>
+</aside>
+<main class="content">
+<div class="page-kicker">SwarmNav</div>
+<h1 id="swarmcrowd-мост-между-swarmnav-и-gameobject">SwarmCrowd: мост между SwarmNav и GameObject</h1>
+<p><code>SwarmAgent</code> ничего не считает сам - он регистрируется в одном общем <code>SwarmCrowd</code> и форвардит вызовы по хэндлу.
+<code>SwarmCrowd</code> хранит всё, что касается именно <code>Transform</code>, а навигацию целиком отдаёт <code>SwarmNav</code>.</p>
+<h2 id="1-что-делает-swarmcrowd-а-что-swarmnav">1. Что делает SwarmCrowd, а что SwarmNav</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th></th>
+<th><code>SwarmNav</code></th>
+<th><code>SwarmCrowd</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Пути, шаг по NavMesh, высота, разведение, LOD</td>
+<td>да</td>
+<td>нет</td>
+</tr>
+<tr>
+<td>Цели (<code>SetDestination</code>), статус пути</td>
+<td>да</td>
+<td>форвардит</td>
+</tr>
+<tr>
+<td><code>TransformAccessArray</code> из <code>TransformHandle</code></td>
+<td>нет</td>
+<td>да</td>
+</tr>
+<tr>
+<td>Поворот, <code>baseOffset</code>, <code>updatePosition/Rotation</code></td>
+<td>нет</td>
+<td>да</td>
+</tr>
+<tr>
+<td>Цель-<code>Transform</code> (погоня): чтение позиции раз в кадр</td>
+<td>нет</td>
+<td>да</td>
+</tr>
+<tr>
+<td>Сглаживание рывков дальних агентов</td>
+<td>нет</td>
+<td>да</td>
+</tr>
+</tbody>
+</table></div>
+<p><code>SwarmNav</code> не знает про <code>Transform</code> вообще (для <code>RenderMeshIndirect</code> он используется напрямую,
+<code>05-advanced.md</code>), поэтому границу провели так.</p>
+<h2 id="2-кадр-swarmcrowd">2. Кадр SwarmCrowd</h2>
+<p>Драйвер <code>SwarmCrowdDriver</code> (один <code>MonoBehaviour</code> на сцену, создаётся сам) делает два вызова:</p>
+<ol>
+<li><strong><code>Update()</code></strong> -&gt; <code>SwarmCrowd.Schedule(dt)</code>:<ul>
+<li>читает позицию каждой цели погони (один раз на уникальный <code>Transform</code>) и передаёт в <code>SwarmNav</code>;</li>
+<li><code>SwarmNav.ScheduleTick(dt)</code> ставит цепочку джобов (<code>04-how-it-works.md</code>);</li>
+<li>после неё ставится <code>WriteTransformsJob</code> (<code>IJobParallelForTransform</code>), зависящий от джоба шага.</li>
+</ul>
+</li>
+<li><strong><code>LateUpdate()</code></strong> -&gt; <code>SwarmCrowd.Complete()</code> дожидается цепочки.</li>
+</ol>
+<p>Между этими вызовами воркеры считают параллельно с остальным кодом игры (<code>Update</code> других скриптов, анимации).
+Если какой-то скрипт в этом промежутке читает данные агента (<code>agent.remainingDistance</code>, <code>Warp</code> и т.п.), первое
+такое обращение само дожидается джобов (<code>Sync</code>), остальные уже бесплатны.</p>
+<h2 id="3-как-записывается-transform">3. Как записывается Transform</h2>
+<p><code>TransformAccessArray</code> строится из <code>TransformHandle</code> (<code>go.transformHandle</code>), а не из <code>Transform</code>: <code>TransformHandle</code> -
+unmanaged-структура, ей не нужен managed-объект. Запись идёт в <code>IJobParallelForTransform</code>:</p>
+<pre class="code"><code>public void Execute(int i, TransformAccess transform)
+{
+    SwarmAgentState agent = Agents[Slots[i]];
+    // позиция - только если изменилась, поворот - плавно к Velocity
+    transform.SetPositionAndRotation(pos, rotation);   // одним вызовом, если нужны оба
+}
+</code></pre>
+<p>Принципы, которые держат эту запись быстрой:</p>
+<ul>
+<li><strong>Пишем только при изменении.</strong> <code>LastPositions[i]</code> хранит то, что записали в прошлый раз; стоящий агент не трогает <code>Transform</code>.</li>
+<li><strong><code>SetPositionAndRotation</code> одним вызовом</strong>, а не два присваивания.</li>
+<li><strong>Поворот считаем, когда агент сдвинулся</strong>, а не каждый кадр на всех: <code>RotateTowards</code> (угол + <code>slerp</code>) - самая дорогая
+  арифметика в джобе.</li>
+<li><strong><code>TransformAccessArray(capacity, desiredJobCount)</code></strong> с <code>desiredJobCount = 128</code> (<code>TransformJobCount</code>): Unity делит
+  работу по иерархиям (корням), а 128 частей раскидывает её по воркерам ровнее.</li>
+<li><strong>Агенты должны лежать в корне сцены</strong> (или под разными родителями): тысячи агентов под одним родителем
+  считаются в один поток.</li>
+</ul>
+<h2 id="4-почему-два-джоба-а-не-один">4. Почему два джоба, а не один</h2>
+<p>Расчёт шага (<code>SwarmMoveJob</code>, внутри <code>NavWorld.MoveLocation</code>) и запись <code>Transform</code> (<code>WriteTransformsJob</code>) - два
+отдельных джоба. Одним <code>IJobParallelForTransform</code> было хуже: на замере <code>MoveLocation</code> внутри
+<code>IJobParallelForTransform</code> работал в ~5 раз медленнее (20-25 мс на 20 000 агентов), чем тот же вызов в обычном
+<code>IJobParallelFor</code> (≈2 мс), потому что <code>IJobParallelForTransform</code> делит работу по иерархиям <code>Transform</code>, а не равномерно по
+индексам. Разделение вернуло скорость (6,6-7,4 мс вместе до LOD, затем 2-3 мс с LOD).</p>
+<h2 id="5-сглаживание-рывков-у-lod">5. Сглаживание рывков у LOD</h2>
+<p>Mid и Far агенты шагают раз в 2-4 кадра с накопленным <code>dt</code>. Позиция меняется скачком, и издалека видно дрожание.
+<code>WriteTransformsJob</code> для Mid/Far показывает не настоящую позицию, а догоняющую: она приближается к настоящей на
+скорости агента (<code>speed * LodSmoothing</code>, по умолчанию 1,3), без скачка. Телепорт, <code>Warp</code> и прыжок по <code>NavMeshLink</code>
+(расстояние больше 8 м) переносятся сразу.</p>
+<p>Сглаживание стоит денег: каждый такой агент пишет <code>Transform</code> каждый кадр, а не раз в N кадров. Поэтому оно
+включено <strong>только для дальних агентов внутри кадра камеры</strong> (6 плоскостей <code>GeometryUtility.CalculateFrustumPlanes</code>
+для <code>Camera.main</code>, запас 3 м). За кадром агент пишется на своём шаге, как без сглаживания. Замер 20 000 агентов:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Вариант</th>
+<th>Ожидание навигации p50</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Без сглаживания</td>
+<td>≈2,2 мс</td>
+</tr>
+<tr>
+<td>Сглаживание всех Mid/Far</td>
+<td>3,8-5 мс</td>
+</tr>
+<tr>
+<td>Сглаживание только Mid/Far в кадре</td>
+<td>1,6-1,8 мс (в этом прогоне, шум машины ±30%)</td>
+</tr>
+</tbody>
+</table></div>
+<p><code>LodSmoothing = 0</code> выключает сглаживание. Для <code>RenderMeshIndirect</code> сглаживание в <code>SwarmCrowd</code> не участвует
+(<code>Transform</code> там нет); его нужно делать в своём джобе записи инстансов.</p>
+<h2 id="6-api-swarmcrowd">6. API SwarmCrowd</h2>
+<p>Прямое использование нужно, если не хочется компонента на каждом <code>GameObject</code>:</p>
+<pre class="code"><code>SwarmCrowd crowd = new SwarmCrowd(settings, 20000);
+SwarmNavHandle h = crowd.AddAgent(go, speed: 3.5f, stoppingDistance: 0.5f, baseOffset: 0.5f);
+crowd.SetDestination(h, new Vector3(10, 0, 5));
+// каждый кадр: crowd.Schedule(dt) в Update, crowd.Complete() в LateUpdate
+crowd.RemoveAgent(h);
+crowd.Dispose();
+</code></pre>
+<p>Через <code>SwarmAgent</code> это всё делается само; <code>SwarmNavRuntime</code> держит общий <code>SwarmCrowd</code> и драйвер.
+Методы <code>SwarmCrowd</code> повторяют <code>SwarmAgent</code> (по хэндлу): <code>SetDestination</code> (<code>Vector3</code>/<code>TransformHandle</code>), <code>ResetPath</code>,
+<code>SetStopped</code>, <code>SetSpeed</code>, <code>SetStoppingDistance</code>, <code>SetBaseOffset</code>, <code>SetAngularSpeed</code>, <code>SetUpdatePosition</code>,
+<code>SetUpdateRotation</code>, <code>GetRemainingDistance</code>, <code>HasDestination</code>, <code>GetPathStatus</code>, <code>IsOnNavMesh</code>, <code>Warp</code>, <code>SyncPosition</code>, <code>Move</code>.</p>
+<div class="pager"><a href="02-swarm-agent.html"><span class="dir">Назад</span>SwarmAgent (просто)</a><a class="next" href="04-how-it-works.html"><span class="dir">Дальше</span>Как это работает</a></div>
+</main>
+<aside class="onpage">
+  <div class="label">На этой странице</div>
+<a class="" href="#1-что-делает-swarmcrowd-а-что-swarmnav">1. Что делает SwarmCrowd, а что SwarmNav</a>
+<a class="" href="#2-кадр-swarmcrowd">2. Кадр SwarmCrowd</a>
+<a class="" href="#3-как-записывается-transform">3. Как записывается Transform</a>
+<a class="" href="#4-почему-два-джоба-а-не-один">4. Почему два джоба, а не один</a>
+<a class="" href="#5-сглаживание-рывков-у-lod">5. Сглаживание рывков у LOD</a>
+<a class="" href="#6-api-swarmcrowd">6. API SwarmCrowd</a>
+</aside>
+</div>
+</body>
+</html>

@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Подключение ИИ — SwarmNav</title>
+<style>
+:root {
+  --base: #1e1e2e; --mantle: #181825; --crust: #11111b;
+  --surface0: #313244; --surface1: #45475a; --surface2: #585b70;
+  --overlay0: #6c7086; --overlay1: #7f849c;
+  --text: #cdd6f4; --subtext1: #bac2de; --subtext0: #a6adc8;
+  --rosewater: #f5e0dc; --flamingo: #f2cdcd; --pink: #f5c2e7; --mauve: #cba6f7;
+  --red: #f38ba8; --maroon: #eba0ac; --peach: #fab387; --yellow: #f9e2af;
+  --green: #a6e3a1; --teal: #94e2d5; --sky: #89dceb; --sapphire: #74c7ec;
+  --blue: #89b4fa; --lavender: #b4befe;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0; background: var(--base); color: var(--text);
+  font-family: -apple-system, "Segoe UI", "Noto Sans", "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.7; font-size: 16px;
+}
+.layout {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr) 220px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+.sidebar {
+  position: sticky; top: 0; align-self: start; height: 100vh; overflow-y: auto;
+  padding: 1.8rem 1.2rem; border-right: 1px solid var(--surface1);
+}
+.sidebar .brand {
+  font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--crust); background: var(--mauve); display: inline-block;
+  padding: 0.15rem 0.6rem; border-radius: 999px; font-weight: 700; margin-bottom: 1.4rem;
+}
+.sidebar nav a {
+  display: block; padding: 0.5rem 0.7rem; margin: 0.1rem 0; border-radius: 7px;
+  color: var(--subtext1); text-decoration: none; font-size: 0.92rem; border-bottom: none;
+  transition: background 0.12s, color 0.12s;
+}
+.sidebar nav a:hover { background: var(--surface0); color: var(--text); }
+.sidebar nav a.active { background: var(--mauve); color: var(--crust); font-weight: 700; }
+.sidebar nav .part-label {
+  font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--overlay0);
+  margin: 1.1rem 0 0.3rem 0.7rem;
+}
+.content { padding: 2.6rem 2.6rem 5rem; min-width: 0; }
+.onpage {
+  position: sticky; top: 0; align-self: start; height: 100vh; overflow-y: auto;
+  padding: 2.6rem 1.2rem;
+}
+.onpage .label {
+  font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--overlay0);
+  margin-bottom: 0.6rem;
+}
+.onpage a {
+  display: block; padding: 0.28rem 0; color: var(--subtext0); text-decoration: none;
+  font-size: 0.86rem; border-bottom: none; border-left: 2px solid transparent; padding-left: 0.7rem;
+}
+.onpage a.h3 { padding-left: 1.4rem; font-size: 0.82rem; }
+.onpage a:hover { color: var(--sapphire); border-left-color: var(--sapphire); }
+
+h1, h2, h3 { font-weight: 700; line-height: 1.3; scroll-margin-top: 1.5rem; }
+h1 { font-size: 2rem; color: var(--mauve); margin: 0 0 0.6rem; }
+.page-kicker {
+  font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--peach);
+  font-weight: 700; margin-bottom: 0.5rem;
+}
+h2 { font-size: 1.4rem; color: var(--blue); margin: 2.4rem 0 1rem; padding-bottom: 0.4rem; border-bottom: 1px solid var(--surface1); }
+h3 { font-size: 1.1rem; color: var(--sky); margin: 1.8rem 0 0.8rem; }
+p { margin: 0.9rem 0; color: var(--text); }
+a { color: var(--sapphire); text-decoration: none; border-bottom: 1px solid rgba(116, 199, 236, 0.35); }
+a:hover { color: var(--lavender); border-bottom-color: var(--lavender); }
+strong { color: var(--peach); font-weight: 700; }
+code {
+  font-family: "JetBrains Mono", "Fira Code", Consolas, "Liberation Mono", monospace;
+  font-size: 0.86em; background: var(--surface0); color: var(--peach);
+  padding: 0.15em 0.4em; border-radius: 5px;
+}
+pre.code {
+  background: var(--mantle); border: 1px solid var(--surface1); border-radius: 10px;
+  padding: 1rem 1.2rem; overflow-x: auto; margin: 1.1rem 0;
+}
+pre.code code { background: none; color: var(--text); padding: 0; font-size: 0.85em; border-radius: 0; }
+.tok-kw { color: var(--mauve); font-weight: 600; }
+.tok-type { color: var(--yellow); }
+.tok-str { color: var(--green); }
+.tok-com { color: var(--overlay0); font-style: italic; }
+blockquote {
+  margin: 1.1rem 0; padding: 0.15rem 1.1rem; border-left: 3px solid var(--peach);
+  background: var(--surface0); border-radius: 0 8px 8px 0; color: var(--subtext1);
+}
+blockquote p { margin: 0.6rem 0; }
+ul, ol { padding-left: 1.4rem; margin: 0.9rem 0; }
+li { margin: 0.45rem 0; }
+hr { border: none; border-top: 1px solid var(--surface1); margin: 2.2rem 0; }
+.table-wrap { overflow-x: auto; margin: 1.1rem 0; }
+table { border-collapse: collapse; width: 100%; font-size: 0.92em; }
+th, td { border: 1px solid var(--surface1); padding: 0.55rem 0.8rem; text-align: left; vertical-align: top; }
+th { background: var(--surface0); color: var(--lavender); }
+tbody tr:nth-child(odd) { background: rgba(49, 50, 68, 0.35); }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+.card {
+  display: block; padding: 1.1rem 1.2rem; background: var(--mantle); border: 1px solid var(--surface1);
+  border-radius: 12px; text-decoration: none; border-bottom: 1px solid var(--surface1); transition: border-color 0.12s, transform 0.12s;
+}
+.card:hover { border-color: var(--mauve); transform: translateY(-2px); }
+.card .card-title { color: var(--text); font-weight: 700; font-size: 1rem; margin-bottom: 0.3rem; display: block; }
+.card .card-desc { color: var(--subtext0); font-size: 0.86rem; }
+.pager { display: flex; justify-content: space-between; margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--surface1); gap: 1rem; }
+.pager a {
+  border: 1px solid var(--surface1); border-radius: 10px; padding: 0.8rem 1.1rem; flex: 1;
+  border-bottom: 1px solid var(--surface1); color: var(--text);
+}
+.pager a:hover { border-color: var(--mauve); }
+.pager .dir { font-size: 0.72rem; text-transform: uppercase; color: var(--overlay0); display: block; margin-bottom: 0.2rem; }
+.pager .next { text-align: right; }
+::selection { background: var(--surface2); color: var(--rosewater); }
+@media (max-width: 1100px) {
+  .layout { grid-template-columns: 220px minmax(0, 1fr); }
+  .onpage { display: none; }
+}
+@media (max-width: 760px) {
+  .layout { grid-template-columns: 1fr; }
+  .sidebar { position: relative; height: auto; border-right: none; border-bottom: 1px solid var(--surface1); }
+  .content { padding: 1.6rem 1.2rem 3rem; }
+}
+
+</style>
+</head>
+<body>
+<div class="layout">
+<aside class="sidebar">
+  <span class="brand">Catppuccin Mocha</span>
+  <nav><div class="part-label">SwarmNav</div>
+<a class="" href="index.html">Обзор</a>
+<a class="" href="01-quickstart.html">Быстрый старт</a>
+<a class="" href="02-swarm-agent.html">SwarmAgent (просто)</a>
+<a class="" href="03-swarm-crowd.html">SwarmCrowd (Burst)</a>
+<a class="" href="04-how-it-works.html">Как это работает</a>
+<a class="" href="05-advanced.html">Расширенные темы</a>
+<a class="" href="06-SwarmNav-recipes.html">Рецепты</a>
+<a class="" href="07-performance.html">Производительность (GPU)</a>
+<a class="" href="08-behaviour-and-lod.html">Поведение и LOD</a>
+<a class="active" href="09-ai-integration.html">Подключение ИИ</a>
+</nav>
+</aside>
+<main class="content">
+<div class="page-kicker">SwarmNav</div>
+<h1 id="подключение-ии-игры">Подключение ИИ игры</h1>
+<p>Эта страница о том, как обычный ИИ из <code>Assets/Scripts/AI</code> (волк, медведь, олень, белка) работает со <code>SwarmAgent</code> и
+<code>VATAnimator</code>, не зная, что именно висит на объекте. Код: <code>AIBody.cs</code>, <code>BaseEnemyAI.cs</code>, <code>AIManager.cs</code>, <code>WolfAI.cs</code>,
+<code>BearAI.cs</code>, <code>WildlifeAI.cs</code>.</p>
+<h2 id="1-тело-ии-одна-точка-входа">1. Тело ИИ: одна точка входа</h2>
+<p>ИИ раньше напрямую звал <code>NavMeshAgent</code> и <code>Animator</code>. Теперь между ними два маленьких класса из <code>AIBody.cs</code>:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Класс</th>
+<th>Что выбирает</th>
+<th>Что даёт ИИ</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>AINavigation</code></td>
+<td><code>SwarmAgent</code>, если он есть и включён, иначе <code>NavMeshAgent</code></td>
+<td><code>SetDestination</code>, <code>Chase</code>, <code>ResetPath</code>, <code>hasPath</code>, <code>remainingDistance</code>, <code>isPathPartial</code>, <code>reachedPartialEnd</code>, <code>SteeringTarget</code>, <code>Move</code></td>
+</tr>
+<tr>
+<td><code>AIAnimation</code></td>
+<td><code>VATAnimator</code>, если он есть, иначе <code>Animator</code></td>
+<td><code>SetFloat</code> (с damp), <code>SetBool</code>, <code>SetTrigger</code>, <code>SetInteger</code>, <code>SetBoolOrTrigger</code>, <code>HasRootMotion</code></td>
+</tr>
+</tbody>
+</table></div>
+<p>Это приём <strong>адаптер</strong>: у двух классов с разным API (<code>NavMeshAgent</code> и <code>SwarmAgent</code>) появляется общая «розетка», и код ИИ
+пишется один раз. Пример из <code>BearAI</code>:</p>
+<pre class="code"><code>nav.speed = _chaseSpeed;
+nav.Chase(targetTransform);   // SwarmAgent сам следит за движущейся целью
+</code></pre>
+<p>Если рядом со <code>SwarmAgent</code> есть <code>NavMeshAgent</code>, <code>AINavigation</code> его выключает (иначе Unity считал бы агента второй раз) и
+переносит <code>radius</code> с учётом масштаба объекта, если у <code>SwarmAgent</code> свой радиус не задан.</p>
+<p><strong>Боссы не затронуты.</strong> В <code>BaseEnemyAI</code> поля <code>nav</code> и <code>anim</code> ленивые:</p>
+<pre class="code"><code>protected AINavigation nav =&gt; _nav ??= new AINavigation(gameObject);
+</code></pre>
+<p><code>??=</code> создаёт объект при первом обращении. Боссы (<code>VanitasBoss</code>, <code>KingDiceBossAI</code> и др.) к <code>nav</code> не обращаются, поэтому
+у них ничего не создаётся и ничего не выключается.</p>
+<h2 id="2-порядок-кадра-почему-ии-раньше-swarmnav">2. Порядок кадра: почему ИИ раньше SwarmNav</h2>
+<p>Драйвер SwarmNav в <code>Update</code> ставит джобы кадра, а в <code>LateUpdate</code> их дожидается. Любой вызов API агента, пока джобы
+идут, вынужден их дождаться (<code>Complete</code>). Поэтому:</p>
+<ul>
+<li><code>AIManager</code> помечен <code>[DefaultExecutionOrder(-50)]</code>: <code>Tick()</code> всех ИИ выполняется <strong>до</strong> драйвера и читает данные,
+  готовые с прошлого кадра, ничего не ожидая;</li>
+<li>root motion волка копится в <code>OnAnimatorMove</code> / <code>OnVATAnimatorMove</code> и прикладывается в следующем <code>Tick()</code>
+  (<code>ApplyMotion</code>), а не сразу: <code>OnAnimatorMove</code> идёт после <code>Update</code>, когда джобы уже запущены;</li>
+<li>цепочка «отскок -&gt; лай -&gt; обход с фланга» у волка - состояние внутри <code>Tick()</code>, а не корутина: корутины
+  продолжаются после <code>Update</code>, и их вызовы навигации тоже останавливали бы джобы.</li>
+</ul>
+<p>Это общий принцип многопоточного кадра: <strong>главный поток пишет данные до того, как отдал их воркерам, и читает после
+того, как воркеры закончили</strong>. Всё, что лезет в данные посередине, превращает параллельную работу в последовательную.</p>
+<h2 id="3-видимость-цели-игрок-в-доме">3. Видимость цели: игрок в доме</h2>
+<p>Раньше враг решал атаковать только по дистанции, поэтому бил сквозь стену дома. Теперь <code>AIManager</code> раз в
+<code>updateRateFrames</code> кадров бросает лучи «глаза врага -&gt; игрок» <strong>одним пакетом</strong>:</p>
+<pre class="code"><code>_sightCommands.Add(new RaycastCommand(eye, toTarget / distance, query, distance));
+...
+RaycastCommand.ScheduleBatch(_sightCommands.AsArray(), _sightHits.AsArray(), 8).Complete();
+</code></pre>
+<p><code>RaycastCommand</code> - запрос луча как данные. <code>ScheduleBatch</code> раздаёт их воркерам по 8 штук, и физика считает лучи
+параллельно, вместо N вызовов <code>Physics.Raycast</code> подряд на главном потоке. Попадание в <code>Default</code> или <code>Ground</code>
+(стены, крыша, скалы, террейн) значит, что цель не видна. Слои игрока и врагов в маску не входят.</p>
+<p>ИИ включает проверку сам (<code>UsesLineOfSight =&gt; true</code>) и использует её так:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Где</th>
+<th>Правило</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>DistanceToSensedTarget()</code></td>
+<td>Игрок не виден дольше <code>loseSightTime</code> - для врага его нет, враг уходит в патруль.</td>
+</tr>
+<tr>
+<td>Атака волка и медведя</td>
+<td>Только если игрок виден прямо сейчас и по высоте в пределах <code>maxAttackHeight</code> (не летит, не на крыше).</td>
+</tr>
+<tr>
+<td><code>WildlifeAI</code></td>
+<td>Пугается только видимого игрока.</td>
+</tr>
+<tr>
+<td>Пегасы (<code>ShadowPegasusAI</code> + <code>FlightJob</code>)</td>
+<td>Свой пакет лучей; без видимости не замечают, не пикируют, а начатое пике прерывают отлётом без атакующих частиц; через <code>_loseSightTime</code> возвращаются к патрулю.</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="4-недостижимая-цель">4. Недостижимая цель</h2>
+<p>Если путь до игрока частичный (<code>isPathPartial</code>: игрок в воздухе, на крыше), медведь доходит до края пути
+(<code>reachedPartialEnd</code>), встаёт и смотрит на игрока. Погоня остаётся назначенной: когда путь снова станет полным,
+он побежит сам.</p>
+<h2 id="5-разгон-и-радиус">5. Разгон и радиус</h2>
+<p>У <code>NavMeshAgent</code> есть <code>acceleration</code> и <code>radius</code>, у <code>SwarmAgent</code> их раньше не было: скорость сразу была полной (медведь
+со <code>_chaseSpeed = 35</code> «телепортировался»), а разводились все на одинаковые 0,6 м. Теперь:</p>
+<ul>
+<li><code>acceleration</code> - текущая скорость тянется к целевой не быстрее <code>acceleration * dt</code>, а у цели ограничена
+  <code>sqrt(2 * acceleration * d)</code>. Это формула равнозамедленного движения: с такой скоростью агент успевает остановиться
+  ровно за оставшиеся <code>d</code> метров (так же устроен <code>autoBraking</code> у <code>NavMeshAgent</code>);</li>
+<li><code>radius</code> - пара агентов расходится на <code>r1 + r2</code>. На GPU радиус едет в свободных битах флагов агента
+  (биты 2..7, шаг 0,1 м), поэтому буфер не вырос.</li>
+</ul>
+<h2 id="6-анимация">6. Анимация</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Зверь</th>
+<th>Что двигает модель</th>
+<th>Параметр скорости</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Волк</td>
+<td>root motion (<code>Animator</code>, или <code>VATAnimator</code> в режиме <code>Manual</code>); без него - сам ИИ (<code>_walkSpeed</code>/<code>_runSpeed</code>)</td>
+<td><code>Run</code>, <code>InputZ</code></td>
+</tr>
+<tr>
+<td>Медведь</td>
+<td><code>SwarmAgent</code></td>
+<td><code>Move</code> по фактической скорости (<code>_moveParamScale</code>: 1 для Animator, 2 для VAT-графа)</td>
+</tr>
+<tr>
+<td>Олень, белка</td>
+<td><code>SwarmAgent</code></td>
+<td><code>Locomotion</code> (VAT: 1 - шаг, 2 - бег), у Animator оленя <code>Run</code> + <code>Move</code></td>
+</tr>
+</tbody>
+</table></div>
+<p>У VAT нет <code>StateMachineBehaviour</code>, поэтому конец атаки сообщает <code>VATAttackStateNotifier</code> (VAT-копия
+<code>AttackStateNotifier</code>). Если в графе его нет, ИИ ждёт возврата VAT-графа в состояние, из которого началась атака
+(<code>WaitVatAttackEnd</code>, не дольше 4 с).</p>
+<div class="pager"><a href="08-behaviour-and-lod.html"><span class="dir">Назад</span>Поведение и LOD</a></div>
+</main>
+<aside class="onpage">
+  <div class="label">На этой странице</div>
+<a class="" href="#1-тело-ии-одна-точка-входа">1. Тело ИИ: одна точка входа</a>
+<a class="" href="#2-порядок-кадра-почему-ии-раньше-swarmnav">2. Порядок кадра: почему ИИ раньше SwarmNav</a>
+<a class="" href="#3-видимость-цели-игрок-в-доме">3. Видимость цели: игрок в доме</a>
+<a class="" href="#4-недостижимая-цель">4. Недостижимая цель</a>
+<a class="" href="#5-разгон-и-радиус">5. Разгон и радиус</a>
+<a class="" href="#6-анимация">6. Анимация</a>
+</aside>
+</div>
+</body>
+</html>

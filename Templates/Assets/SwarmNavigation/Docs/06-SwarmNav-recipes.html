@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Рецепты — SwarmNav</title>
+<style>
+:root {
+  --base: #1e1e2e; --mantle: #181825; --crust: #11111b;
+  --surface0: #313244; --surface1: #45475a; --surface2: #585b70;
+  --overlay0: #6c7086; --overlay1: #7f849c;
+  --text: #cdd6f4; --subtext1: #bac2de; --subtext0: #a6adc8;
+  --rosewater: #f5e0dc; --flamingo: #f2cdcd; --pink: #f5c2e7; --mauve: #cba6f7;
+  --red: #f38ba8; --maroon: #eba0ac; --peach: #fab387; --yellow: #f9e2af;
+  --green: #a6e3a1; --teal: #94e2d5; --sky: #89dceb; --sapphire: #74c7ec;
+  --blue: #89b4fa; --lavender: #b4befe;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0; background: var(--base); color: var(--text);
+  font-family: -apple-system, "Segoe UI", "Noto Sans", "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.7; font-size: 16px;
+}
+.layout {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr) 220px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+.sidebar {
+  position: sticky; top: 0; align-self: start; height: 100vh; overflow-y: auto;
+  padding: 1.8rem 1.2rem; border-right: 1px solid var(--surface1);
+}
+.sidebar .brand {
+  font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--crust); background: var(--mauve); display: inline-block;
+  padding: 0.15rem 0.6rem; border-radius: 999px; font-weight: 700; margin-bottom: 1.4rem;
+}
+.sidebar nav a {
+  display: block; padding: 0.5rem 0.7rem; margin: 0.1rem 0; border-radius: 7px;
+  color: var(--subtext1); text-decoration: none; font-size: 0.92rem; border-bottom: none;
+  transition: background 0.12s, color 0.12s;
+}
+.sidebar nav a:hover { background: var(--surface0); color: var(--text); }
+.sidebar nav a.active { background: var(--mauve); color: var(--crust); font-weight: 700; }
+.sidebar nav .part-label {
+  font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--overlay0);
+  margin: 1.1rem 0 0.3rem 0.7rem;
+}
+.content { padding: 2.6rem 2.6rem 5rem; min-width: 0; }
+.onpage {
+  position: sticky; top: 0; align-self: start; height: 100vh; overflow-y: auto;
+  padding: 2.6rem 1.2rem;
+}
+.onpage .label {
+  font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--overlay0);
+  margin-bottom: 0.6rem;
+}
+.onpage a {
+  display: block; padding: 0.28rem 0; color: var(--subtext0); text-decoration: none;
+  font-size: 0.86rem; border-bottom: none; border-left: 2px solid transparent; padding-left: 0.7rem;
+}
+.onpage a.h3 { padding-left: 1.4rem; font-size: 0.82rem; }
+.onpage a:hover { color: var(--sapphire); border-left-color: var(--sapphire); }
+
+h1, h2, h3 { font-weight: 700; line-height: 1.3; scroll-margin-top: 1.5rem; }
+h1 { font-size: 2rem; color: var(--mauve); margin: 0 0 0.6rem; }
+.page-kicker {
+  font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--peach);
+  font-weight: 700; margin-bottom: 0.5rem;
+}
+h2 { font-size: 1.4rem; color: var(--blue); margin: 2.4rem 0 1rem; padding-bottom: 0.4rem; border-bottom: 1px solid var(--surface1); }
+h3 { font-size: 1.1rem; color: var(--sky); margin: 1.8rem 0 0.8rem; }
+p { margin: 0.9rem 0; color: var(--text); }
+a { color: var(--sapphire); text-decoration: none; border-bottom: 1px solid rgba(116, 199, 236, 0.35); }
+a:hover { color: var(--lavender); border-bottom-color: var(--lavender); }
+strong { color: var(--peach); font-weight: 700; }
+code {
+  font-family: "JetBrains Mono", "Fira Code", Consolas, "Liberation Mono", monospace;
+  font-size: 0.86em; background: var(--surface0); color: var(--peach);
+  padding: 0.15em 0.4em; border-radius: 5px;
+}
+pre.code {
+  background: var(--mantle); border: 1px solid var(--surface1); border-radius: 10px;
+  padding: 1rem 1.2rem; overflow-x: auto; margin: 1.1rem 0;
+}
+pre.code code { background: none; color: var(--text); padding: 0; font-size: 0.85em; border-radius: 0; }
+.tok-kw { color: var(--mauve); font-weight: 600; }
+.tok-type { color: var(--yellow); }
+.tok-str { color: var(--green); }
+.tok-com { color: var(--overlay0); font-style: italic; }
+blockquote {
+  margin: 1.1rem 0; padding: 0.15rem 1.1rem; border-left: 3px solid var(--peach);
+  background: var(--surface0); border-radius: 0 8px 8px 0; color: var(--subtext1);
+}
+blockquote p { margin: 0.6rem 0; }
+ul, ol { padding-left: 1.4rem; margin: 0.9rem 0; }
+li { margin: 0.45rem 0; }
+hr { border: none; border-top: 1px solid var(--surface1); margin: 2.2rem 0; }
+.table-wrap { overflow-x: auto; margin: 1.1rem 0; }
+table { border-collapse: collapse; width: 100%; font-size: 0.92em; }
+th, td { border: 1px solid var(--surface1); padding: 0.55rem 0.8rem; text-align: left; vertical-align: top; }
+th { background: var(--surface0); color: var(--lavender); }
+tbody tr:nth-child(odd) { background: rgba(49, 50, 68, 0.35); }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+.card {
+  display: block; padding: 1.1rem 1.2rem; background: var(--mantle); border: 1px solid var(--surface1);
+  border-radius: 12px; text-decoration: none; border-bottom: 1px solid var(--surface1); transition: border-color 0.12s, transform 0.12s;
+}
+.card:hover { border-color: var(--mauve); transform: translateY(-2px); }
+.card .card-title { color: var(--text); font-weight: 700; font-size: 1rem; margin-bottom: 0.3rem; display: block; }
+.card .card-desc { color: var(--subtext0); font-size: 0.86rem; }
+.pager { display: flex; justify-content: space-between; margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--surface1); gap: 1rem; }
+.pager a {
+  border: 1px solid var(--surface1); border-radius: 10px; padding: 0.8rem 1.1rem; flex: 1;
+  border-bottom: 1px solid var(--surface1); color: var(--text);
+}
+.pager a:hover { border-color: var(--mauve); }
+.pager .dir { font-size: 0.72rem; text-transform: uppercase; color: var(--overlay0); display: block; margin-bottom: 0.2rem; }
+.pager .next { text-align: right; }
+::selection { background: var(--surface2); color: var(--rosewater); }
+@media (max-width: 1100px) {
+  .layout { grid-template-columns: 220px minmax(0, 1fr); }
+  .onpage { display: none; }
+}
+@media (max-width: 760px) {
+  .layout { grid-template-columns: 1fr; }
+  .sidebar { position: relative; height: auto; border-right: none; border-bottom: 1px solid var(--surface1); }
+  .content { padding: 1.6rem 1.2rem 3rem; }
+}
+
+</style>
+</head>
+<body>
+<div class="layout">
+<aside class="sidebar">
+  <span class="brand">Catppuccin Mocha</span>
+  <nav><div class="part-label">SwarmNav</div>
+<a class="" href="index.html">Обзор</a>
+<a class="" href="01-quickstart.html">Быстрый старт</a>
+<a class="" href="02-swarm-agent.html">SwarmAgent (просто)</a>
+<a class="" href="03-swarm-crowd.html">SwarmCrowd (Burst)</a>
+<a class="" href="04-how-it-works.html">Как это работает</a>
+<a class="" href="05-advanced.html">Расширенные темы</a>
+<a class="active" href="06-SwarmNav-recipes.html">Рецепты</a>
+<a class="" href="07-performance.html">Производительность (GPU)</a>
+<a class="" href="08-behaviour-and-lod.html">Поведение и LOD</a>
+<a class="" href="09-ai-integration.html">Подключение ИИ</a>
+</nav>
+</aside>
+<main class="content">
+<div class="page-kicker">SwarmNav</div>
+<h1 id="swarmnav-простыми-словами">SwarmNav простыми словами</h1>
+<p>Шпаргалка «хочу X -&gt; делай так». Объяснения - в остальных страницах.</p>
+<h2 id="шесть-слов-которые-встретятся">Шесть слов, которые встретятся</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Слово</th>
+<th>Что это</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>NavMesh / <code>NavWorld</code></strong></td>
+<td>Запечённая навигационная сетка Unity и её API для джобов. SwarmNav берёт у неё пути, высоту и стены.</td>
+</tr>
+<tr>
+<td><strong>Хэндл</strong> (<code>SwarmNavHandle</code>)</td>
+<td>Номер агента внутри <code>SwarmNav</code>. Нужен, если работаете без <code>SwarmAgent</code>.</td>
+</tr>
+<tr>
+<td><strong>Путь</strong></td>
+<td>Список углов от агента до цели (кратчайший, по NavMesh). Считается в фоне.</td>
+</tr>
+<tr>
+<td><strong>LOD / тир</strong></td>
+<td>Near/Mid/Far по расстоянию до камеры: дальние шагают реже.</td>
+</tr>
+<tr>
+<td><strong>Прямой ход</strong></td>
+<td>Если до цели близко и нет стен, агент идёт напрямую, без пути.</td>
+</tr>
+<tr>
+<td><strong>Приземление</strong></td>
+<td>Прибытие по <code>NavMeshLink</code>: агент прыгнул и снова стоит на NavMesh.</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="рецепт-0-подготовка-один-раз">Рецепт 0. Подготовка (один раз)</h2>
+<ol>
+<li>Запеките <code>NavMeshSurface</code>.</li>
+<li>Повесьте тег <code>MainCamera</code> на камеру (фокус LOD).</li>
+<li>Больше ничего: <code>SwarmAgent</code> сам создаёт всё нужное.</li>
+</ol>
+<h2 id="рецепт-1-один-персонаж-идёт-в-точку">Рецепт 1. Один персонаж идёт в точку</h2>
+<pre class="code"><code>agent.SetDestination(point);
+</code></pre>
+<h2 id="рецепт-2-один-персонаж-идёт-за-объектом">Рецепт 2. Один персонаж идёт за объектом</h2>
+<pre class="code"><code>agent.stoppingDistance = 1.5f;                       // дистанция остановки у цели
+agent.SetDestination(player.transformHandle);        // достаточно один раз
+</code></pre>
+<h2 id="рецепт-3-толпа-тысяч-gameobject">Рецепт 3. Толпа тысяч <code>GameObject</code></h2>
+<p>Тот же компонент на каждом объекте (в корне сцены, не под одним родителем). <code>PathRequestsPerFrame</code> ограничивает,
+сколько путей считается за кадр: остальные агенты стартуют порциями.</p>
+<h2 id="рецепт-4-остановить--сбросить--телепортировать">Рецепт 4. Остановить / сбросить / телепортировать</h2>
+<pre class="code"><code>agent.isStopped = true;       // стоит, цель сохраняется
+agent.ResetPath();            // цели больше нет (hasDestination == false)
+agent.Warp(newPosition);      // телепорт с привязкой к NavMesh
+</code></pre>
+<h2 id="рецепт-5-дошёл-ли-агент">Рецепт 5. Дошёл ли агент</h2>
+<pre class="code"><code>if (!agent.hasDestination) { /* дошёл до неподвижной цели */ }
+if (agent.remainingDistance &lt;= agent.stoppingDistance) { /* у цели (в том числе в погоне) */ }
+if (agent.pathStatus == SwarmPathStatus.Partial) { /* цель недостижима */ }
+</code></pre>
+<h2 id="рецепт-6-агент-не-дошёл-цель-на-другом-острове">Рецепт 6. Агент не дошёл, цель на другом острове</h2>
+<p>Нужен <code>NavMeshLink</code> между частями NavMesh. Без него <code>pathStatus == Partial</code>: агент дойдёт до ближайшей достижимой
+точки и остановится. Плавающий остров - просто ещё одна часть NavMesh, пока его запекает <code>NavMeshSurface</code>.</p>
+<h2 id="рецепт-7-патруль-у-каждого-свой-погоня-за-игроком-атака">Рецепт 7. Патруль у каждого свой, погоня за игроком, атака</h2>
+<p>См. <code>SwarmPatrolChaseExample.cs</code> и <code>08-behaviour-and-lod.md</code>, раздел 2: один менеджер на всю толпу, один <code>Update()</code>.</p>
+<h2 id="рецепт-8-50-000-животных-без-gameobject-rendermeshindirect">Рецепт 8. 50 000 животных без GameObject (RenderMeshIndirect)</h2>
+<p><code>SwarmNav</code> напрямую: <code>RegisterAgent</code>, <code>SetSharedGoal</code>/<code>SetDestination</code>, <code>Tick</code>, чтение <code>nav.Agents</code> и запись
+инстансов в своём джобе. Пример - <code>SwarmNavDemo.cs</code>; <code>AgentsGpu</code> отдаёт те же данные в GraphicsBuffer (<code>05-advanced.md</code>, раздел 1).</p>
+<h2 id="рецепт-9-агенты-проходят-сквозь-друг-друга--слипаются">Рецепт 9. Агенты проходят сквозь друг друга / слипаются</h2>
+<ul>
+<li>Сквозь: <code>SeparationWeight</code> слишком мал или <code>SeparateFarAgents = false</code> (дальние не разводятся).</li>
+<li>Слипаются в точке: увеличьте <code>AvoidanceRadius</code> или <code>MaxNeighborsPerAgent</code>; для погони поставьте <code>stoppingDistance</code>
+  побольше, чтобы они вставали кольцом.</li>
+</ul>
+<h2 id="рецепт-10-дальние-агенты-дрожат">Рецепт 10. Дальние агенты дрожат</h2>
+<p>Mid/Far шагают раз в N кадров. <code>LodSmoothing &gt; 0</code> сглаживает их в кадре камеры (<code>03-swarm-crowd.md</code>, раздел 5);
+сократите <code>MidUpdateEveryNFrames</code>/<code>FarUpdateEveryNFrames</code> (дороже), если нужно ещё плавнее. Для <code>RenderMeshIndirect</code>
+сглаживание нужно делать в своём джобе записи инстансов.</p>
+<h2 id="рецепт-11-посмотреть-что-происходит">Рецепт 11. Посмотреть, что происходит</h2>
+<p><code>SwarmNavDebugOverlay</code> на любой объект; <code>ShowLodGizmos</code> в настройках; для времени по стадиям -
+<code>SwarmNav.ProfileStages = true</code>.</p>
+<h2 id="рецепт-12-агент-висит-в-воздухе-или-в-земле">Рецепт 12. Агент висит в воздухе или в земле</h2>
+<p>Проверьте <code>baseOffset</code> и пивот модели (для куба с центральным пивотом - половина высоты) и что NavMesh запечён
+на нужной поверхности.</p>
+<h2 id="если-не-работает">Если не работает</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Симптом</th>
+<th>Причина</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Агент стоит, <code>isOnNavMesh == false</code></td>
+<td>Заспавнен дальше <code>QueryExtents</code> от NavMesh.</td>
+</tr>
+<tr>
+<td><code>pathStatus == Invalid</code></td>
+<td>Цель или агент вне NavMesh.</td>
+</tr>
+<tr>
+<td><code>pathStatus == Partial</code>, агент останавливается рано</td>
+<td>Цель недостижима без <code>NavMeshLink</code>.</td>
+</tr>
+<tr>
+<td>Агент стартует с задержкой</td>
+<td>Путь считается в фоне, порциями по <code>PathRequestsPerFrame</code>.</td>
+</tr>
+<tr>
+<td>«NavWorld недоступен» в консоли</td>
+<td>Нет запечённого NavMesh при создании <code>SwarmNav</code>.</td>
+</tr>
+<tr>
+<td>Дальние рывками</td>
+<td><code>LodSmoothing = 0</code>, либо вне кадра камеры (там сглаживания нет намеренно).</td>
+</tr>
+</tbody>
+</table></div>
+<div class="pager"><a href="05-advanced.html"><span class="dir">Назад</span>Расширенные темы</a><a class="next" href="07-performance.html"><span class="dir">Дальше</span>Производительность (GPU)</a></div>
+</main>
+<aside class="onpage">
+  <div class="label">На этой странице</div>
+<a class="" href="#шесть-слов-которые-встретятся">Шесть слов, которые встретятся</a>
+<a class="" href="#рецепт-0-подготовка-один-раз">Рецепт 0. Подготовка (один раз)</a>
+<a class="" href="#рецепт-1-один-персонаж-идёт-в-точку">Рецепт 1. Один персонаж идёт в точку</a>
+<a class="" href="#рецепт-2-один-персонаж-идёт-за-объектом">Рецепт 2. Один персонаж идёт за объектом</a>
+<a class="" href="#рецепт-3-толпа-тысяч-gameobject">Рецепт 3. Толпа тысяч <code>GameObject</code></a>
+<a class="" href="#рецепт-4-остановить--сбросить--телепортировать">Рецепт 4. Остановить / сбросить / телепортировать</a>
+<a class="" href="#рецепт-5-дошёл-ли-агент">Рецепт 5. Дошёл ли агент</a>
+<a class="" href="#рецепт-6-агент-не-дошёл-цель-на-другом-острове">Рецепт 6. Агент не дошёл, цель на другом острове</a>
+<a class="" href="#рецепт-7-патруль-у-каждого-свой-погоня-за-игроком-атака">Рецепт 7. Патруль у каждого свой, погоня за игроком, атака</a>
+<a class="" href="#рецепт-8-50-000-животных-без-gameobject-rendermeshindirect">Рецепт 8. 50 000 животных без GameObject (RenderMeshIndirect)</a>
+<a class="" href="#рецепт-9-агенты-проходят-сквозь-друг-друга--слипаются">Рецепт 9. Агенты проходят сквозь друг друга / слипаются</a>
+<a class="" href="#рецепт-10-дальние-агенты-дрожат">Рецепт 10. Дальние агенты дрожат</a>
+<a class="" href="#рецепт-11-посмотреть-что-происходит">Рецепт 11. Посмотреть, что происходит</a>
+<a class="" href="#рецепт-12-агент-висит-в-воздухе-или-в-земле">Рецепт 12. Агент висит в воздухе или в земле</a>
+<a class="" href="#если-не-работает">Если не работает</a>
+</aside>
+</div>
+</body>
+</html>

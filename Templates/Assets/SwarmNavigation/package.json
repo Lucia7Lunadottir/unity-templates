@@ -1,0 +1,15 @@
+{
+  "name": "com.pg.swarm-navigation",
+  "version": "1.0.0",
+  "displayName": "Swarm Navigation",
+  "description": "GPU/Jobs crowd navigation for thousands of agents on top of NavMesh (SwarmAgent with a NavMeshAgent-like API, LOD scheduling, avoidance). Docs in Docs/.",
+  "unity": "6000.6",
+  "author": "Lucia Lunadottir",
+  "type": "assets",
+  "dependencies": {
+    "com.unity.burst": "2.0.0",
+    "com.unity.collections": "6.6.0",
+    "com.unity.mathematics": "1.4.0",
+    "com.unity.ai.navigation": "2.0.14"
+  }
+}

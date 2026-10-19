@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Диагностика и биты — Graphics.RenderMeshIndirect</title>
+<style>
+:root {
+  --base: #1e1e2e; --mantle: #181825; --crust: #11111b;
+  --surface0: #313244; --surface1: #45475a; --surface2: #585b70;
+  --overlay0: #6c7086; --overlay1: #7f849c;
+  --text: #cdd6f4; --subtext1: #bac2de; --subtext0: #a6adc8;
+  --rosewater: #f5e0dc; --flamingo: #f2cdcd; --pink: #f5c2e7; --mauve: #cba6f7;
+  --red: #f38ba8; --maroon: #eba0ac; --peach: #fab387; --yellow: #f9e2af;
+  --green: #a6e3a1; --teal: #94e2d5; --sky: #89dceb; --sapphire: #74c7ec;
+  --blue: #89b4fa; --lavender: #b4befe;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0; background: var(--base); color: var(--text);
+  font-family: -apple-system, "Segoe UI", "Noto Sans", "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.7; font-size: 16px;
+}
+.layout {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr) 220px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+.sidebar {
+  position: sticky; top: 0; align-self: start; height: 100vh; overflow-y: auto;
+  padding: 1.8rem 1.2rem; border-right: 1px solid var(--surface1);
+}
+.sidebar .brand {
+  font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--crust); background: var(--mauve); display: inline-block;
+  padding: 0.15rem 0.6rem; border-radius: 999px; font-weight: 700; margin-bottom: 1.4rem;
+}
+.sidebar nav a {
+  display: block; padding: 0.5rem 0.7rem; margin: 0.1rem 0; border-radius: 7px;
+  color: var(--subtext1); text-decoration: none; font-size: 0.92rem; border-bottom: none;
+  transition: background 0.12s, color 0.12s;
+}
+.sidebar nav a:hover { background: var(--surface0); color: var(--text); }
+.sidebar nav a.active { background: var(--mauve); color: var(--crust); font-weight: 700; }
+.sidebar nav .part-label {
+  font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--overlay0);
+  margin: 1.1rem 0 0.3rem 0.7rem;
+}
+.content { padding: 2.6rem 2.6rem 5rem; min-width: 0; }
+.onpage {
+  position: sticky; top: 0; align-self: start; height: 100vh; overflow-y: auto;
+  padding: 2.6rem 1.2rem;
+}
+.onpage .label {
+  font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--overlay0);
+  margin-bottom: 0.6rem;
+}
+.onpage a {
+  display: block; padding: 0.28rem 0; color: var(--subtext0); text-decoration: none;
+  font-size: 0.86rem; border-bottom: none; border-left: 2px solid transparent; padding-left: 0.7rem;
+}
+.onpage a.h3 { padding-left: 1.4rem; font-size: 0.82rem; }
+.onpage a:hover { color: var(--sapphire); border-left-color: var(--sapphire); }
+
+h1, h2, h3 { font-weight: 700; line-height: 1.3; scroll-margin-top: 1.5rem; }
+h1 { font-size: 2rem; color: var(--mauve); margin: 0 0 0.6rem; }
+.page-kicker {
+  font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--peach);
+  font-weight: 700; margin-bottom: 0.5rem;
+}
+h2 { font-size: 1.4rem; color: var(--blue); margin: 2.4rem 0 1rem; padding-bottom: 0.4rem; border-bottom: 1px solid var(--surface1); }
+h3 { font-size: 1.1rem; color: var(--sky); margin: 1.8rem 0 0.8rem; }
+p { margin: 0.9rem 0; color: var(--text); }
+a { color: var(--sapphire); text-decoration: none; border-bottom: 1px solid rgba(116, 199, 236, 0.35); }
+a:hover { color: var(--lavender); border-bottom-color: var(--lavender); }
+strong { color: var(--peach); font-weight: 700; }
+code {
+  font-family: "JetBrains Mono", "Fira Code", Consolas, "Liberation Mono", monospace;
+  font-size: 0.86em; background: var(--surface0); color: var(--peach);
+  padding: 0.15em 0.4em; border-radius: 5px;
+}
+pre.code {
+  background: var(--mantle); border: 1px solid var(--surface1); border-radius: 10px;
+  padding: 1rem 1.2rem; overflow-x: auto; margin: 1.1rem 0;
+}
+pre.code code { background: none; color: var(--text); padding: 0; font-size: 0.85em; border-radius: 0; }
+.tok-kw { color: var(--mauve); font-weight: 600; }
+.tok-type { color: var(--yellow); }
+.tok-str { color: var(--green); }
+.tok-com { color: var(--overlay0); font-style: italic; }
+blockquote {
+  margin: 1.1rem 0; padding: 0.15rem 1.1rem; border-left: 3px solid var(--peach);
+  background: var(--surface0); border-radius: 0 8px 8px 0; color: var(--subtext1);
+}
+blockquote p { margin: 0.6rem 0; }
+ul, ol { padding-left: 1.4rem; margin: 0.9rem 0; }
+li { margin: 0.45rem 0; }
+hr { border: none; border-top: 1px solid var(--surface1); margin: 2.2rem 0; }
+.table-wrap { overflow-x: auto; margin: 1.1rem 0; }
+table { border-collapse: collapse; width: 100%; font-size: 0.92em; }
+th, td { border: 1px solid var(--surface1); padding: 0.55rem 0.8rem; text-align: left; vertical-align: top; }
+th { background: var(--surface0); color: var(--lavender); }
+tbody tr:nth-child(odd) { background: rgba(49, 50, 68, 0.35); }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+.card {
+  display: block; padding: 1.1rem 1.2rem; background: var(--mantle); border: 1px solid var(--surface1);
+  border-radius: 12px; text-decoration: none; border-bottom: 1px solid var(--surface1); transition: border-color 0.12s, transform 0.12s;
+}
+.card:hover { border-color: var(--mauve); transform: translateY(-2px); }
+.card .card-title { color: var(--text); font-weight: 700; font-size: 1rem; margin-bottom: 0.3rem; display: block; }
+.card .card-desc { color: var(--subtext0); font-size: 0.86rem; }
+.pager { display: flex; justify-content: space-between; margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--surface1); gap: 1rem; }
+.pager a {
+  border: 1px solid var(--surface1); border-radius: 10px; padding: 0.8rem 1.1rem; flex: 1;
+  border-bottom: 1px solid var(--surface1); color: var(--text);
+}
+.pager a:hover { border-color: var(--mauve); }
+.pager .dir { font-size: 0.72rem; text-transform: uppercase; color: var(--overlay0); display: block; margin-bottom: 0.2rem; }
+.pager .next { text-align: right; }
+::selection { background: var(--surface2); color: var(--rosewater); }
+@media (max-width: 1100px) {
+  .layout { grid-template-columns: 220px minmax(0, 1fr); }
+  .onpage { display: none; }
+}
+@media (max-width: 760px) {
+  .layout { grid-template-columns: 1fr; }
+  .sidebar { position: relative; height: auto; border-right: none; border-bottom: 1px solid var(--surface1); }
+  .content { padding: 1.6rem 1.2rem 3rem; }
+}
+</style>
+</head>
+<body>
+<div class="layout">
+<aside class="sidebar">
+  <span class="brand">Catppuccin Mocha</span>
+  <nav><div class="part-label">Начало</div>
+<a class="" href="index.html">Обзор</a>
+<a class="" href="00-basics.html">Основы (CPU/GPU, буферы, шейдеры)</a>
+<div class="part-label">Часть 1 — практика</div>
+<a class="" href="01-quickstart.html">Быстрый старт</a>
+<div class="part-label">Часть 2 — устройство</div>
+<a class="" href="02-architecture.html">Архитектура</a>
+<a class="" href="02b-compute-shaders.html">Свои ComputeShader</a>
+<a class="" href="03-culling.html">GPU-culling</a>
+<a class="active" href="04-diagnostics.html">Диагностика и биты</a>
+<a class="" href="06-lod.html">LOD</a>
+<div class="part-label">Справочник</div>
+<a class="" href="05-gotchas.html">Грабли и шейдеры</a></nav>
+</aside>
+<main class="content">
+<div class="page-kicker">Часть 2 — устройство</div>
+<h1 id="диагностика-как-искать-баги-cullingа">Диагностика: как искать баги culling'а</h1>
+<p>Три теста, GPU-параллелизм и матрицы camera-space — комбинация, в которой "просто посмотреть на экран" почти никогда не говорит, какой из трёх тестов и почему отбросил конкретный объект. Поэтому на компоненте есть отдельный набор диагностических полей — они не влияют на сам culling (кроме <code>_invertOcclusion</code>, который специально для этого и существует), только показывают, что происходит.</p>
+<h2 id="_debuginstanceindex-построчный-разбор-одного-инстанса"><code>_debugInstanceIndex</code> — построчный разбор ОДНОГО инстанса</h2>
+<p>Задайте индекс инстанса (0..<code>_instanceCount-1</code>) — раз в секунду в консоль печатаются три строки:</p>
+<ol><li><strong>Сырые числа frustum-теста</strong>: <code>clipPos.xyz</code>, <code>w(+radius)</code> — те же величины, что участвуют в <code>IsInsideFrustum</code>, чтобы видеть реальные значения, а не гадать по картинке.</li><li><strong>Occlusion — числа для центра инстанса</strong>: <code>uv</code> (где в depth-текстуре прошлого кадра ищем), <code>sceneDepth</code>/<code>instanceDepth</code> (что сравнивается), <code>withinPrevFrame</code>, <code>occludedByDepth</code>.</li><li><strong>Occlusion — 7-точечная маска</strong>: <code>occludedCount/7</code> и битовая маска, какие именно из 7 точек (центр, +Y, -Y, +X, -X, +Z, -Z) сейчас считаются скрытыми. Инстанс реально отбрасывается только при <code>occludedCount = 7</code>. Что такое эта маска и как её читать — <a href="#как-работать-с-битами">ниже</a>.</li></ol>
+<p>Если включён LOD (см. <a href="06-lod.html">LOD</a>), эти три строки печатаются один раз за кадр и отражают данные ПОСЛЕДНЕГО LOD-бакета, обработанного в этом кадре — не всех сразу.</p>
+<h2 id="_debugshowallfrustumstatus-визуальный-обзор-всех-инстансов-сразу"><code>_debugShowAllFrustumStatus</code> — визуальный обзор всех инстансов сразу</h2>
+<p>Индекс конкретного "виновника" среди тысячи инстансов на глаз не найти. Эта галочка рисует в Scene view маленькую сферу на <strong>каждом</strong> инстансе — зелёную, если CPU-копия frustum-теста (<code>IsInsideFrustumCpu</code>, та же формула, что в compute shader'е, пересчитывается каждый gizmo-кадр живьём) считает его видимым, красную иначе. У красных сфер рядом всплывает подпись с индексом инстанса — только у красных, иначе тысяча подписей друг на друге нечитаема.</p>
+<p>Практический workflow, чтобы найти конкретный баг:</p>
+<ol><li>Включите <code>_debugShowAllFrustumStatus</code> на нужном рендерере во время Play mode.</li><li>Дождитесь/спровоцируйте момент, когда объект, который вы видите на экране, пропадает.</li><li>Найдите его красную сферу в Scene view, прочитайте подпись-индекс рядом с ней.</li><li>Подставьте этот индекс в <code>_debugInstanceIndex</code> — получите три строки точных чисел именно для этого инстанса, не для случайного.</li></ol>
+<p>Если сфера <strong>зелёная</strong> (frustum говорит "видим"), а объект всё равно не рисуется — дело не во frustum, смотрите на occlusion-числа из <code>_debugInstanceIndex</code> (или временно выключите <code>_enableOcclusionCulling</code>, чтобы проверить гипотезу изоляцией).</p>
+<h2 id="важно-живое-vs-закэшированное-значение-radius-extents">Важно: живое vs закэшированное значение radius/extents</h2>
+<p><code>_boundsRadiusOverride</code>/<code>_boundsExtentsOverride</code> пересчитываются в актуальный радиус/extents <strong>каждый кадр, заново, локальными переменными</strong> — и в <code>DispatchAndRenderWithCulling()</code> (для реального GPU-теста), и отдельно в <code>OnDrawGizmos()</code> (для визуализации), — ни то, ни другое нигде не кэшируется между кадрами. Раньше было не так (значение кэшировалось один раз при <code>OnEnable</code> в поле): правка override-поля в инспекторе во время Play mode визуально меняла гизмо, но реальный GPU-тест продолжал молча работать со старым значением, что давало ложные выводы при отладке ("тест же зелёный, почему объект всё равно пропал?"). Сейчас оба места читают одно и то же живое значение из инспектора каждый раз заново — гизмо и GPU-культинг больше не могут разойтись из-за этого.</p>
+<h2 id="как-работать-с-битами">Как работать с битами</h2>
+<p><code>_DebugOccludedMask</code> (и вообще любая битовая маска в коде) — это способ упаковать <strong>несколько да/нет-флагов в одно целое число</strong>, вместо массива из 7 отдельных <code>bool</code>. Если вы не работали с этим раньше — вот как это устроено, на примере реального кода из этого проекта.</p>
+<h3 id="что-такое-бит">Что такое бит</h3>
+<p>Число в компьютере хранится в двоичной системе — как последовательность нулей и единиц (<strong>бит</strong> — одна такая цифра, 0 или 1). <code>uint</code> (беззнаковое целое) в HLSL/C# — это 32 бита подряд. Нам из них нужно всего 7 (по одному на каждую из 7 точек occlusion-теста), но принцип не зависит от того, сколько битов реально используется.</p>
+<p>Число <code>13</code> в двоичной записи — <code>00001101</code> (считая справа налево: бит 0 = <code>1</code>, бит 1 = <code>0</code>, бит 2 = <code>1</code>, бит 3 = <code>1</code>, остальные — <code>0</code>). Каждый бит — это ОТДЕЛЬНЫЙ независимый флаг "да/нет" внутри одного числа.</p>
+<h3 id="три-оператора-которые-реально-использует-код">Три оператора, которые реально использует код</h3>
+<pre class="code lang-hlsl"><code><span class="tok-kw">uint</span> occludedMaskDbg = 0;
+<span class="tok-kw">for</span> (<span class="tok-kw">int</span> j = 0; j &lt; 7; j++)
+{
+    <span class="tok-kw">float3</span> samplePosDbg = inst.position + RotateByQuaternion(offsetsDbg[j], inst.rotation);
+    <span class="tok-kw">if</span> (IsPointOccluded(samplePosDbg)) occludedMaskDbg |= (1u &lt;&lt; j);
+}</code></pre>
+<p><strong><code>1u &lt;&lt; j</code> (сдвиг влево, <code>&lt;&lt;</code>)</strong> — берёт число <code>1</code> и сдвигает его биты влево на <code>j</code> позиций. <code>1u &lt;&lt; 0</code> = <code>00000001</code> (бит 0 включён), <code>1u &lt;&lt; 3</code> = <code>00001000</code> (бит 3 включён), и так далее. Это способ получить "число, у которого включён ровно один конкретный бит номер <code>j</code>, а все остальные — <code>0</code>".</p>
+<p><strong><code>|=</code> (побитовое ИЛИ с присваиванием, <code>|</code>)</strong> — включает бит, не трогая остальные, уже включённые биты. <code>mask |= (1u &lt;&lt; j)</code> значит "поставь бит номер <code>j</code> в <code>1</code> в <code>mask</code>, оставь все остальные биты как были". Если бы вместо <code>|=</code> использовалось простое <code>=</code>, каждая новая точка СТИРАЛА бы результат всех предыдущих точек — <code>|=</code> этого не делает, он именно ДОБАВЛЯЕТ бит к уже накопленным.</p>
+<p><strong><code>&amp;</code> (побитовое И, AND)</strong> — используется при ЧТЕНИИ маски обратно, проверить, включён ли конкретный бит:</p>
+<pre class="code lang-csharp"><code><span class="tok-kw">for</span> (<span class="tok-kw">int</span> bit = 0; bit &lt; 7; bit++)
+    <span class="tok-kw">if</span> ((mask &amp; (1u &lt;&lt; bit)) != 0) occludedCount++;</code></pre>
+<p><code>mask &amp; (1u &lt;&lt; bit)</code> даёт ненулевой результат, только если И в <code>mask</code>, И в <code>(1u &lt;&lt; bit)</code> этот конкретный бит равен <code>1</code> одновременно — то есть это буквально вопрос "включён ли бит номер <code>bit</code> в <code>mask</code>?". Раз <code>(1u &lt;&lt; bit)</code> — это число с единственным включённым битом, <code>&amp;</code> с ним "вырезает" из <code>mask</code> ровно один этот бит, игнорируя все остальные.</p>
+<h3 id="пример-с-реальными-числами">Пример с реальными числами</h3>
+<p>Допустим, у инстанса скрыты точки с индексами 0 (центр), 2 (-Y) и 5 (+Z), а остальные 4 видны. После цикла <code>mask</code> будет равен <code>(1u&lt;&lt;0) | (1u&lt;&lt;2) | (1u&lt;&lt;5)</code> = <code>1 + 4 + 32</code> = <code>37</code>, в двоичном виде <code>0100101</code> (читая справа налево: биты 0, 2, 5 включены, остальные — нет). Именно поэтому лог диагностики печатает маску через <code>Convert.ToString((int)mask, 2)</code> — переводит число в текстовую строку из нулей и единиц, чтобы можно было увидеть, какие ИМЕННО точки скрыты, не считая в уме.</p>
+<h3 id="шпаргалка-остальные-побитовые-операторы">Шпаргалка: остальные побитовые операторы</h3>
+<p>В коде этого проекта используются только <code>&lt;&lt;</code>, <code>&amp;</code>, <code>|=</code> (см. выше) — но для полноты, вот все основные побитовые операторы C#/HLSL (одинаковый синтаксис в обоих языках), на 4-битных примерах:</p>
+<ul><li><strong>AND (<code>&amp;</code>)</strong> — результат бита <code>1</code>, только если ОБА бита равны <code>1</code>: <code>0110 &amp; 0011</code> = <code>0010</code>.</li><li><strong>OR (<code>|</code>)</strong> — результат бита <code>1</code>, если хотя бы один из битов равен <code>1</code>: <code>0110 | 0011</code> = <code>0111</code>.</li><li><strong>XOR (<code>^</code>)</strong> — результат бита <code>1</code>, если биты РАЗНЫЕ: <code>0110 ^ 0011</code> = <code>0101</code>.</li><li><strong>NOT (<code>~</code>)</strong> — переворачивает каждый бит на противоположный: <code>~0110</code> = <code>1001</code>.</li><li><strong>Сдвиг влево (<code>&lt;&lt;</code>)</strong> — двигает все биты влево, справа дописывает нули: <code>0001 &lt;&lt; 2</code> = <code>0100</code>.</li><li><strong>Сдвиг вправо (<code>&gt;&gt;</code>)</strong> — двигает все биты вправо: <code>1000 &gt;&gt; 2</code> = <code>0010</code>.</li></ul>
+<p>Практическое правило, когда это вообще имеет смысл использовать: если вам нужно упаковать МНОГО независимых да/нет-состояний экономно (в одно число вместо массива bool'ов) — как в <code>_DebugOccludedMask</code> — или прочитать/записать один конкретный бит, не трогая остальные — это оно. Для обычной логики "если A и B" в коде достаточно <code>&amp;&amp;</code>/<code>||</code> (логическое И/ИЛИ на <code>bool</code>, не путать с <code>&amp;</code>/<code>|</code> на числах — это разные операторы, просто похожие символы).</p>
+<div class="pager"><a class="prev" href="03-culling.html"><span class="dir">Назад</span>GPU-culling</a><a class="next" href="06-lod.html"><span class="dir">Дальше</span>LOD</a></div>
+</main>
+<aside class="onpage">
+  <div class="label">На этой странице</div>
+  <a class="" href="#_debuginstanceindex-построчный-разбор-одного-инстанса">_debugInstanceIndex — построчный разбор ОДНОГО инстанса</a>
+<a class="" href="#_debugshowallfrustumstatus-визуальный-обзор-всех-инстансов-сразу">_debugShowAllFrustumStatus — визуальный обзор всех инстансов сразу</a>
+<a class="" href="#важно-живое-vs-закэшированное-значение-radius-extents">Важно: живое vs закэшированное значение radius/extents</a>
+<a class="" href="#как-работать-с-битами">Как работать с битами</a>
+<a class="h3" href="#что-такое-бит">Что такое бит</a>
+<a class="h3" href="#три-оператора-которые-реально-использует-код">Три оператора, которые реально использует код</a>
+<a class="h3" href="#пример-с-реальными-числами">Пример с реальными числами</a>
+<a class="h3" href="#шпаргалка-остальные-побитовые-операторы">Шпаргалка: остальные побитовые операторы</a>
+</aside>
+</div>
+</body>
+</html>

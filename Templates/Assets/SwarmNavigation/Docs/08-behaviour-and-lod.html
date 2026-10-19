@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Поведение и LOD — SwarmNav</title>
+<style>
+:root {
+  --base: #1e1e2e; --mantle: #181825; --crust: #11111b;
+  --surface0: #313244; --surface1: #45475a; --surface2: #585b70;
+  --overlay0: #6c7086; --overlay1: #7f849c;
+  --text: #cdd6f4; --subtext1: #bac2de; --subtext0: #a6adc8;
+  --rosewater: #f5e0dc; --flamingo: #f2cdcd; --pink: #f5c2e7; --mauve: #cba6f7;
+  --red: #f38ba8; --maroon: #eba0ac; --peach: #fab387; --yellow: #f9e2af;
+  --green: #a6e3a1; --teal: #94e2d5; --sky: #89dceb; --sapphire: #74c7ec;
+  --blue: #89b4fa; --lavender: #b4befe;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0; background: var(--base); color: var(--text);
+  font-family: -apple-system, "Segoe UI", "Noto Sans", "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.7; font-size: 16px;
+}
+.layout {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr) 220px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+.sidebar {
+  position: sticky; top: 0; align-self: start; height: 100vh; overflow-y: auto;
+  padding: 1.8rem 1.2rem; border-right: 1px solid var(--surface1);
+}
+.sidebar .brand {
+  font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--crust); background: var(--mauve); display: inline-block;
+  padding: 0.15rem 0.6rem; border-radius: 999px; font-weight: 700; margin-bottom: 1.4rem;
+}
+.sidebar nav a {
+  display: block; padding: 0.5rem 0.7rem; margin: 0.1rem 0; border-radius: 7px;
+  color: var(--subtext1); text-decoration: none; font-size: 0.92rem; border-bottom: none;
+  transition: background 0.12s, color 0.12s;
+}
+.sidebar nav a:hover { background: var(--surface0); color: var(--text); }
+.sidebar nav a.active { background: var(--mauve); color: var(--crust); font-weight: 700; }
+.sidebar nav .part-label {
+  font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--overlay0);
+  margin: 1.1rem 0 0.3rem 0.7rem;
+}
+.content { padding: 2.6rem 2.6rem 5rem; min-width: 0; }
+.onpage {
+  position: sticky; top: 0; align-self: start; height: 100vh; overflow-y: auto;
+  padding: 2.6rem 1.2rem;
+}
+.onpage .label {
+  font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--overlay0);
+  margin-bottom: 0.6rem;
+}
+.onpage a {
+  display: block; padding: 0.28rem 0; color: var(--subtext0); text-decoration: none;
+  font-size: 0.86rem; border-bottom: none; border-left: 2px solid transparent; padding-left: 0.7rem;
+}
+.onpage a.h3 { padding-left: 1.4rem; font-size: 0.82rem; }
+.onpage a:hover { color: var(--sapphire); border-left-color: var(--sapphire); }
+
+h1, h2, h3 { font-weight: 700; line-height: 1.3; scroll-margin-top: 1.5rem; }
+h1 { font-size: 2rem; color: var(--mauve); margin: 0 0 0.6rem; }
+.page-kicker {
+  font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--peach);
+  font-weight: 700; margin-bottom: 0.5rem;
+}
+h2 { font-size: 1.4rem; color: var(--blue); margin: 2.4rem 0 1rem; padding-bottom: 0.4rem; border-bottom: 1px solid var(--surface1); }
+h3 { font-size: 1.1rem; color: var(--sky); margin: 1.8rem 0 0.8rem; }
+p { margin: 0.9rem 0; color: var(--text); }
+a { color: var(--sapphire); text-decoration: none; border-bottom: 1px solid rgba(116, 199, 236, 0.35); }
+a:hover { color: var(--lavender); border-bottom-color: var(--lavender); }
+strong { color: var(--peach); font-weight: 700; }
+code {
+  font-family: "JetBrains Mono", "Fira Code", Consolas, "Liberation Mono", monospace;
+  font-size: 0.86em; background: var(--surface0); color: var(--peach);
+  padding: 0.15em 0.4em; border-radius: 5px;
+}
+pre.code {
+  background: var(--mantle); border: 1px solid var(--surface1); border-radius: 10px;
+  padding: 1rem 1.2rem; overflow-x: auto; margin: 1.1rem 0;
+}
+pre.code code { background: none; color: var(--text); padding: 0; font-size: 0.85em; border-radius: 0; }
+.tok-kw { color: var(--mauve); font-weight: 600; }
+.tok-type { color: var(--yellow); }
+.tok-str { color: var(--green); }
+.tok-com { color: var(--overlay0); font-style: italic; }
+blockquote {
+  margin: 1.1rem 0; padding: 0.15rem 1.1rem; border-left: 3px solid var(--peach);
+  background: var(--surface0); border-radius: 0 8px 8px 0; color: var(--subtext1);
+}
+blockquote p { margin: 0.6rem 0; }
+ul, ol { padding-left: 1.4rem; margin: 0.9rem 0; }
+li { margin: 0.45rem 0; }
+hr { border: none; border-top: 1px solid var(--surface1); margin: 2.2rem 0; }
+.table-wrap { overflow-x: auto; margin: 1.1rem 0; }
+table { border-collapse: collapse; width: 100%; font-size: 0.92em; }
+th, td { border: 1px solid var(--surface1); padding: 0.55rem 0.8rem; text-align: left; vertical-align: top; }
+th { background: var(--surface0); color: var(--lavender); }
+tbody tr:nth-child(odd) { background: rgba(49, 50, 68, 0.35); }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+.card {
+  display: block; padding: 1.1rem 1.2rem; background: var(--mantle); border: 1px solid var(--surface1);
+  border-radius: 12px; text-decoration: none; border-bottom: 1px solid var(--surface1); transition: border-color 0.12s, transform 0.12s;
+}
+.card:hover { border-color: var(--mauve); transform: translateY(-2px); }
+.card .card-title { color: var(--text); font-weight: 700; font-size: 1rem; margin-bottom: 0.3rem; display: block; }
+.card .card-desc { color: var(--subtext0); font-size: 0.86rem; }
+.pager { display: flex; justify-content: space-between; margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--surface1); gap: 1rem; }
+.pager a {
+  border: 1px solid var(--surface1); border-radius: 10px; padding: 0.8rem 1.1rem; flex: 1;
+  border-bottom: 1px solid var(--surface1); color: var(--text);
+}
+.pager a:hover { border-color: var(--mauve); }
+.pager .dir { font-size: 0.72rem; text-transform: uppercase; color: var(--overlay0); display: block; margin-bottom: 0.2rem; }
+.pager .next { text-align: right; }
+::selection { background: var(--surface2); color: var(--rosewater); }
+@media (max-width: 1100px) {
+  .layout { grid-template-columns: 220px minmax(0, 1fr); }
+  .onpage { display: none; }
+}
+@media (max-width: 760px) {
+  .layout { grid-template-columns: 1fr; }
+  .sidebar { position: relative; height: auto; border-right: none; border-bottom: 1px solid var(--surface1); }
+  .content { padding: 1.6rem 1.2rem 3rem; }
+}
+
+</style>
+</head>
+<body>
+<div class="layout">
+<aside class="sidebar">
+  <span class="brand">Catppuccin Mocha</span>
+  <nav><div class="part-label">SwarmNav</div>
+<a class="" href="index.html">Обзор</a>
+<a class="" href="01-quickstart.html">Быстрый старт</a>
+<a class="" href="02-swarm-agent.html">SwarmAgent (просто)</a>
+<a class="" href="03-swarm-crowd.html">SwarmCrowd (Burst)</a>
+<a class="" href="04-how-it-works.html">Как это работает</a>
+<a class="" href="05-advanced.html">Расширенные темы</a>
+<a class="" href="06-SwarmNav-recipes.html">Рецепты</a>
+<a class="" href="07-performance.html">Производительность (GPU)</a>
+<a class="active" href="08-behaviour-and-lod.html">Поведение и LOD</a>
+<a class="" href="09-ai-integration.html">Подключение ИИ</a>
+</nav>
+</aside>
+<main class="content">
+<div class="page-kicker">SwarmNav</div>
+<h1 id="патруль-погоня-lod">Патруль, погоня, LOD</h1>
+<h2 id="1-два-вида-цели">1. Два вида цели</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th></th>
+<th>Личная точка</th>
+<th>Погоня за <code>Transform</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Вызов</td>
+<td><code>agent.SetDestination(Vector3)</code></td>
+<td><code>agent.SetDestination(TransformHandle)</code></td>
+</tr>
+<tr>
+<td>Кто делит цель</td>
+<td>никто, у агента своя точка</td>
+<td>все агенты с одним <code>Transform</code> читают его позицию один раз за кадр</td>
+</tr>
+<tr>
+<td>Путь</td>
+<td>свой, считается один раз</td>
+<td>свой, пересчитывается, когда цель смещается</td>
+</tr>
+<tr>
+<td>Лимит разных целей</td>
+<td>нет</td>
+<td>до 256 разных целей-<code>Transform</code> одновременно (<code>MaxGroups</code>)</td>
+</tr>
+<tr>
+<td>После прибытия</td>
+<td><code>hasDestination = false</code></td>
+<td><code>hasDestination</code> остаётся <code>true</code>: агент следует за целью дальше</td>
+</tr>
+</tbody>
+</table></div>
+<p>Раньше был лимит 8 разных общих целей из-за GPU-слотов flow field; теперь пути у каждого агента свои, и лимит 256 - только
+на число отслеживаемых движущихся целей, а не на агентов.</p>
+<p>В <code>SwarmNav</code> напрямую то же самое: <code>SetDestination(handle, pos)</code> и <code>SetSharedGoal(handle, pos, groupKey)</code> +
+<code>UpdateSharedGoalPosition(groupKey, pos)</code>.</p>
+<h3 id="11-как-пересчитывается-путь-при-погоне">1.1. Как пересчитывается путь при погоне</h3>
+<p>Путь агента пересчитывается, если одновременно:</p>
+<ol>
+<li>цель сместилась больше чем на <code>max(ChaseRepathDistance, ChaseRepathFraction * расстояние до цели)</code> с момента расчёта пути;</li>
+<li>с прошлого расчёта прошло <code>RepathCooldown</code> (Near 0,25 с, Mid 1 с, Far 3 с);</li>
+<li>агент не идёт напрямую (<code>DirectMoveRange</code>).</li>
+</ol>
+<p>Дальний агент идёт к устаревшей точке дольше, ближний обновляется чаще, а у цели (≤ 30 м и без стен) путь не нужен.
+За кадр считается не больше <code>PathRequestsPerFrame</code> путей: если преследователей много, часть ждёт очереди. Пример замера:
+20 000 агентов гонятся за одним агентом на карте ~1 км - за ~45 с медиана расстояния до цели падает с 444 до 321 м, число
+агентов ближе 30 м растёт с 95 до 1454 (они же и есть те, кто идёт напрямую). Такая погоня на весь мир дальше дойдёт
+к цели постепенно; если нужна быстрее - поднимите <code>PathRequestsPerFrame</code> (стоит воркеров, не главного потока).</p>
+<h2 id="2-патруль---погоня---атака">2. Патруль -&gt; погоня -&gt; атака</h2>
+<p><code>SwarmPatrolChaseExample.cs</code>: один менеджер на всю толпу, один <code>Update()</code>, по массиву <code>SwarmAgent</code>.</p>
+<ul>
+<li><strong>Патруль:</strong> <code>SetDestination(случайная точка)</code>; новая точка, когда <code>!hasDestination</code> или <code>remainingDistance &lt;=
+  stoppingDistance + 0,5</code>.</li>
+<li><strong>Погоня:</strong> игрок ближе <code>sightRange</code> -&gt; <code>SetDestination(player.transformHandle)</code>. Потерял игрока на <code>1,5 * sightRange</code> -&gt;
+  патруль (гистерезис против дрожания границы).</li>
+<li><strong>Атака:</strong> ближе <code>attackRange</code> -&gt; <code>isStopped = true</code>, событие <code>Attacked</code> по <code>attackCooldown</code>; вышел за <code>1,2 * attackRange</code> -&gt;
+  <code>isStopped = false</code> и снова погоня. <code>stoppingDistance = 0,9 * attackRange</code>: агент встанет на дистанции удара сам.</li>
+</ul>
+<p>Менеджер с одним циклом по массиву дешевле <code>Update()</code> на каждом агенте. Решения («что делать») можно принимать не каждый
+кадр (например, по 1/10 агентов за кадр): навигацию это не затрагивает.</p>
+<h2 id="3-lod-по-расстоянию-до-камеры">3. LOD по расстоянию до камеры</h2>
+<p>Фокус LOD - объект с тегом <code>LodFocusTag</code> (по умолчанию <code>MainCamera</code>); рантайм находит его сам раз в 60 кадров,
+пока не нашёл, и обновляет его позицию каждый кадр. Без фокуса все живые агенты считаются <strong>Near</strong> (полное качество).</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Поле (<code>SwarmNavSettings.Lod</code>)</th>
+<th>Смысл</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>NearRadius</code></td>
+<td>Внутри - Near: шаг <strong>каждый кадр</strong>, разведение. По умолчанию 60 м.</td>
+</tr>
+<tr>
+<td><code>MidRadius</code></td>
+<td>До него - Mid: шаг раз в <code>MidUpdateEveryNFrames</code> кадров, разведение. По умолчанию 150 м.</td>
+</tr>
+<tr>
+<td><code>MidUpdateEveryNFrames</code></td>
+<td>По умолчанию 2.</td>
+</tr>
+<tr>
+<td><code>FarUpdateEveryNFrames</code></td>
+<td>Дальше <code>MidRadius</code> - Far: шаг раз в N кадров, <strong>без разведения</strong> (<code>SeparateFarAgents</code>). По умолчанию 4.</td>
+</tr>
+<tr>
+<td><code>LodSmoothing</code></td>
+<td>Сглаживание Mid/Far в кадре камеры (<code>03-swarm-crowd.md</code>, раздел 5).</td>
+</tr>
+</tbody>
+</table></div>
+<p><code>ShowLodGizmos</code> рисует в Scene View зелёное кольцо <code>NearRadius</code> и жёлтое <code>MidRadius</code> вокруг фокуса.</p>
+<h3 id="31-как-подобрать-расстояния">3.1. Как подобрать расстояния</h3>
+<ol>
+<li>Включите гизмо и посмотрите, где граница видимых деталей (примерно по размеру агента на экране).</li>
+<li><code>NearRadius</code> - там, где «шаг раз в 2 кадра» становится заметен: обычно 40-80 м для человека.</li>
+<li><code>MidRadius</code> - где разведение и частота шага ещё важны, но агент мал: 120-200 м.</li>
+<li><code>FarUpdateEveryNFrames</code> - чем больше, тем дешевле и тем заметнее рывки дальних; для рывков есть <code>LodSmoothing</code>.</li>
+</ol>
+<h3 id="32-что-lod-ускоряет-а-что-нет">3.2. Что LOD ускоряет, а что нет</h3>
+<ul>
+<li>Ускоряет: <code>Steer</code> и <code>Move</code> (шагают раз в N кадров), хэш и разведение (Far в нём нет), запись <code>Transform</code> (у дальних вне
+  кадра - только на шаге).</li>
+<li>Не ускоряет: расчёт путей (они считаются по заявке, не по тиру; для дальних реже только пересчёт при погоне),
+  регистрацию и <code>Collect</code> (он просматривает агентов подряд, пока не наберёт бюджет заявок).</li>
+</ul>
+<h2 id="4-navmesh-острова-связи">4. NavMesh, острова, связи</h2>
+<ul>
+<li>Агенты ходят по <strong>любой</strong> части NavMesh, запечённой <code>NavMeshSurface</code>: земля, Terrain-тайлы, плавающие острова.</li>
+<li>Разорванные части соединяются <code>NavMeshLink</code>; агент проходит связь прыжком по прямой вход -&gt; выход. Дуги/анимации прыжка
+  нет, скорость - <code>speed * LinkSpeedMultiplier</code>.</li>
+<li>Цель в отрезанной части без связи -&gt; <code>pathStatus == Partial</code>: агент доходит до ближайшей достижимой точки.</li>
+<li>Высота - высота поверхности NavMesh в точке агента. Слои друг над другом не путаются: агент привязан к полигону,
+  на котором стоит, и <code>MoveLocation</code> не перепрыгивает на другой слой.</li>
+<li>Объём запекания, качество, <code>Agent Type</code>, области (<code>AreaMask</code>) - настройки вашего <code>NavMeshSurface</code>/<code>SwarmNavSettings</code>.</li>
+</ul>
+<h3 id="41-baseoffset">4.1. baseOffset</h3>
+<p><code>SwarmAgent.baseOffset</code> - смещение Y модели над поверхностью NavMesh, как у <code>NavMeshAgent</code>. Для куба с пивотом в центре -
+половина высоты. Если модель висит в воздухе или утонула - начните с него.</p>
+<h2 id="5-domain-reload-отключён-статики-переживают-stopplay">5. Domain Reload отключён: статики переживают Stop/Play</h2>
+<p>В проекте отключён Domain Reload (Enter Play Mode Options), поэтому статические поля не сбрасываются между запусками.
+<code>SwarmNavRuntime</code> сам сбрасывает свои статики (общий <code>SwarmCrowd</code>, драйвер, фокус LOD) на старте каждого Play через
+<code>[RuntimeInitializeOnLoadMethod(SubsystemRegistration)]</code>. Если вы добавляете свои статические поля, сбрасывайте их так же.</p>
+<div class="pager"><a href="07-performance.html"><span class="dir">Назад</span>Производительность (GPU)</a><a class="next" href="09-ai-integration.html"><span class="dir">Дальше</span>Подключение ИИ</a></div>
+</main>
+<aside class="onpage">
+  <div class="label">На этой странице</div>
+<a class="" href="#1-два-вида-цели">1. Два вида цели</a>
+<a class="" href="#2-патруль---погоня---атака">2. Патруль -&gt; погоня -&gt; атака</a>
+<a class="" href="#3-lod-по-расстоянию-до-камеры">3. LOD по расстоянию до камеры</a>
+<a class="" href="#4-navmesh-острова-связи">4. NavMesh, острова, связи</a>
+<a class="" href="#5-domain-reload-отключён-статики-переживают-stopplay">5. Domain Reload отключён: статики переживают Stop/Play</a>
+</aside>
+</div>
+</body>
+</html>

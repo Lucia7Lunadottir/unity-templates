@@ -1,0 +1,26 @@
+{
+    "name": "PG.VFXPooling.Editor",
+    "rootNamespace": "",
+    "references": [
+        "PG.VFXPooling",
+        "Unity.Burst",
+        "PG.StoryGraph"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [
+        {
+            "name": "com.pg.story-graph",
+            "expression": "",
+            "define": "PG_STORY_GRAPH"
+        }
+    ],
+    "noEngineReferences": false
+}

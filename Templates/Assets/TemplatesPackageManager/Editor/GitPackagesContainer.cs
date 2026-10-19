@@ -141,6 +141,44 @@ namespace PG.TemplatesPackageManager
                     name      = "PG Subclass Serialization",
                     url       = "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/Subclass%20Serialization",
                     packageId = "com.pg.subclass-serialization"
+                },
+                new GitPackage {
+                    name      = "Audio Management",
+                    url       = "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/AudioManagement",
+                    packageId = "com.pg.audio-management"
+                },
+                new GitPackage {
+                    name      = "Swarm Navigation",
+                    url       = "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/SwarmNavigation",
+                    packageId = "com.pg.swarm-navigation"
+                },
+                new GitPackage {
+                    name      = "Indirect Rendering",
+                    url       = "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/IndirectRendering",
+                    packageId = "com.pg.indirect-rendering"
+                },
+                new GitPackage {
+                    name      = "VFX Pooling",
+                    url       = "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/VFXPooling",
+                    packageId = "com.pg.vfx-pooling"
+                },
+                new GitPackage {
+                    name      = "Spring Bone",
+                    url       = "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/Springbone",
+                    packageId = "com.pg.springbone"
+                },
+                new GitPackage {
+                    name      = "Timeline Tracks",
+                    url       = "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/TimelineTracks",
+                    packageId = "com.pg.timeline-tracks",
+                    dependencies = new List<GitPackage>
+                    {
+                        new GitPackage {
+                            name      = "Localization System",
+                            url       = "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/LocalizationSystem",
+                            packageId = "com.pg.localization-system"
+                        }
+                    }
                 }
             };
     }

@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Свои ComputeShader — Graphics.RenderMeshIndirect</title>
+<style>
+:root {
+  --base: #1e1e2e; --mantle: #181825; --crust: #11111b;
+  --surface0: #313244; --surface1: #45475a; --surface2: #585b70;
+  --overlay0: #6c7086; --overlay1: #7f849c;
+  --text: #cdd6f4; --subtext1: #bac2de; --subtext0: #a6adc8;
+  --rosewater: #f5e0dc; --flamingo: #f2cdcd; --pink: #f5c2e7; --mauve: #cba6f7;
+  --red: #f38ba8; --maroon: #eba0ac; --peach: #fab387; --yellow: #f9e2af;
+  --green: #a6e3a1; --teal: #94e2d5; --sky: #89dceb; --sapphire: #74c7ec;
+  --blue: #89b4fa; --lavender: #b4befe;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0; background: var(--base); color: var(--text);
+  font-family: -apple-system, "Segoe UI", "Noto Sans", "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.7; font-size: 16px;
+}
+.layout {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr) 220px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+.sidebar {
+  position: sticky; top: 0; align-self: start; height: 100vh; overflow-y: auto;
+  padding: 1.8rem 1.2rem; border-right: 1px solid var(--surface1);
+}
+.sidebar .brand {
+  font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--crust); background: var(--mauve); display: inline-block;
+  padding: 0.15rem 0.6rem; border-radius: 999px; font-weight: 700; margin-bottom: 1.4rem;
+}
+.sidebar nav a {
+  display: block; padding: 0.5rem 0.7rem; margin: 0.1rem 0; border-radius: 7px;
+  color: var(--subtext1); text-decoration: none; font-size: 0.92rem; border-bottom: none;
+  transition: background 0.12s, color 0.12s;
+}
+.sidebar nav a:hover { background: var(--surface0); color: var(--text); }
+.sidebar nav a.active { background: var(--mauve); color: var(--crust); font-weight: 700; }
+.sidebar nav .part-label {
+  font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--overlay0);
+  margin: 1.1rem 0 0.3rem 0.7rem;
+}
+.content { padding: 2.6rem 2.6rem 5rem; min-width: 0; }
+.onpage {
+  position: sticky; top: 0; align-self: start; height: 100vh; overflow-y: auto;
+  padding: 2.6rem 1.2rem;
+}
+.onpage .label {
+  font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--overlay0);
+  margin-bottom: 0.6rem;
+}
+.onpage a {
+  display: block; padding: 0.28rem 0; color: var(--subtext0); text-decoration: none;
+  font-size: 0.86rem; border-bottom: none; border-left: 2px solid transparent; padding-left: 0.7rem;
+}
+.onpage a.h3 { padding-left: 1.4rem; font-size: 0.82rem; }
+.onpage a:hover { color: var(--sapphire); border-left-color: var(--sapphire); }
+
+h1, h2, h3 { font-weight: 700; line-height: 1.3; scroll-margin-top: 1.5rem; }
+h1 { font-size: 2rem; color: var(--mauve); margin: 0 0 0.6rem; }
+.page-kicker {
+  font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--peach);
+  font-weight: 700; margin-bottom: 0.5rem;
+}
+h2 { font-size: 1.4rem; color: var(--blue); margin: 2.4rem 0 1rem; padding-bottom: 0.4rem; border-bottom: 1px solid var(--surface1); }
+h3 { font-size: 1.1rem; color: var(--sky); margin: 1.8rem 0 0.8rem; }
+p { margin: 0.9rem 0; color: var(--text); }
+a { color: var(--sapphire); text-decoration: none; border-bottom: 1px solid rgba(116, 199, 236, 0.35); }
+a:hover { color: var(--lavender); border-bottom-color: var(--lavender); }
+strong { color: var(--peach); font-weight: 700; }
+code {
+  font-family: "JetBrains Mono", "Fira Code", Consolas, "Liberation Mono", monospace;
+  font-size: 0.86em; background: var(--surface0); color: var(--peach);
+  padding: 0.15em 0.4em; border-radius: 5px;
+}
+pre.code {
+  background: var(--mantle); border: 1px solid var(--surface1); border-radius: 10px;
+  padding: 1rem 1.2rem; overflow-x: auto; margin: 1.1rem 0;
+}
+pre.code code { background: none; color: var(--text); padding: 0; font-size: 0.85em; border-radius: 0; }
+.tok-kw { color: var(--mauve); font-weight: 600; }
+.tok-type { color: var(--yellow); }
+.tok-str { color: var(--green); }
+.tok-com { color: var(--overlay0); font-style: italic; }
+blockquote {
+  margin: 1.1rem 0; padding: 0.15rem 1.1rem; border-left: 3px solid var(--peach);
+  background: var(--surface0); border-radius: 0 8px 8px 0; color: var(--subtext1);
+}
+blockquote p { margin: 0.6rem 0; }
+ul, ol { padding-left: 1.4rem; margin: 0.9rem 0; }
+li { margin: 0.45rem 0; }
+hr { border: none; border-top: 1px solid var(--surface1); margin: 2.2rem 0; }
+.table-wrap { overflow-x: auto; margin: 1.1rem 0; }
+table { border-collapse: collapse; width: 100%; font-size: 0.92em; }
+th, td { border: 1px solid var(--surface1); padding: 0.55rem 0.8rem; text-align: left; vertical-align: top; }
+th { background: var(--surface0); color: var(--lavender); }
+tbody tr:nth-child(odd) { background: rgba(49, 50, 68, 0.35); }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+.card {
+  display: block; padding: 1.1rem 1.2rem; background: var(--mantle); border: 1px solid var(--surface1);
+  border-radius: 12px; text-decoration: none; border-bottom: 1px solid var(--surface1); transition: border-color 0.12s, transform 0.12s;
+}
+.card:hover { border-color: var(--mauve); transform: translateY(-2px); }
+.card .card-title { color: var(--text); font-weight: 700; font-size: 1rem; margin-bottom: 0.3rem; display: block; }
+.card .card-desc { color: var(--subtext0); font-size: 0.86rem; }
+.pager { display: flex; justify-content: space-between; margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--surface1); gap: 1rem; }
+.pager a {
+  border: 1px solid var(--surface1); border-radius: 10px; padding: 0.8rem 1.1rem; flex: 1;
+  border-bottom: 1px solid var(--surface1); color: var(--text);
+}
+.pager a:hover { border-color: var(--mauve); }
+.pager .dir { font-size: 0.72rem; text-transform: uppercase; color: var(--overlay0); display: block; margin-bottom: 0.2rem; }
+.pager .next { text-align: right; }
+::selection { background: var(--surface2); color: var(--rosewater); }
+@media (max-width: 1100px) {
+  .layout { grid-template-columns: 220px minmax(0, 1fr); }
+  .onpage { display: none; }
+}
+@media (max-width: 760px) {
+  .layout { grid-template-columns: 1fr; }
+  .sidebar { position: relative; height: auto; border-right: none; border-bottom: 1px solid var(--surface1); }
+  .content { padding: 1.6rem 1.2rem 3rem; }
+}
+</style>
+</head>
+<body>
+<div class="layout">
+<aside class="sidebar">
+  <span class="brand">Catppuccin Mocha</span>
+  <nav><div class="part-label">Начало</div>
+<a class="" href="index.html">Обзор</a>
+<a class="" href="00-basics.html">Основы (CPU/GPU, буферы, шейдеры)</a>
+<div class="part-label">Часть 1 — практика</div>
+<a class="" href="01-quickstart.html">Быстрый старт</a>
+<div class="part-label">Часть 2 — устройство</div>
+<a class="" href="02-architecture.html">Архитектура</a>
+<a class="active" href="02b-compute-shaders.html">Свои ComputeShader</a>
+<a class="" href="03-culling.html">GPU-culling</a>
+<a class="" href="04-diagnostics.html">Диагностика и биты</a>
+<a class="" href="06-lod.html">LOD</a>
+<div class="part-label">Справочник</div>
+<a class="" href="05-gotchas.html">Грабли и шейдеры</a></nav>
+</aside>
+<main class="content">
+<div class="page-kicker">Часть 2 — устройство</div>
+<h1 id="computeshader-как-писать-свои">ComputeShader: как писать свои</h1>
+<p>Это не разбор <code>IndirectCulling.compute</code> (тот разбор — на странице <a href="03-culling.html">GPU-culling</a>). Это отдельная страница про саму технологию: как устроен <code>.compute</code>-файл, что означают все эти <code>[numthreads]</code>/<code>SV_DispatchThreadID</code>/<code>Dispatch</code>, какие типы буферов бывают — чтобы вы могли написать СВОЙ compute shader с нуля, а не только читать чужой. Если "Основы" (<a href="00-basics.html">00-basics.html</a>) ещё не читали — сначала туда, там объясняется, чем compute shader принципиально отличается от обычного (рисующего) шейдера.</p>
+<h2 id="анатомия-compute-файла">Анатомия <code>.compute</code>-файла</h2>
+<pre class="code lang-hlsl"><code>#pragma kernel CSMain
+
+RWStructuredBuffer&lt;<span class="tok-kw">float</span>&gt; _Numbers;
+
+[numthreads(64, 1, 1)]
+<span class="tok-kw">void</span> CSMain(uint3 id : SV_DispatchThreadID)
+{
+    _Numbers[id.x] = _Numbers[id.x] * 2.0;
+}</code></pre>
+<p>По кусочкам:</p>
+<ul><li><strong><code>#pragma kernel CSMain</code></strong> — объявляет, что функция <code>CSMain</code> ниже это <strong>kernel</strong> — отдельная входная точка, которую можно вызвать (dispatch'нуть) из C#. В одном <code>.compute</code>-файле может быть несколько kernel'ов (несколько <code>#pragma kernel</code> + несколько функций) — например, отдельно "тест видимости" и отдельно "движение", в одном файле, вызываемые независимо.</li><li><strong><code>RWStructuredBuffer&lt;float&gt; _Numbers;</code></strong> — объявление буфера на уровне файла (аналог полей класса в C#) — это "переменная", в которую C#-сторона подставит конкретный <code>GraphicsBuffer</code> перед запуском. Разбор типов буферов — <a href="#какие-буферы-можно-объявлять">ниже</a>.</li><li><strong><code>[numthreads(64, 1, 1)]</code></strong> — говорит GPU "запускай эту функцию ГРУППАМИ по 64 потока в ряд" (два других числа — Y и Z, здесь не используются, <code>1</code> значит "не задействовано"). Подробнее — <a href="#потоки-группы-потоков-и-numthreads">ниже</a>.</li><li><strong><code>void CSMain(uint3 id : SV_DispatchThreadID)</code></strong> — сама функция. <code>SV_DispatchThreadID</code> — это "семантика" (специальное имя, которое GPU понимает без вашего участия) — сюда GPU автоматически подставляет уникальный номер потока, который выполняет именно эту копию функции. Ваш код читает <code>id.x</code> (а если бы <code>numthreads</code> было двумерным/трёхмерным — ещё и <code>id.y</code>/<code>id.z</code>) и понимает, какую именно порцию данных ему обрабатывать.</li></ul>
+<h2 id="потоки-группы-потоков-и-numthreads">Потоки, группы потоков, и <code>[numthreads]</code></h2>
+<p>GPU не запускает функцию "просто миллион раз подряд" — потоки организованы в <strong>группы</strong> фиксированного размера, и размер группы (<code>numthreads</code>) вы задаёте сами, в самом коде шейдера (это должно быть известно на этапе компиляции — нельзя передать его как переменную из C#).</p>
+<p><code>[numthreads(64, 1, 1)]</code> значит: каждая группа — это 64 потока подряд по оси X (и по одному по Y/Z — то есть фактически одномерная группа). Число <code>64</code> не случайно: оно кратно размеру warp/wavefront (блока потоков, которые физически выполняются GPU синхронно, обычно 32 на NVIDIA или 64 на AMD) — на большинстве видеокарт это эффективный размер группы. <code>32</code> или <code>256</code> тоже частые практические выборы; <code>numthreads(1,1,1)</code> технически скомпилируется, но future ГПУ будет использовать одно ядро за раз — крайне неэффективно.</p>
+<p>C# запускает не потоки напрямую, а <strong>группы</strong> потоков:</p>
+<pre class="code lang-csharp"><code>_shader.<span class="tok-type">Dispatch</span>(kernel, threadGroupsX, threadGroupsY, threadGroupsZ);</code></pre>
+<p>Итоговое число запущенных потоков по оси X = <code>threadGroupsX * numthreads.x</code>. Отсюда — практический паттерн "обработать N элементов массива", который использует весь этот проект:</p>
+<pre class="code lang-csharp"><code><span class="tok-kw">int</span> threadGroups = <span class="tok-type">Mathf</span>.<span class="tok-type">CeilToInt</span>(_instanceCount / 64f);
+_shader.<span class="tok-type">Dispatch</span>(kernel, threadGroups, 1, 1);</code></pre>
+<p>С округлением ВВЕРХ (<code>CeilToInt</code>), не вниз — потому что <code>_instanceCount</code> почти никогда не делится на 64 без остатка. Пример с реальными числами: <code>_instanceCount = 1000</code>. <code>1000 / 64 = 15.625</code>, округляем вверх до <code>16</code> групп. Итого запускается <code>16 * 64 = 1024</code> потока — на <strong>24 больше</strong>, чем реальных инстансов. Эти лишние 24 потока получат <code>id.x</code> от <code>1000</code> до <code>1023</code> — индексы, которых в массиве не существует. Поэтому <strong>первая строка тела любого такого kernel'а всегда должна быть защитой от переполнения</strong>:</p>
+<pre class="code lang-hlsl"><code><span class="tok-kw">uint</span> index = id.x;
+<span class="tok-kw">if</span> (index &gt;= _InstanceCount) <span class="tok-kw">return</span>;</code></pre>
+<p>Без неё лишние потоки читали/писали бы память за пределами буфера — неопределённое поведение, не всегда сразу заметный краш.</p>
+<h2 id="какие-буферы-можно-объявлять">Какие буферы можно объявлять</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>Тип</th><th>Смысл</th><th>Пример использования в этом проекте</th></tr></thead>
+<tbody>
+<tr><td><code>StructuredBuffer&lt;T&gt;</code></td><td>Только чтение</td><td><code>_AllInstances</code> в culling-шейдере — читает, никогда не пишет</td></tr>
+<tr><td><code>RWStructuredBuffer&lt;T&gt;</code></td><td>Чтение и запись</td><td>Понадобится для <a href="02-architecture.html#техника-3-движение-прямо-на-gpu-без-участия-cpu-вообще">Техники 3 движения на GPU</a> - шейдер читает старую позицию и пишет новую в тот же элемент</td></tr>
+<tr><td><code>AppendStructuredBuffer&lt;T&gt;</code></td><td>Только запись, со встроенным атомарным счётчиком, <code>.Append(x)</code> дописывает в конец</td><td><code>_VisibleInstances</code> - безопасно из тысяч потоков одновременно, GPU сам гарантирует отсутствие гонок</td></tr>
+<tr><td><code>ConsumeStructuredBuffer&lt;T&gt;</code></td><td>Обратное Append - <code>.Consume()</code> атомарно забирает и удаляет последний элемент</td><td>Не используется в этом проекте, но существует как парный к Append тип - полезен для очередей задач на GPU</td></tr>
+<tr><td><code>Texture2D&lt;T&gt;</code></td><td>Чтение текстуры</td><td><code>_CameraDepthTexture</code> - читается через <code>.Load(int3(pixel, mip))</code>, без сэмплера</td></tr>
+<tr><td><code>RWTexture2D&lt;T&gt;</code></td><td>Чтение и запись текстуры</td><td>Не используется в этом проекте, но существует - например, для compute-шейдеров, которые сами рисуют в текстуру (постобработка, симуляции)</td></tr>
+</tbody></table></div>
+<p>Обычные (не буферные) переменные — <code>float</code>/<code>int</code>/<code>float3</code>/<code>float4x4</code> и т.п. — тоже объявляются на уровне файла и заполняются с C#-стороны через <code>SetFloat</code>/<code>SetInt</code>/<code>SetVector</code>/<code>SetMatrix</code>, как в примере выше с <code>_InstanceCount</code>.</p>
+<h2 id="c-сторона-минимальный-набор-вызовов">C#-сторона: минимальный набор вызовов</h2>
+<pre class="code lang-csharp"><code>[<span class="tok-type">SerializeField</span>] <span class="tok-kw">private</span> <span class="tok-type">ComputeShader</span> _shader;
+<span class="tok-kw">private</span> <span class="tok-kw">int</span> _kernel;
+
+<span class="tok-kw">void</span> <span class="tok-type">Setup</span>()
+{
+    _kernel = _shader.<span class="tok-type">FindKernel</span>(<span class="tok-str">"CSMain"</span>); <span class="tok-com">// имя должно совпадать с #pragma kernel</span>
+}
+
+<span class="tok-kw">void</span> <span class="tok-type">Dispatch</span>(<span class="tok-type">GraphicsBuffer</span> buffer, <span class="tok-kw">int</span> count)
+{
+    _shader.<span class="tok-type">SetBuffer</span>(_kernel, <span class="tok-str">"_Numbers"</span>, buffer);   <span class="tok-com">// буферы - с указанием kernel'а</span>
+    _shader.<span class="tok-type">SetInt</span>(<span class="tok-str">"_Count"</span>, count);                   <span class="tok-com">// обычные переменные - без kernel'а</span>
+    _shader.<span class="tok-type">Dispatch</span>(_kernel, <span class="tok-type">Mathf</span>.<span class="tok-type">CeilToInt</span>(count / 64f), 1, 1);
+}</code></pre>
+<p><code>FindKernel</code> ищет по строковому имени — опечатка не поймается компилятором C#, вылезет только в рантайме (<code>ArgumentException</code>). <code>SetBuffer</code> требует номер kernel'а (один файл может содержать несколько kernel'ов с разными наборами привязанных буферов), а обычные переменные (<code>SetInt</code> и т.п.) — нет, они общие на весь compute shader asset.</p>
+<h2 id="полный-минимальный-пример-удвоить-массив-чисел">Полный минимальный пример: удвоить массив чисел</h2>
+<p>Отдельно от всего проекта — самый маленький возможный рабочий compute shader, чтобы увидеть все кусочки вместе, без culling/frustum/occlusion-сложности:</p>
+<p><code>Double.compute</code>:</p>
+<pre class="code lang-hlsl"><code>#pragma kernel CSMain
+
+RWStructuredBuffer&lt;<span class="tok-kw">float</span>&gt; _Numbers;
+<span class="tok-kw">uint</span> _Count;
+
+[numthreads(64, 1, 1)]
+<span class="tok-kw">void</span> CSMain(uint3 id : SV_DispatchThreadID)
+{
+    <span class="tok-kw">if</span> (id.x &gt;= _Count) <span class="tok-kw">return</span>;
+    _Numbers[id.x] *= 2.0;
+}</code></pre>
+<p>C#:</p>
+<pre class="code lang-csharp"><code><span class="tok-kw">public</span> <span class="tok-type">ComputeShader</span> shader;
+
+<span class="tok-kw">void</span> <span class="tok-type">Run</span>()
+{
+    <span class="tok-kw">float</span>[] data = { 1, 2, 3, 4, 5 };
+    <span class="tok-kw">var</span> buffer = <span class="tok-kw">new</span> <span class="tok-type">GraphicsBuffer</span>(<span class="tok-type">GraphicsBuffer</span>.<span class="tok-type">Target</span>.<span class="tok-type">Structured</span>, data.<span class="tok-type">Length</span>, sizeof(<span class="tok-kw">float</span>));
+    buffer.<span class="tok-type">SetData</span>(data);
+
+    <span class="tok-kw">int</span> kernel = shader.<span class="tok-type">FindKernel</span>(<span class="tok-str">"CSMain"</span>);
+    shader.<span class="tok-type">SetBuffer</span>(kernel, <span class="tok-str">"_Numbers"</span>, buffer);
+    shader.<span class="tok-type">SetInt</span>(<span class="tok-str">"_Count"</span>, data.<span class="tok-type">Length</span>);
+    shader.<span class="tok-type">Dispatch</span>(kernel, <span class="tok-type">Mathf</span>.<span class="tok-type">CeilToInt</span>(data.<span class="tok-type">Length</span> / 64f), 1, 1);
+
+    buffer.<span class="tok-type">GetData</span>(data); <span class="tok-com">// синхронное чтение обратно - см. предупреждение в Диагностике</span>
+    <span class="tok-com">// data теперь { 2, 4, 6, 8, 10 }</span>
+    buffer.<span class="tok-type">Dispose</span>();
+}</code></pre>
+<p>Это тот же самый набор шагов, что в реальном culling-коде этого проекта (<code>GpuIndirectCuller.Dispatch()</code>/<code>DispatchLevel()</code>) — просто без трёх тестов видимости внутри. Если этот маленький пример понятен, разница с настоящим <code>IndirectCulling.compute</code> — только в том, что происходит ВНУТРИ тела kernel'а, не в механике вызова.</p>
+<h2 id="частые-грабли-специфичные-для-compute-shaderов">Частые грабли, специфичные для compute shader'ов</h2>
+<ul><li><strong><code>numthreads</code> должен быть известен на этапе компиляции</strong> — нельзя передать размер группы как переменную из C#, только буквальные числа в самом <code>.hlsl</code>.</li><li><strong>Layout буфера должен побайтово совпадать между HLSL-структурой и C#-структурой</strong> — см. <a href="02-architecture.html#1-instance-буфер-graphicsbuffertargetstructured">Instance-буфер</a>, это касается любого своего buffer'а, не только <code>InstanceData</code>.</li><li><strong>Нельзя динамически выбирать тип буфера</strong> — если объявили <code>StructuredBuffer&lt;T&gt;</code> (только чтение), в этот же буфер нельзя писать из того же kernel'а; нужен отдельный <code>RWStructuredBuffer&lt;T&gt;</code>.</li><li><strong>Платформенные различия компиляторов HLSL</strong> (Vulkan/glslang против D3D/DXC) — отдельно разобраны в <a href="05-gotchas.html#известные-грабли">Граблях</a> (namespace в reflected-HLSL, несколько <code>return</code> в одной функции) — те же ограничения действуют и в <code>.compute</code>-файлах.</li></ul>
+<div class="pager"><a class="prev" href="02-architecture.html"><span class="dir">Назад</span>Архитектура</a><a class="next" href="03-culling.html"><span class="dir">Дальше</span>GPU-culling</a></div>
+</main>
+<aside class="onpage">
+  <div class="label">На этой странице</div>
+  <a class="" href="#анатомия-compute-файла">Анатомия .compute-файла</a>
+<a class="" href="#потоки-группы-потоков-и-numthreads">Потоки, группы потоков, и [numthreads]</a>
+<a class="" href="#какие-буферы-можно-объявлять">Какие буферы можно объявлять</a>
+<a class="" href="#c-сторона-минимальный-набор-вызовов">C#-сторона: минимальный набор вызовов</a>
+<a class="" href="#полный-минимальный-пример-удвоить-массив-чисел">Полный минимальный пример: удвоить массив чисел</a>
+<a class="" href="#частые-грабли-специфичные-для-compute-shaderов">Частые грабли, специфичные для compute shader&#x27;ов</a>
+</aside>
+</div>
+</body>
+</html>

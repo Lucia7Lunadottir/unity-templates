@@ -1,0 +1,20 @@
+{
+    "name": "PG.IndirectRendering",
+    "rootNamespace": "",
+    "references": [
+        "Unity.Burst",
+        "Unity.Collections",
+        "Unity.Mathematics",
+        "Unity.RenderPipelines.Core.Runtime",
+        "Unity.UnifiedRayTracing.Runtime"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

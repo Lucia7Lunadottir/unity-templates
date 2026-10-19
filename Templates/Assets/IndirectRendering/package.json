@@ -1,0 +1,15 @@
+{
+  "name": "com.pg.indirect-rendering",
+  "version": "1.0.0",
+  "displayName": "Indirect Rendering",
+  "description": "GPU-driven indirect rendering of terrain trees, grass and world objects with compute culling, LODs and impostors (URP). Docs in Docs/.",
+  "unity": "6000.6",
+  "author": "Lucia Lunadottir",
+  "type": "assets",
+  "dependencies": {
+    "com.unity.burst": "2.0.0",
+    "com.unity.collections": "6.6.0",
+    "com.unity.mathematics": "1.4.0",
+    "com.unity.render-pipelines.core": "17.6.0"
+  }
+}

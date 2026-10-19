@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GPU-culling — Graphics.RenderMeshIndirect</title>
+<style>
+:root {
+  --base: #1e1e2e; --mantle: #181825; --crust: #11111b;
+  --surface0: #313244; --surface1: #45475a; --surface2: #585b70;
+  --overlay0: #6c7086; --overlay1: #7f849c;
+  --text: #cdd6f4; --subtext1: #bac2de; --subtext0: #a6adc8;
+  --rosewater: #f5e0dc; --flamingo: #f2cdcd; --pink: #f5c2e7; --mauve: #cba6f7;
+  --red: #f38ba8; --maroon: #eba0ac; --peach: #fab387; --yellow: #f9e2af;
+  --green: #a6e3a1; --teal: #94e2d5; --sky: #89dceb; --sapphire: #74c7ec;
+  --blue: #89b4fa; --lavender: #b4befe;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0; background: var(--base); color: var(--text);
+  font-family: -apple-system, "Segoe UI", "Noto Sans", "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.7; font-size: 16px;
+}
+.layout {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr) 220px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+.sidebar {
+  position: sticky; top: 0; align-self: start; height: 100vh; overflow-y: auto;
+  padding: 1.8rem 1.2rem; border-right: 1px solid var(--surface1);
+}
+.sidebar .brand {
+  font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--crust); background: var(--mauve); display: inline-block;
+  padding: 0.15rem 0.6rem; border-radius: 999px; font-weight: 700; margin-bottom: 1.4rem;
+}
+.sidebar nav a {
+  display: block; padding: 0.5rem 0.7rem; margin: 0.1rem 0; border-radius: 7px;
+  color: var(--subtext1); text-decoration: none; font-size: 0.92rem; border-bottom: none;
+  transition: background 0.12s, color 0.12s;
+}
+.sidebar nav a:hover { background: var(--surface0); color: var(--text); }
+.sidebar nav a.active { background: var(--mauve); color: var(--crust); font-weight: 700; }
+.sidebar nav .part-label {
+  font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--overlay0);
+  margin: 1.1rem 0 0.3rem 0.7rem;
+}
+.content { padding: 2.6rem 2.6rem 5rem; min-width: 0; }
+.onpage {
+  position: sticky; top: 0; align-self: start; height: 100vh; overflow-y: auto;
+  padding: 2.6rem 1.2rem;
+}
+.onpage .label {
+  font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--overlay0);
+  margin-bottom: 0.6rem;
+}
+.onpage a {
+  display: block; padding: 0.28rem 0; color: var(--subtext0); text-decoration: none;
+  font-size: 0.86rem; border-bottom: none; border-left: 2px solid transparent; padding-left: 0.7rem;
+}
+.onpage a.h3 { padding-left: 1.4rem; font-size: 0.82rem; }
+.onpage a:hover { color: var(--sapphire); border-left-color: var(--sapphire); }
+
+h1, h2, h3 { font-weight: 700; line-height: 1.3; scroll-margin-top: 1.5rem; }
+h1 { font-size: 2rem; color: var(--mauve); margin: 0 0 0.6rem; }
+.page-kicker {
+  font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--peach);
+  font-weight: 700; margin-bottom: 0.5rem;
+}
+h2 { font-size: 1.4rem; color: var(--blue); margin: 2.4rem 0 1rem; padding-bottom: 0.4rem; border-bottom: 1px solid var(--surface1); }
+h3 { font-size: 1.1rem; color: var(--sky); margin: 1.8rem 0 0.8rem; }
+p { margin: 0.9rem 0; color: var(--text); }
+a { color: var(--sapphire); text-decoration: none; border-bottom: 1px solid rgba(116, 199, 236, 0.35); }
+a:hover { color: var(--lavender); border-bottom-color: var(--lavender); }
+strong { color: var(--peach); font-weight: 700; }
+code {
+  font-family: "JetBrains Mono", "Fira Code", Consolas, "Liberation Mono", monospace;
+  font-size: 0.86em; background: var(--surface0); color: var(--peach);
+  padding: 0.15em 0.4em; border-radius: 5px;
+}
+pre.code {
+  background: var(--mantle); border: 1px solid var(--surface1); border-radius: 10px;
+  padding: 1rem 1.2rem; overflow-x: auto; margin: 1.1rem 0;
+}
+pre.code code { background: none; color: var(--text); padding: 0; font-size: 0.85em; border-radius: 0; }
+.tok-kw { color: var(--mauve); font-weight: 600; }
+.tok-type { color: var(--yellow); }
+.tok-str { color: var(--green); }
+.tok-com { color: var(--overlay0); font-style: italic; }
+blockquote {
+  margin: 1.1rem 0; padding: 0.15rem 1.1rem; border-left: 3px solid var(--peach);
+  background: var(--surface0); border-radius: 0 8px 8px 0; color: var(--subtext1);
+}
+blockquote p { margin: 0.6rem 0; }
+ul, ol { padding-left: 1.4rem; margin: 0.9rem 0; }
+li { margin: 0.45rem 0; }
+hr { border: none; border-top: 1px solid var(--surface1); margin: 2.2rem 0; }
+.table-wrap { overflow-x: auto; margin: 1.1rem 0; }
+table { border-collapse: collapse; width: 100%; font-size: 0.92em; }
+th, td { border: 1px solid var(--surface1); padding: 0.55rem 0.8rem; text-align: left; vertical-align: top; }
+th { background: var(--surface0); color: var(--lavender); }
+tbody tr:nth-child(odd) { background: rgba(49, 50, 68, 0.35); }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+.card {
+  display: block; padding: 1.1rem 1.2rem; background: var(--mantle); border: 1px solid var(--surface1);
+  border-radius: 12px; text-decoration: none; border-bottom: 1px solid var(--surface1); transition: border-color 0.12s, transform 0.12s;
+}
+.card:hover { border-color: var(--mauve); transform: translateY(-2px); }
+.card .card-title { color: var(--text); font-weight: 700; font-size: 1rem; margin-bottom: 0.3rem; display: block; }
+.card .card-desc { color: var(--subtext0); font-size: 0.86rem; }
+.pager { display: flex; justify-content: space-between; margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--surface1); gap: 1rem; }
+.pager a {
+  border: 1px solid var(--surface1); border-radius: 10px; padding: 0.8rem 1.1rem; flex: 1;
+  border-bottom: 1px solid var(--surface1); color: var(--text);
+}
+.pager a:hover { border-color: var(--mauve); }
+.pager .dir { font-size: 0.72rem; text-transform: uppercase; color: var(--overlay0); display: block; margin-bottom: 0.2rem; }
+.pager .next { text-align: right; }
+::selection { background: var(--surface2); color: var(--rosewater); }
+@media (max-width: 1100px) {
+  .layout { grid-template-columns: 220px minmax(0, 1fr); }
+  .onpage { display: none; }
+}
+@media (max-width: 760px) {
+  .layout { grid-template-columns: 1fr; }
+  .sidebar { position: relative; height: auto; border-right: none; border-bottom: 1px solid var(--surface1); }
+  .content { padding: 1.6rem 1.2rem 3rem; }
+}
+</style>
+</head>
+<body>
+<div class="layout">
+<aside class="sidebar">
+  <span class="brand">Catppuccin Mocha</span>
+  <nav><div class="part-label">Начало</div>
+<a class="" href="index.html">Обзор</a>
+<a class="" href="00-basics.html">Основы (CPU/GPU, буферы, шейдеры)</a>
+<div class="part-label">Часть 1 — практика</div>
+<a class="" href="01-quickstart.html">Быстрый старт</a>
+<div class="part-label">Часть 2 — устройство</div>
+<a class="" href="02-architecture.html">Архитектура</a>
+<a class="" href="02b-compute-shaders.html">Свои ComputeShader</a>
+<a class="active" href="03-culling.html">GPU-culling</a>
+<a class="" href="04-diagnostics.html">Диагностика и биты</a>
+<a class="" href="06-lod.html">LOD</a>
+<div class="part-label">Справочник</div>
+<a class="" href="05-gotchas.html">Грабли и шейдеры</a></nav>
+</aside>
+<main class="content">
+<div class="page-kicker">Часть 2 — устройство</div>
+<h1 id="gpu-culling-через-computeshader">GPU-culling через ComputeShader</h1>
+<p>Это реальный работающий пример, а не гипотетическое "можно было бы сделать так". Файл — <code>IndirectCulling.compute</code>, включается галочкой <code>_useComputeCulling</code> + назначенным <code>_cullingShader</code> (практика включения — <a href="01-quickstart.html">Быстрый старт</a>).</p>
+<h2 id="идея">Идея</h2>
+<p>Вместо того чтобы CPU каждый кадр решал, что видно, а что нет (перебор тысяч инстансов на C# — дорого и вообще не то, для чего затевался indirect-рендер), решение принимает GPU: compute shader пробегает по всем инстансам параллельно, для каждого проверяет условие видимости и <strong>сам</strong> решает, кому попасть в этот кадр. Результат — новый, более короткий список, и число элементов в нём CPU даже не обязан знать.</p>
+<h2 id="три-теста-подряд-от-дешёвого-к-дорогому-каждый-отключаем-отдельно">Три теста подряд, от дешёвого к дорогому, каждый отключаем отдельно</h2>
+<p>Compute shader делает не одну проверку, а три, последовательно — если инстанс не прошёл более дешёвый тест, дорогой для него даже не считается. Ниже — реальный текущий код <code>CSMain</code>, диагностические блоки (запись в <code>_Debug*</code>-буферы) убраны для читаемости — разбор в <a href="04-diagnostics.html">Диагностике</a>:</p>
+<pre class="code lang-hlsl"><code>#pragma kernel CSMain
+
+<span class="tok-kw">struct</span> InstanceData
+{
+    <span class="tok-kw">float3</span> position;
+    <span class="tok-kw">float</span> scale;
+    <span class="tok-kw">float4</span> rotation;
+};
+
+StructuredBuffer&lt;InstanceData&gt; _AllInstances;
+AppendStructuredBuffer&lt;InstanceData&gt; _VisibleInstances;
+Texture2D&lt;<span class="tok-kw">float</span>&gt; _CameraDepthTexture;
+
+<span class="tok-kw">uint</span> _InstanceCount;
+<span class="tok-kw">float3</span> _CullOrigin;
+<span class="tok-kw">float</span> _CullRadius;
+<span class="tok-kw">float</span> _LodMinDistance;
+<span class="tok-kw">float</span> _MeshBoundsRadius;
+<span class="tok-kw">float3</span> _MeshBoundsExtents;
+<span class="tok-kw">float4x4</span> _ViewProjection;
+<span class="tok-kw">float4x4</span> _PrevViewProj;
+<span class="tok-kw">float2</span> _ScreenSize;
+<span class="tok-kw">int</span> _UsesReversedZ;
+<span class="tok-kw">int</span> _EnableDistance;
+<span class="tok-kw">int</span> _EnableFrustum;
+<span class="tok-kw">int</span> _EnableOcclusion;
+<span class="tok-kw">int</span> _InvertOcclusion;
+
+[numthreads(64, 1, 1)]
+<span class="tok-kw">void</span> CSMain(uint3 id : SV_DispatchThreadID)
+{
+    <span class="tok-kw">uint</span> index = id.x;
+    <span class="tok-kw">if</span> (index &gt;= _InstanceCount) <span class="tok-kw">return</span>;
+
+    InstanceData inst = _AllInstances[index];
+
+    <span class="tok-com">// 1. Дистанция - самый дешёвый тест первым. Диапазон, не просто верхняя граница -</span>
+    <span class="tok-com">// нижняя (_LodMinDistance) нужна только при LOD-бакетах, иначе всегда 0.</span>
+    <span class="tok-kw">if</span> (_EnableDistance != 0)
+    {
+        <span class="tok-kw">float</span> dist = distance(inst.position, _CullOrigin);
+        <span class="tok-kw">if</span> (dist &gt; _CullRadius || dist &lt; _LodMinDistance) <span class="tok-kw">return</span>;
+    }
+
+    <span class="tok-com">// 2. Frustum - учитывает направление взгляда камеры.</span>
+    <span class="tok-kw">if</span> (_EnableFrustum != 0)
+    {
+        <span class="tok-kw">float</span> radius = _MeshBoundsRadius * inst.scale;
+        <span class="tok-kw">if</span> (!IsInsideFrustum(inst.position, radius)) <span class="tok-kw">return</span>;
+    }
+
+    <span class="tok-com">// 3. Occlusion - самый дорогой тест (чтение текстуры), поэтому последний.</span>
+    <span class="tok-kw">if</span> (_EnableOcclusion != 0)
+    {
+        <span class="tok-kw">bool</span> occluded = IsOccluded(inst.position, inst.scale, inst.rotation);
+        <span class="tok-kw">if</span> (_InvertOcclusion != 0) occluded = !occluded;
+        <span class="tok-kw">if</span> (occluded) <span class="tok-kw">return</span>;
+    }
+
+    _VisibleInstances.Append(inst);
+}</code></pre>
+<ul><li><strong><code>StructuredBuffer&lt;InstanceData&gt; _AllInstances</code></strong> — тот же самый <code>_instances.Buffer</code> (реальный <code>GraphicsBuffer</code> внутри <code>InstanceBuffer</code>, см. <a href="02-architecture.html#1-instance-буфер-graphicsbuffertargetstructured">Архитектуру</a>), что заполнял C# при расстановке. Здесь он только читается.</li><li><strong><code>AppendStructuredBuffer&lt;InstanceData&gt; _VisibleInstances</code></strong> — особый тип буфера с <strong>встроенным счётчиком на GPU</strong>. <code>.Append(x)</code> атомарно дописывает элемент в конец и увеличивает счётчик — это безопасно делать параллельно из тысяч потоков одновременно, GPU сам гарантирует, что потоки не затрут данные друг друга.</li><li><strong><code>[numthreads(64, 1, 1)]</code></strong> — размер одной группы потоков: 64 потока в ряд. Это не "64 инстанса видно", это "64 инстанса проверяются параллельно в одной группе" — число выбрано типичным для GPU (кратно размеру warp/wavefront на большинстве видеокарт), не имеет отношения к количеству видимых объектов.</li><li><strong><code>if (index &gt;= _InstanceCount) return;</code></strong> — защита от переполнения: групп потоков всегда запускается с округлением вверх, поэтому последняя группа почти всегда "лишняя" сверх реального количества инстансов.</li><li><strong><code>_Enable*</code> галочки</strong> — без возможности выключить дистанцию по отдельности, она глушила бы всё, что идёт после неё, и изолировать frustum/occlusion друг от друга было бы невозможно (бисекция "какая именно стадия виновата" требует уметь выключать их по одной).</li><li><strong><code>_LodMinDistance</code></strong> — если у вас нет LOD, всегда 0 и не влияет ни на что. Разбор — <a href="06-lod.html">LOD</a>.</li></ul>
+<h2 id="тест-1-дистанция">Тест 1: дистанция</h2>
+<pre class="code lang-hlsl"><code><span class="tok-kw">if</span> (_EnableDistance != 0)
+{
+    <span class="tok-kw">float</span> dist = distance(inst.position, _CullOrigin);
+    <span class="tok-kw">if</span> (dist &gt; _CullRadius || dist &lt; _LodMinDistance) <span class="tok-kw">return</span>;
+}</code></pre>
+<p>Сфера с центром в <code>_CullOrigin</code> (позиция камеры). Инстанс внутри сферы — проходит дальше, снаружи — сразу отбрасывается. Ничего не знает про направление взгляда камеры — используется просто как дешёвый "не рисуем то, что очень далеко" пре-фильтр перед двумя следующими, более дорогими тестами. При активном LOD этот же тест ещё и решает, в какой LOD-бакет попадёт инстанс — см. <a href="06-lod.html">LOD</a>.</p>
+<h2 id="тест-2-frustum-culling">Тест 2: frustum culling</h2>
+<p>Реализация — через clip space напрямую, без построения 6 плоскостей пирамиды видимости. Референс — <code>ellioman/Indirect-Rendering-With-Compute-Shaders</code>, проверенная и широко форкнутая реализация:</p>
+<pre class="code lang-hlsl"><code><span class="tok-kw">bool</span> IsInsideFrustum(<span class="tok-kw">float3</span> worldPos, <span class="tok-kw">float</span> radius)
+{
+    <span class="tok-kw">float4</span> clipPos = mul(_ViewProjection, <span class="tok-kw">float4</span>(worldPos, 1.0));
+    <span class="tok-kw">float</span> w = clipPos.w + radius;
+
+    <span class="tok-kw">bool</span> inFront = w &gt; 0.0;
+    <span class="tok-kw">bool</span> withinDepth = clipPos.z &lt;= w;
+    <span class="tok-kw">bool</span> withinX = clipPos.x &gt;= -w &amp;&amp; clipPos.x &lt;= w;
+    <span class="tok-kw">bool</span> withinY = clipPos.y &gt;= -w &amp;&amp; clipPos.y &lt;= w;
+
+    <span class="tok-kw">return</span> inFront &amp;&amp; withinDepth &amp;&amp; withinX &amp;&amp; withinY;
+}</code></pre>
+<p>Точка внутри фрустума тогда и только тогда, когда <code>-w &lt;= x &lt;= w</code>, <code>-w &lt;= y &lt;= w</code>, <code>z &lt;= w</code>, <code>w &gt; 0</code> (конвенция clip space Unity: <code>w</code> до перспективного деления равен view-space глубине в мировых единицах). Поэтому <code>radius</code> (тоже в мировых единицах) можно просто прибавить к <code>w</code> как консервативный запас на размер инстанса — размерности совпадают не случайно.</p>
+<p><strong>Важная деталь</strong>: <code>inFront</code> сравнивается с <strong>расширенным</strong> <code>w = clipPos.w + radius</code>, а не с сырым <code>clipPos.w</code>. Если бы было наоборот — как только <strong>пивот</strong> крупного объекта (например, медведь, вокруг/сквозь которого прошла камера) пересекал плоскость камеры (<code>clipPos.w &lt;= 0</code>), весь инстанс мгновенно пропадал бы — даже если передняя часть его геометрии, в пределах <code>radius</code> перед пивотом, всё ещё была перед камерой и физически видна. Симптом такого бага: "объект пропадает ровно в момент, когда его pivot/точка скрывается за камерой, хотя полигоны ещё видны".</p>
+<p><code>radius</code> для теста — не произвольное число, а <code>_MeshBoundsRadius * inst.scale</code>. <code>_MeshBoundsRadius</code> берётся из <code>_boundsRadiusOverride</code>, если он <code>&gt; 0</code>, иначе автоматически из <code>_mesh.bounds.extents.magnitude</code>. Пересчитывается <strong>каждый кадр</strong>, не кэшируется при старте — чтобы правки в инспекторе во время Play mode сразу доходили до реального GPU-теста.</p>
+<p>C#-сторона передаёт саму <code>_ViewProjection</code> (без плоскостей):</p>
+<pre class="code lang-csharp"><code><span class="tok-kw">private</span> <span class="tok-type">Matrix4x4</span> <span class="tok-type">BuildViewProjMatrix</span>()
+{
+    <span class="tok-type">Matrix4x4</span> gpuProjection = <span class="tok-type">GL</span>.<span class="tok-type">GetGPUProjectionMatrix</span>(_targetCamera.projectionMatrix, <span class="tok-kw">true</span>);
+    <span class="tok-kw">return</span> gpuProjection * _targetCamera.worldToCameraMatrix;
+}</code></pre>
+<p><code>GL.GetGPUProjectionMatrix</code> переводит <code>camera.projectionMatrix</code> (условная "Unity"-конвенция) в реальную конвенцию конкретной GPU-платформы (D3D/Vulkan/Metal по-своему трактуют clip space) — без этого перевода сравнение с настоящим аппаратным depth-буфером в occlusion-тесте будет систематически неверным. Этот же метод строит и <code>_ViewProjection</code> для frustum-теста, и <code>_PrevViewProj</code> для occlusion — единообразно, одной функцией, чтобы не рассинхронизировать две отдельные конвенции clip space в одном файле.</p>
+<h2 id="тест-3-occlusion-culling-по-depth-буферу-прошлого-кадра">Тест 3: occlusion culling (по depth-буферу прошлого кадра)</h2>
+<p>Отбраковка того, что перекрыто другой геометрией. Реализован <strong>самостоятельно</strong>, не через фичу URP (URP-шная версия работает только с <code>BatchRendererGroup</code> и <code>Graphics.RenderMeshIndirect</code> не видит вообще). Идея та же: сравнение с depth-буфером <strong>прошлого</strong> кадра, а не текущего — на момент, когда мы решаем, что рисовать в этом кадре, глубина этого же кадра ещё физически не существует.</p>
+<pre class="code lang-hlsl"><code><span class="tok-kw">bool</span> IsPointOccluded(<span class="tok-kw">float3</span> worldPos)
+{
+    <span class="tok-kw">float4</span> clipPos = mul(_PrevViewProj, <span class="tok-kw">float4</span>(worldPos, 1.0));
+
+    <span class="tok-kw">float3</span> ndc = clipPos.xyz / clipPos.w;
+    <span class="tok-kw">float2</span> uv = ndc.xy * 0.5 + 0.5;
+    <span class="tok-kw">int2</span> pixelCoord = <span class="tok-kw">int2</span>(uv * _ScreenSize);
+    <span class="tok-kw">float</span> sceneDepth = _CameraDepthTexture.Load(<span class="tok-kw">int3</span>(pixelCoord, 0)).r;
+    <span class="tok-kw">float</span> instanceDepth = ndc.z;
+
+    <span class="tok-kw">bool</span> inFrontOfCamera = clipPos.w &gt; 0.0;
+    <span class="tok-kw">bool</span> withinPrevFrame = uv.x &gt;= 0.0 &amp;&amp; uv.x &lt;= 1.0 &amp;&amp; uv.y &gt;= 0.0 &amp;&amp; uv.y &lt;= 1.0;
+
+    <span class="tok-kw">bool</span> occludedByDepth = _UsesReversedZ != 0 ? (instanceDepth &lt; sceneDepth) : (instanceDepth &gt; sceneDepth);
+
+    <span class="tok-kw">return</span> inFrontOfCamera &amp;&amp; withinPrevFrame &amp;&amp; occludedByDepth;
+}</code></pre>
+<p>По шагам:</p>
+<ol><li><strong><code>mul(_PrevViewProj, ...)</code></strong> — проецируем мировую позицию <strong>из прошлого кадра</strong>. <code>_PrevViewProj</code> сохраняется в конце предыдущего вызова culling'а, строится той же <code>BuildViewProjMatrix()</code>, что и выше.</li><li><strong><code>inFrontOfCamera = clipPos.w &gt; 0.0</code> → иначе считаем видимым</strong> — инстанс был за камерой в прошлом кадре (появился только что / камера повернулась). Сравнивать не с чем — fail-open: лучше лишний раз нарисовать, чем ошибочно спрятать то, что реально видно.</li><li><strong><code>withinPrevFrame</code></strong> — та же логика: точка была за пределами прошлого кадра по горизонтали/ вертикали — тоже fail-open.</li><li><strong><code>_CameraDepthTexture.Load(int3(pixelCoord, 0))</code></strong> — точечное чтение по целочисленным координатам пикселя, без сэмплера и фильтрации (<code>Load</code>, не <code>Sample</code>).</li><li><strong>Сравнение с учётом reversed-Z</strong>: <code>SystemInfo.usesReversedZBuffer</code> говорит, в каком порядке хранится глубина на текущей платформе, передаётся флагом <code>_UsesReversedZ</code> — не зашито в код, иначе на другой платформе тест дал бы противоположный результат.</li></ol>
+<p><strong>Практическое наблюдение</strong> (Vulkan/Linux/NVIDIA): при активном reversed-Z сырой <code>clipPos.z</code> <strong>не</strong> растёт пропорционально глубине — он остаётся близко к near-плоскости почти на всей дистанции (near-плоскость соответствует <code>z ≈ w</code>, far — <code>z ≈ 0</code>, и большая часть диапазона "спрессована" у 0 — это специально для точности float, так работает reversed-Z). Маленькое <code>z</code> при большом <code>w</code> — это нормально для reversed-Z, не аномалия, держите в голове при чтении диагностических чисел.</p>
+<p>Occlusion-тест не одной точки, а <strong>семи</strong> — центр + 6 точек на гранях bounding box'а, повёрнутых и отмасштабированных как сам инстанс:</p>
+<pre class="code lang-hlsl"><code><span class="tok-kw">bool</span> IsOccluded(<span class="tok-kw">float3</span> center, <span class="tok-kw">float</span> scale, <span class="tok-kw">float4</span> rotation)
+{
+    <span class="tok-kw">float3</span> extents = _MeshBoundsExtents * scale;
+
+    <span class="tok-kw">float3</span> localOffsets[7] = {
+        <span class="tok-kw">float3</span>(0, 0, 0),
+        <span class="tok-kw">float3</span>(0, extents.y, 0), <span class="tok-kw">float3</span>(0, -extents.y, 0),
+        <span class="tok-kw">float3</span>(extents.x, 0, 0), <span class="tok-kw">float3</span>(-extents.x, 0, 0),
+        <span class="tok-kw">float3</span>(0, 0, extents.z), <span class="tok-kw">float3</span>(0, 0, -extents.z)
+    };
+
+    [<span class="tok-kw">unroll</span>]
+    <span class="tok-kw">for</span> (<span class="tok-kw">int</span> i = 0; i &lt; 7; i++)
+    {
+        <span class="tok-kw">float3</span> samplePos = center + RotateByQuaternion(localOffsets[i], rotation);
+        <span class="tok-kw">if</span> (!IsPointOccluded(samplePos)) <span class="tok-kw">return</span> <span class="tok-kw">false</span>; <span class="tok-com">// хоть одна точка видна - инстанс видим</span>
+    }
+
+    <span class="tok-kw">return</span> <span class="tok-kw">true</span>; <span class="tok-com">// все 7 точек скрыты</span>
+}</code></pre>
+<p>Инстанс считается скрытым, только если скрыты <strong>все 7</strong> точек — одной видимой (например, спина животного торчит над укрытием, а центр тела — нет) достаточно, чтобы не отбрасывать объект целиком.</p>
+<p><strong>Важный нюанс, который стоит понимать, а не просто знать, что он есть</strong>: точка <code>(0,0,0)</code> — это центр/пивот инстанса, точка <strong>внутри</strong> тела меша. Для любого сплошного объекта центр почти всегда физически "закрыт" собственной ближней поверхностью — это нормальная геометрия, самоокклюзия, а не баг. Цикл это учитывает: раз центр не прошёл, проверка идёт к 6 точкам-граням. Но вся надёжность теста в итоге зависит от того, <strong>долетают ли эти 6 точек до настоящей поверхности меша</strong>. Они смещены на <code>_MeshBoundsExtents * scale</code> — и если <code>_boundsExtentsOverride</code> не соответствует реальным, несимметричным пропорциям животного (например, равносторонний куб на явно вытянутое тело), часть или все 6 точек могут остаться ВНУТРИ меша и тоже самоокклюзироваться — тест на практике начнёт себя вести почти как "только центр", хотя код формально сэмплирует 7 точек. Симптом — необъяснимое "мигание"/пропадание объектов, у которых <code>occludedCount</code> (см. <a href="04-diagnostics.html">Диагностику</a>) стабильно 7/7 даже когда объект явно должен быть виден. Лечится настройкой <code>_boundsExtentsOverride</code> под реальную форму меша.</p>
+<p>C#-сторона — привязка текстуры и передача остальных параметров:</p>
+<pre class="code lang-csharp"><code>_cullingShader.<span class="tok-type">SetTextureFromGlobal</span>(_cullingKernel, <span class="tok-str">"_CameraDepthTexture"</span>, <span class="tok-str">"_CameraDepthTexture"</span>);
+_cullingShader.<span class="tok-type">SetMatrix</span>(<span class="tok-str">"_PrevViewProj"</span>, _prevViewProj);
+_cullingShader.<span class="tok-type">SetVector</span>(<span class="tok-str">"_ScreenSize"</span>, <span class="tok-kw">new</span> <span class="tok-type">Vector2</span>(_targetCamera.pixelWidth, _targetCamera.pixelHeight));
+_cullingShader.<span class="tok-type">SetInt</span>(<span class="tok-str">"_UsesReversedZ"</span>, <span class="tok-type">SystemInfo</span>.usesReversedZBuffer ? 1 : 0);</code></pre>
+<p><strong><code>SetTextureFromGlobal</code>, не <code>SetTexture</code></strong> — важное отличие именно для compute shader'ов. Обычные материалы автоматически видят глобальные текстуры, заданные через <code>Shader.SetGlobalTexture</code> (так URP публикует <code>_CameraDepthTexture</code> каждый кадр). Compute shader — нет, ему нужно явно сказать "возьми вот эту глобальную текстуру и привяжи вот сюда". <code>_CameraDepthTexture</code> будет реально существовать и обновляться только если у активного URP-ассета включена Depth Texture (в этом проекте — <code>Assets/Settings/PC_RPAsset.asset</code>, <code>m_RequireDepthTexture: 1</code>, уже включено, трогать не нужно).</p>
+<h2 id="известные-ограничения-occlusion-теста">Известные ограничения occlusion-теста</h2>
+<ul><li><strong><code>_MeshBoundsExtents</code> должен соответствовать реальным пропорциям меша</strong>, не быть произвольным кубом — см. объяснение самоокклюзии центра выше. Это главный подозреваемый для ложных отбраковок occlusion-теста у крупных/близких объектов.</li><li><strong>Глубина прошлого, не текущего кадра.</strong> При резком повороте камеры на краю экрана возможны один-два кадра ложноположительных "не отброшен, хотя должен был бы" (fail-open по UV/за-камерой) — это осознанный компромисс в пользу "лучше лишний раз нарисовать".</li><li><strong><code>_boundsRadiusOverride</code>/<code>_boundsExtentsOverride</code> общие на все инстансы одного рендерера</strong> — при LOD с разными мешами на разные уровни, у каждого бакета сейчас общий радиус/extents (от базового <code>_mesh</code>) — обычно нормально, т.к. LOD-мешы сохраняют силуэт, но держите в голове.</li><li><strong>По умолчанию выключен</strong> (<code>_enableOcclusionCulling = false</code>) именно из-за истории нестабильности выше — включайте осознанно и проверяйте через диагностику, а не как "ещё одну галочку до кучи".</li></ul>
+<h2 id="критически-важный-нюанс-чей-буфер-читает-шейдер-рендера">Критически важный нюанс: чей буфер читает шейдер рендера</h2>
+<p>Когда culling включён, <code>SV_InstanceID</code>/<code>Instance ID</code> в шейдере отрисовки нумерует место в буфере <strong>выживших</strong> (после всех трёх тестов), а не в исходном <code>_instances.Buffer</code>. Выживших хранит <code>GpuIndirectCuller.Level.VisibleBuffer</code> — свой на каждый LOD-уровень (или один, если LOD не настроен, см. <a href="06-lod.html">LOD</a>). Поэтому перед каждым draw call'ом привязка буфера к материалу переключается — реальный код из <code>IndirectMeshRenderer.DispatchAndRenderWithCulling()</code>:</p>
+<pre class="code lang-csharp"><code><span class="tok-kw">foreach</span> (<span class="tok-type">GpuIndirectCuller</span>.<span class="tok-type">Level</span> level <span class="tok-kw">in</span> _culler.<span class="tok-type">Levels</span>)
+{
+    _propertyBlock.<span class="tok-type">SetBuffer</span>(<span class="tok-type">InstanceBufferId</span>, level.<span class="tok-type">VisibleBuffer</span>);
+    <span class="tok-type">RenderParams</span> rparams = <span class="tok-type">BuildRenderParams</span>();
+    rparams.forceMeshLod = level.<span class="tok-type">ForceMeshLod</span>;
+    <span class="tok-type">Graphics</span>.<span class="tok-type">RenderMeshIndirect</span>(rparams, level.<span class="tok-type">Mesh</span>, level.<span class="tok-type">CommandBuffer</span>);
+}</code></pre>
+<p>Если бы шейдер продолжал читать <code>_instances.Buffer</code> (весь список, до фильтрации) при уже отфильтрованном <code>instanceCount</code>, на экране оказались бы просто первые N инстансов исходного списка — не обязательно те, что реально прошли отбраковку. Шейдер сам не знает и не должен знать, работает он с полным списком или с отфильтрованным — за него это решает то, какой буфер ему подсунули с C#-стороны.</p>
+<h2 id="какой-culling-тут-реально-работает-а-какой-нет">Какой culling тут реально работает — а какой нет</h2>
+<p>Это принципиально важно не перепутать:</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Механизм</th><th>Реализован здесь?</th><th>Что учитывает</th></tr></thead>
+<tbody>
+<tr><td><strong>Дистанционный culling</strong></td><td>✅ Да</td><td>Только расстояние по прямой до <code>_CullOrigin</code></td></tr>
+<tr><td><strong>Frustum culling</strong></td><td>✅ Да, собственная реализация</td><td>Направление взгляда камеры — тест напрямую в clip space (<code>-w&lt;=x&lt;=w</code>, <code>-w&lt;=y&lt;=w</code>, <code>z&lt;=w</code>), не через 6 плоскостей</td></tr>
+<tr><td><strong>Occlusion culling</strong> (что перекрыто другой геометрией)</td><td>✅ Да, собственная реализация, по depth прошлого кадра</td><td>Перекрытие другими объектами — 7 точек по объёму инстанса (центр + 6 граней bounding box'а), без Hi-Z</td></tr>
+<tr><td><strong>GPU Occlusion Culling — фича URP</strong> (GPU Resident Drawer → GPU Occlusion)</td><td>❌ Не применима в принципе к этой технике</td><td>Отдельная встроенная в URP система через <code>BatchRendererGroup</code> — <code>Graphics.RenderMeshIndirect</code> идёт полностью в обход неё. Включить галочку "GPU Occlusion" в Renderer'е — не даст этим инстансам вообще ничего. Наша собственная occlusion-реализация выше — это НЕ она, а отдельный, самописный аналог той же идеи</td></tr>
+</tbody></table></div>
+<div class="pager"><a class="prev" href="02b-compute-shaders.html"><span class="dir">Назад</span>Свои ComputeShader</a><a class="next" href="04-diagnostics.html"><span class="dir">Дальше</span>Диагностика и биты</a></div>
+</main>
+<aside class="onpage">
+  <div class="label">На этой странице</div>
+  <a class="" href="#идея">Идея</a>
+<a class="" href="#три-теста-подряд-от-дешёвого-к-дорогому-каждый-отключаем-отдельно">Три теста подряд, от дешёвого к дорогому, каждый отключаем отдельно</a>
+<a class="" href="#тест-1-дистанция">Тест 1: дистанция</a>
+<a class="" href="#тест-2-frustum-culling">Тест 2: frustum culling</a>
+<a class="" href="#тест-3-occlusion-culling-по-depth-буферу-прошлого-кадра">Тест 3: occlusion culling (по depth-буферу прошлого кадра)</a>
+<a class="" href="#известные-ограничения-occlusion-теста">Известные ограничения occlusion-теста</a>
+<a class="" href="#критически-важный-нюанс-чей-буфер-читает-шейдер-рендера">Критически важный нюанс: чей буфер читает шейдер рендера</a>
+<a class="" href="#какой-culling-тут-реально-работает-а-какой-нет">Какой culling тут реально работает — а какой нет</a>
+</aside>
+</div>
+</body>
+</html>

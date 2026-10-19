@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VFX Pool — VFX Pool: эффекты из пула</title>
+<style>
+:root {
+  --base: #1e1e2e; --mantle: #181825; --crust: #11111b;
+  --surface0: #313244; --surface1: #45475a; --surface2: #585b70;
+  --overlay0: #6c7086; --overlay1: #7f849c;
+  --text: #cdd6f4; --subtext1: #bac2de; --subtext0: #a6adc8;
+  --rosewater: #f5e0dc; --flamingo: #f2cdcd; --pink: #f5c2e7; --mauve: #cba6f7;
+  --red: #f38ba8; --maroon: #eba0ac; --peach: #fab387; --yellow: #f9e2af;
+  --green: #a6e3a1; --teal: #94e2d5; --sky: #89dceb; --sapphire: #74c7ec;
+  --blue: #89b4fa; --lavender: #b4befe;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0; background: var(--base); color: var(--text);
+  font-family: -apple-system, "Segoe UI", "Noto Sans", "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.7; font-size: 16px;
+}
+.layout {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr) 220px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+.sidebar {
+  position: sticky; top: 0; align-self: start; height: 100vh; overflow-y: auto;
+  padding: 1.8rem 1.2rem; border-right: 1px solid var(--surface1);
+}
+.sidebar .brand {
+  font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--crust); background: var(--mauve); display: inline-block;
+  padding: 0.15rem 0.6rem; border-radius: 999px; font-weight: 700; margin-bottom: 1.4rem;
+}
+.sidebar nav a {
+  display: block; padding: 0.5rem 0.7rem; margin: 0.1rem 0; border-radius: 7px;
+  color: var(--subtext1); text-decoration: none; font-size: 0.92rem; border-bottom: none;
+  transition: background 0.12s, color 0.12s;
+}
+.sidebar nav a:hover { background: var(--surface0); color: var(--text); }
+.sidebar nav a.active { background: var(--mauve); color: var(--crust); font-weight: 700; }
+.sidebar nav .part-label {
+  font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--overlay0);
+  margin: 1.1rem 0 0.3rem 0.7rem;
+}
+.content { padding: 2.6rem 2.6rem 5rem; min-width: 0; }
+.onpage {
+  position: sticky; top: 0; align-self: start; height: 100vh; overflow-y: auto;
+  padding: 2.6rem 1.2rem;
+}
+.onpage .label {
+  font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--overlay0);
+  margin-bottom: 0.6rem;
+}
+.onpage a {
+  display: block; padding: 0.28rem 0; color: var(--subtext0); text-decoration: none;
+  font-size: 0.86rem; border-bottom: none; border-left: 2px solid transparent; padding-left: 0.7rem;
+}
+.onpage a.h3 { padding-left: 1.4rem; font-size: 0.82rem; }
+.onpage a:hover { color: var(--sapphire); border-left-color: var(--sapphire); }
+
+h1, h2, h3 { font-weight: 700; line-height: 1.3; scroll-margin-top: 1.5rem; }
+h1 { font-size: 2rem; color: var(--mauve); margin: 0 0 0.6rem; }
+.page-kicker {
+  font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--peach);
+  font-weight: 700; margin-bottom: 0.5rem;
+}
+h2 { font-size: 1.4rem; color: var(--blue); margin: 2.4rem 0 1rem; padding-bottom: 0.4rem; border-bottom: 1px solid var(--surface1); }
+h3 { font-size: 1.1rem; color: var(--sky); margin: 1.8rem 0 0.8rem; }
+p { margin: 0.9rem 0; color: var(--text); }
+a { color: var(--sapphire); text-decoration: none; border-bottom: 1px solid rgba(116, 199, 236, 0.35); }
+a:hover { color: var(--lavender); border-bottom-color: var(--lavender); }
+strong { color: var(--peach); font-weight: 700; }
+code {
+  font-family: "JetBrains Mono", "Fira Code", Consolas, "Liberation Mono", monospace;
+  font-size: 0.86em; background: var(--surface0); color: var(--peach);
+  padding: 0.15em 0.4em; border-radius: 5px;
+}
+pre.code {
+  background: var(--mantle); border: 1px solid var(--surface1); border-radius: 10px;
+  padding: 1rem 1.2rem; overflow-x: auto; margin: 1.1rem 0;
+}
+pre.code code { background: none; color: var(--text); padding: 0; font-size: 0.85em; border-radius: 0; }
+.tok-kw { color: var(--mauve); font-weight: 600; }
+.tok-type { color: var(--yellow); }
+.tok-str { color: var(--green); }
+.tok-com { color: var(--overlay0); font-style: italic; }
+blockquote {
+  margin: 1.1rem 0; padding: 0.15rem 1.1rem; border-left: 3px solid var(--peach);
+  background: var(--surface0); border-radius: 0 8px 8px 0; color: var(--subtext1);
+}
+blockquote p { margin: 0.6rem 0; }
+ul, ol { padding-left: 1.4rem; margin: 0.9rem 0; }
+li { margin: 0.45rem 0; }
+hr { border: none; border-top: 1px solid var(--surface1); margin: 2.2rem 0; }
+.table-wrap { overflow-x: auto; margin: 1.1rem 0; }
+table { border-collapse: collapse; width: 100%; font-size: 0.92em; }
+th, td { border: 1px solid var(--surface1); padding: 0.55rem 0.8rem; text-align: left; vertical-align: top; }
+th { background: var(--surface0); color: var(--lavender); }
+tbody tr:nth-child(odd) { background: rgba(49, 50, 68, 0.35); }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+.card {
+  display: block; padding: 1.1rem 1.2rem; background: var(--mantle); border: 1px solid var(--surface1);
+  border-radius: 12px; text-decoration: none; border-bottom: 1px solid var(--surface1); transition: border-color 0.12s, transform 0.12s;
+}
+.card:hover { border-color: var(--mauve); transform: translateY(-2px); }
+.card .card-title { color: var(--text); font-weight: 700; font-size: 1rem; margin-bottom: 0.3rem; display: block; }
+.card .card-desc { color: var(--subtext0); font-size: 0.86rem; }
+.pager { display: flex; justify-content: space-between; margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--surface1); gap: 1rem; }
+.pager a {
+  border: 1px solid var(--surface1); border-radius: 10px; padding: 0.8rem 1.1rem; flex: 1;
+  border-bottom: 1px solid var(--surface1); color: var(--text);
+}
+.pager a:hover { border-color: var(--mauve); }
+.pager .dir { font-size: 0.72rem; text-transform: uppercase; color: var(--overlay0); display: block; margin-bottom: 0.2rem; }
+.pager .next { text-align: right; }
+::selection { background: var(--surface2); color: var(--rosewater); }
+@media (max-width: 1100px) {
+  .layout { grid-template-columns: 220px minmax(0, 1fr); }
+  .onpage { display: none; }
+}
+@media (max-width: 760px) {
+  .layout { grid-template-columns: 1fr; }
+  .sidebar { position: relative; height: auto; border-right: none; border-bottom: 1px solid var(--surface1); }
+  .content { padding: 1.6rem 1.2rem 3rem; }
+}
+</style>
+</head>
+<body>
+<div class="layout">
+<aside class="sidebar">
+  <span class="brand">Catppuccin Mocha</span>
+  <nav><div class="part-label">Начало</div>
+<a class="active" href="index.html">Обзор</a>
+<div class="part-label">Как устроено</div>
+<a class="" href="01-pool-and-anchor.html">Пул и пустышка</a>
+<a class="" href="02-converter.html">Перевод ParticlesInvoker на пул</a></nav>
+</aside>
+<main class="content">
+<div class="page-kicker">Начало</div>
+<h1 id="vfx-pool">VFX Pool</h1>
+<p>Эффекты (<code>ParticleSystem</code>) не живут внутри каждого врага, а берутся из общего пула: заранее созданные экземпляры выдаются на время удара и возвращаются обратно. На враге остаётся только пустышка (<code>VFXPoolElement</code>) - точка, поворот и размер, где эффект должен появиться.</p>
+<h2 id="зачем">Зачем</h2>
+<p>Раньше у каждого волка внутри было 114 <code>ParticleSystem</code> (5 эффектов, из них «Sword Slash» - по 8-9 систем) и 189 <code>Transform</code>. Все они ехали вместе с волком каждый кадр, даже когда ничего не играло: каждая смена позиции родителя помечает изменёнными всех детей, и Unity пересчитывает их матрицы. После перевода на пул:</p>
+<div class="table-wrap"><table><thead><tr><th>Префаб</th><th><code>ParticleSystem</code> было -&gt; стало</th><th><code>Transform</code> стало</th></tr></thead><tbody><tr><td>Wolf Realistic</td><td>114 -&gt; 4</td><td>84 (было 189)</td></tr><tr><td>Bear</td><td>61 -&gt; 4</td><td>81</td></tr><tr><td>Bear_VAT</td><td>59 -&gt; 4</td><td>17</td></tr><tr><td>Shadow Unicorn (и варианты, 116 штук на Snow World)</td><td>13-14 -&gt; 3</td><td>99-101</td></tr></tbody></table></div>
+<p>У зверей оставшиеся 4 системы - эффекты баффов (<code>FireBuff</code>, <code>PoisonBuff</code>), на них ссылается код напрямую. У единорогов остаётся <code>Attack</code> (в нём снаряд, на который указывает <code>UnicornAIUnit</code>).</p>
+<p>Второй выигрыш - общие экземпляры: десяти волкам нужно столько эффектов, сколько ударов идёт одновременно, а не десять наборов.</p>
+<h2 id="из-чего-состоит">Из чего состоит</h2>
+<div class="table-wrap"><table><thead><tr><th>Что</th><th>Где</th><th>Роль</th></tr></thead><tbody><tr><td><code>VFXPool</code></td><td>на <code>PLAYER.prefab</code>, <code>DontDestroyOnLoad</code></td><td>хранит пулы по <code>id</code>, выдаёт и возвращает экземпляры</td></tr><tr><td><code>VFXPrefabsContainer</code></td><td><code>Assets/ScriptableData/VFXPrefabsContainer.asset</code></td><td>список эффектов: <code>id</code>, префаб, длительность, петля, прогрев</td></tr><tr><td><code>VFXPoolElement</code></td><td>пустышка на враге</td><td><code>Play()</code> / <code>Stop()</code>: эффект появляется в её позе</td></tr><tr><td><code>VFXPoolElementInvoker</code></td><td>на корне врага</td><td>замена <code>ParticlesInvoker</code>: тот же список по индексу и имени</td></tr></tbody></table></div>
+<p><code>ParticlesActivator</code>, <code>VATParticlesActivator</code> и <code>ParticlesBlendTreeActivator</code> работают с обоими: если на объекте нет <code>ParticlesInvoker</code>, они берут <code>VFXPoolElementInvoker</code>.</p>
+<h2 id="дальше">Дальше</h2>
+<ul><li><a href="01-pool-and-anchor.html">Пул и пустышка</a> - как эффект выдаётся, едет за пустышкой и возвращается; почему у запуска есть номер.</li><li><a href="02-converter.html">Перевод ParticlesInvoker на пул</a> - что делает конвертер и как откатить.</li></ul>
+<div class="pager"><div></div><a class="next" href="01-pool-and-anchor.html"><span class="dir">Дальше</span>Пул и пустышка</a></div>
+</main>
+<aside class="onpage">
+  <div class="label">На этой странице</div>
+<a class="" href="#зачем">Зачем</a>
+<a class="" href="#из-чего-состоит">Из чего состоит</a>
+<a class="" href="#дальше">Дальше</a>
+</aside>
+</div>
+</body>
+</html>

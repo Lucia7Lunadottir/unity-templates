@@ -1,0 +1,15 @@
+{
+  "name": "com.pg.springbone",
+  "version": "1.0.0",
+  "displayName": "Spring Bone",
+  "description": "Burst/Jobs spring bones for hair, tails and cloth chains with colliders.",
+  "unity": "6000.6",
+  "author": "Lucia Lunadottir",
+  "type": "assets",
+  "dependencies": {
+    "com.unity.burst": "2.0.0",
+    "com.unity.collections": "6.6.0",
+    "com.unity.mathematics": "1.4.0",
+    "com.unity.animation.rigging": "6.6.0"
+  }
+}

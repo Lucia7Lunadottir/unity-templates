@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Расширенные темы — SwarmNav</title>
+<style>
+:root {
+  --base: #1e1e2e; --mantle: #181825; --crust: #11111b;
+  --surface0: #313244; --surface1: #45475a; --surface2: #585b70;
+  --overlay0: #6c7086; --overlay1: #7f849c;
+  --text: #cdd6f4; --subtext1: #bac2de; --subtext0: #a6adc8;
+  --rosewater: #f5e0dc; --flamingo: #f2cdcd; --pink: #f5c2e7; --mauve: #cba6f7;
+  --red: #f38ba8; --maroon: #eba0ac; --peach: #fab387; --yellow: #f9e2af;
+  --green: #a6e3a1; --teal: #94e2d5; --sky: #89dceb; --sapphire: #74c7ec;
+  --blue: #89b4fa; --lavender: #b4befe;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0; background: var(--base); color: var(--text);
+  font-family: -apple-system, "Segoe UI", "Noto Sans", "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.7; font-size: 16px;
+}
+.layout {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr) 220px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+.sidebar {
+  position: sticky; top: 0; align-self: start; height: 100vh; overflow-y: auto;
+  padding: 1.8rem 1.2rem; border-right: 1px solid var(--surface1);
+}
+.sidebar .brand {
+  font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--crust); background: var(--mauve); display: inline-block;
+  padding: 0.15rem 0.6rem; border-radius: 999px; font-weight: 700; margin-bottom: 1.4rem;
+}
+.sidebar nav a {
+  display: block; padding: 0.5rem 0.7rem; margin: 0.1rem 0; border-radius: 7px;
+  color: var(--subtext1); text-decoration: none; font-size: 0.92rem; border-bottom: none;
+  transition: background 0.12s, color 0.12s;
+}
+.sidebar nav a:hover { background: var(--surface0); color: var(--text); }
+.sidebar nav a.active { background: var(--mauve); color: var(--crust); font-weight: 700; }
+.sidebar nav .part-label {
+  font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--overlay0);
+  margin: 1.1rem 0 0.3rem 0.7rem;
+}
+.content { padding: 2.6rem 2.6rem 5rem; min-width: 0; }
+.onpage {
+  position: sticky; top: 0; align-self: start; height: 100vh; overflow-y: auto;
+  padding: 2.6rem 1.2rem;
+}
+.onpage .label {
+  font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--overlay0);
+  margin-bottom: 0.6rem;
+}
+.onpage a {
+  display: block; padding: 0.28rem 0; color: var(--subtext0); text-decoration: none;
+  font-size: 0.86rem; border-bottom: none; border-left: 2px solid transparent; padding-left: 0.7rem;
+}
+.onpage a.h3 { padding-left: 1.4rem; font-size: 0.82rem; }
+.onpage a:hover { color: var(--sapphire); border-left-color: var(--sapphire); }
+
+h1, h2, h3 { font-weight: 700; line-height: 1.3; scroll-margin-top: 1.5rem; }
+h1 { font-size: 2rem; color: var(--mauve); margin: 0 0 0.6rem; }
+.page-kicker {
+  font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--peach);
+  font-weight: 700; margin-bottom: 0.5rem;
+}
+h2 { font-size: 1.4rem; color: var(--blue); margin: 2.4rem 0 1rem; padding-bottom: 0.4rem; border-bottom: 1px solid var(--surface1); }
+h3 { font-size: 1.1rem; color: var(--sky); margin: 1.8rem 0 0.8rem; }
+p { margin: 0.9rem 0; color: var(--text); }
+a { color: var(--sapphire); text-decoration: none; border-bottom: 1px solid rgba(116, 199, 236, 0.35); }
+a:hover { color: var(--lavender); border-bottom-color: var(--lavender); }
+strong { color: var(--peach); font-weight: 700; }
+code {
+  font-family: "JetBrains Mono", "Fira Code", Consolas, "Liberation Mono", monospace;
+  font-size: 0.86em; background: var(--surface0); color: var(--peach);
+  padding: 0.15em 0.4em; border-radius: 5px;
+}
+pre.code {
+  background: var(--mantle); border: 1px solid var(--surface1); border-radius: 10px;
+  padding: 1rem 1.2rem; overflow-x: auto; margin: 1.1rem 0;
+}
+pre.code code { background: none; color: var(--text); padding: 0; font-size: 0.85em; border-radius: 0; }
+.tok-kw { color: var(--mauve); font-weight: 600; }
+.tok-type { color: var(--yellow); }
+.tok-str { color: var(--green); }
+.tok-com { color: var(--overlay0); font-style: italic; }
+blockquote {
+  margin: 1.1rem 0; padding: 0.15rem 1.1rem; border-left: 3px solid var(--peach);
+  background: var(--surface0); border-radius: 0 8px 8px 0; color: var(--subtext1);
+}
+blockquote p { margin: 0.6rem 0; }
+ul, ol { padding-left: 1.4rem; margin: 0.9rem 0; }
+li { margin: 0.45rem 0; }
+hr { border: none; border-top: 1px solid var(--surface1); margin: 2.2rem 0; }
+.table-wrap { overflow-x: auto; margin: 1.1rem 0; }
+table { border-collapse: collapse; width: 100%; font-size: 0.92em; }
+th, td { border: 1px solid var(--surface1); padding: 0.55rem 0.8rem; text-align: left; vertical-align: top; }
+th { background: var(--surface0); color: var(--lavender); }
+tbody tr:nth-child(odd) { background: rgba(49, 50, 68, 0.35); }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+.card {
+  display: block; padding: 1.1rem 1.2rem; background: var(--mantle); border: 1px solid var(--surface1);
+  border-radius: 12px; text-decoration: none; border-bottom: 1px solid var(--surface1); transition: border-color 0.12s, transform 0.12s;
+}
+.card:hover { border-color: var(--mauve); transform: translateY(-2px); }
+.card .card-title { color: var(--text); font-weight: 700; font-size: 1rem; margin-bottom: 0.3rem; display: block; }
+.card .card-desc { color: var(--subtext0); font-size: 0.86rem; }
+.pager { display: flex; justify-content: space-between; margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--surface1); gap: 1rem; }
+.pager a {
+  border: 1px solid var(--surface1); border-radius: 10px; padding: 0.8rem 1.1rem; flex: 1;
+  border-bottom: 1px solid var(--surface1); color: var(--text);
+}
+.pager a:hover { border-color: var(--mauve); }
+.pager .dir { font-size: 0.72rem; text-transform: uppercase; color: var(--overlay0); display: block; margin-bottom: 0.2rem; }
+.pager .next { text-align: right; }
+::selection { background: var(--surface2); color: var(--rosewater); }
+@media (max-width: 1100px) {
+  .layout { grid-template-columns: 220px minmax(0, 1fr); }
+  .onpage { display: none; }
+}
+@media (max-width: 760px) {
+  .layout { grid-template-columns: 1fr; }
+  .sidebar { position: relative; height: auto; border-right: none; border-bottom: 1px solid var(--surface1); }
+  .content { padding: 1.6rem 1.2rem 3rem; }
+}
+
+</style>
+</head>
+<body>
+<div class="layout">
+<aside class="sidebar">
+  <span class="brand">Catppuccin Mocha</span>
+  <nav><div class="part-label">SwarmNav</div>
+<a class="" href="index.html">Обзор</a>
+<a class="" href="01-quickstart.html">Быстрый старт</a>
+<a class="" href="02-swarm-agent.html">SwarmAgent (просто)</a>
+<a class="" href="03-swarm-crowd.html">SwarmCrowd (Burst)</a>
+<a class="" href="04-how-it-works.html">Как это работает</a>
+<a class="active" href="05-advanced.html">Расширенные темы</a>
+<a class="" href="06-SwarmNav-recipes.html">Рецепты</a>
+<a class="" href="07-performance.html">Производительность (GPU)</a>
+<a class="" href="08-behaviour-and-lod.html">Поведение и LOD</a>
+<a class="" href="09-ai-integration.html">Подключение ИИ</a>
+</nav>
+</aside>
+<main class="content">
+<div class="page-kicker">SwarmNav</div>
+<h1 id="расширенные-темы">Расширенные темы</h1>
+<h2 id="1-swarmnav-напрямую-агенты-без-gameobject">1. SwarmNav напрямую: агенты без GameObject</h2>
+<p><code>SwarmNav</code> не знает про <code>Transform</code>. Он хранит позиции в массиве <code>Agents</code> и считает кадр по вашему вызову. Это путь для
+<code>RenderMeshIndirect</code> и VAT-толпы с десятками тысяч агентов.</p>
+<pre class="code"><code>SwarmNav nav = new SwarmNav(SwarmNavSettings.CreateDefault(), 50000);
+int focus = nav.RegisterFocusPoint(camera.position);            // фокус LOD (без него все Near)
+
+SwarmNavHandle h = nav.RegisterAgent(spawnPoint, speed: 3.5f, stoppingDistance: 1f);
+nav.SetDestination(h, goal);                       // личная цель
+nav.SetSharedGoal(h, playerPos, groupKey: 1);      // общая цель группы (погоня, сбор у точки)
+
+// каждый кадр:
+nav.UpdateFocusPoint(focus, camera.position);
+nav.UpdateSharedGoalPosition(1, playerPos);        // сдвинуть общую цель
+nav.Tick(Time.deltaTime);                          // Schedule + Complete
+NativeArray&lt;SwarmAgentState&gt; agents = nav.Agents;  // Position на NavMesh, Velocity - направление шага
+</code></pre>
+<p><code>nav.Agents</code> дожидается джобов, если они идут. Позиция уже посчитана и стоит на поверхности NavMesh: ваш джоб
+только пишет матрицы инстансов (и, например, плавно вращает по <code>Velocity</code>). Живой пример - <code>SwarmNavDemo.cs</code>
+(<code>Assets/Scripts/Experimental</code>) и <code>VATCrowdIndirectRendererNav</code> (интеграция с VAT-толпой).</p>
+<p>Освобождайте <code>nav.Dispose()</code> в <code>OnDestroy</code>. Один <code>Tick</code> на <code>SwarmNav</code>: не вызывайте его из двух скриптов.</p>
+<h3 id="11-overlap-с-остальным-кадром">1.1. Overlap с остальным кадром</h3>
+<p><code>Tick</code> синхронный. Если хотите, чтобы воркеры считали параллельно с вашим кодом, используйте пару:</p>
+<pre class="code"><code>void Update()   { nav.ScheduleTick(Time.deltaTime); }   // поставить джобы
+void LateUpdate() { nav.Complete(); /* читать nav.Agents */ }
+</code></pre>
+<p>Любой метод <code>SwarmNav</code> между ними сам дожидается джобов (<code>Sync</code>), поэтому порядок безопасен, но ждать придётся при
+первом обращении.</p>
+<h3 id="12-agentsgpu-те-же-агенты-в-graphicsbuffer">1.2. AgentsGpu: те же агенты в GraphicsBuffer</h3>
+<pre class="code"><code>GraphicsBuffer gpu = nav.EnableGpuBuffer();   // раскладка SwarmAgentState, stride = UnsafeUtility.SizeOf&lt;SwarmAgentState&gt;()
+</code></pre>
+<p>После этого буфер обновляется в конце каждого <code>Complete()</code>. Его можно привязать к материалу <code>RenderMeshIndirect</code> или
+читать ComputeShader'ом (позиция, направление, скорость, тир). Раскладка структуры: <code>float3 Position; float3 Velocity;
+float Speed; byte Tier; byte Generation;</code> плюс выравнивание до 4 байт (30 байт данных -&gt; <code>SizeOf</code> = 32); в HLSL объявляйте
+такой же stride, например <code>float3, float3, float, uint</code> (тир и поколение лежат в младших байтах последнего слова).</p>
+<h2 id="2-анимация-ходьбы">2. Анимация ходьбы</h2>
+<ul>
+<li><strong>Animator на GameObject.</strong> <code>SwarmAgent.velocity.magnitude</code> (или фактический сдвиг за кадр) -&gt; параметр <code>Speed</code>.
+  Фактический сдвиг надёжнее: агент, упёршийся в соседа, перестаёт «идти ногами».</li>
+<li><strong>VAT-толпа (<code>VATCrowdIndirectRendererNav</code>).</strong> Walk-параметр = <code>lengthsq(Velocity) &gt; 0.0025</code> (в джобе
+  <code>SwarmIntegrateJob</code>). Агент без цели имеет нулевую <code>Velocity</code> и стоит.</li>
+</ul>
+<h2 id="3-события-дошёл-до-цели">3. События «дошёл до цели»</h2>
+<p>Событий нет: опросите <code>hasDestination</code> (для неподвижной цели станет <code>false</code> по прибытии) или <code>remainingDistance &lt;=
+stoppingDistance</code>. Один менеджер, опрашивающий массив агентов, дешевле <code>Update()</code> на агента: пример -
+<code>SwarmPatrolChaseExample.cs</code>.</p>
+<h2 id="4-высота">4. Высота</h2>
+<p>Высоту даёт NavMesh: <code>Position.y</code> - это высота поверхности под агентом, <code>baseOffset</code> добавляет смещение модели
+(половина высоты куба с центральным пивотом). Отдельного бейка высот, <code>Height Source</code> и объёмов больше нет.
+Если агент «в воздухе» или «в земле»: проверьте <code>baseOffset</code>, пивот модели и что NavMesh запечён на нужной поверхности.</p>
+<h2 id="5-отладка">5. Отладка</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Что смотреть</th>
+<th>Где</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Счётчики: активные агенты, тиры, стоящие, путей за кадр, ожидание джобов</td>
+<td><code>SwarmNavDebugOverlay</code> (HUD)</td>
+</tr>
+<tr>
+<td>Позиции и направления агентов в Scene View</td>
+<td><code>SwarmNavDebugOverlay</code> (гизмо, цвет по тиру)</td>
+</tr>
+<tr>
+<td>Поля агента по ПКМ</td>
+<td><code>SwarmNavDebugOverlay</code> (инспектор в Game View)</td>
+</tr>
+<tr>
+<td>На что уходит время кадра</td>
+<td><code>SwarmNav.ProfileStages = true</code>, затем <code>StageMs</code> / <code>StageNames</code> (раздел 3 в <code>07-performance.md</code>)</td>
+</tr>
+<tr>
+<td>Радиусы LOD</td>
+<td><code>ShowLodGizmos</code> в настройках: зелёное кольцо - Near, жёлтое - Mid</td>
+</tr>
+<tr>
+<td>Статус пути агента</td>
+<td><code>agent.pathStatus</code></td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="6-rootmotion-transform-двигает-animator">6. RootMotion: Transform двигает Animator</h2>
+<pre class="code"><code>agent.updatePosition = false;     // позицию не пишет SwarmCrowd
+agent.updateRotation = false;
+// в OnAnimatorMove:
+agent.SyncPosition(transform.position);          // сообщить SwarmNav, где агент на самом деле
+transform.position = agent.Move(animator.deltaPosition);   // смещение с учётом NavMesh и стен
+</code></pre>
+<p><code>Move</code> применяет смещение через <code>NavWorld.MoveLocation</code>: агент не выйдет за границу NavMesh, и возвращается
+позиция на поверхности. Поворот при <code>updateRotation = false</code> остаётся за вами.</p>
+<p><code>SyncPosition</code> сдвигает привязку агента к полигону тем же <code>MoveLocation</code> и <strong>не трогает путь</strong> (как
+<code>NavMeshAgent.nextPosition</code>). Телепорт с пересчётом пути - это <code>Warp</code>. Раньше <code>SyncPosition</code> работал как телепорт и каждый
+кадр заново заказывал путь: у агента с root motion <code>pathStatus</code> навсегда оставался <code>Pending</code>.</p>
+<p><strong>Где вызывать.</strong> <code>OnAnimatorMove</code> выполняется после <code>Update</code>, когда джобы SwarmNav уже идут, и первый вызов API в нём
+дожидается их (<code>Complete</code>) - параллельность кадра теряется. Лучше копить <code>animator.deltaPosition</code> в <code>OnAnimatorMove</code> и
+прикладывать в своём <code>Update</code> до драйвера SwarmNav (так делает <code>WolfAI</code>, см. <code>09-ai-integration.md</code>).</p>
+<h2 id="7-реакция-на-удар-взрыв-частица">7. Реакция на удар (взрыв, частица)</h2>
+<pre class="code"><code>SwarmNav.Instance.ApplyImpulseAt(hitPoint, radius: 3f, strength: 2f);
+</code></pre>
+<p>Агенты в радиусе получают толчок прочь от точки, с затуханием по расстоянию и с учётом NavMesh (через <code>MoveLocation</code>).
+Метод перебирает всех агентов, поэтому подходит для редких событий, а не для вызова каждым столкновением частицы.</p>
+<h2 id="8-известные-ограничения">8. Известные ограничения</h2>
+<ul>
+<li><strong>API агента ждёт основную цепочку кадра, но не пути.</strong> Первый вызов <code>SwarmAgent</code>/<code>SwarmNav</code>, который трогает данные агента (<code>SetDestination</code>, <code>remainingDistance</code>, <code>Warp</code> и т.п.), дожидается джобов шага (LOD, Steer, Move, запись <code>Transform</code>); остальные вызовы кадра бесплатны. Фоновые пути с массивами агентов не работают (у них своя копия запроса), поэтому API их не ждёт. Результат пути вступает в силу в начале следующего кадра; если цель или позиция агента менялись после запроса (<code>Serial</code>), устаревший результат отбрасывается.</li>
+<li><strong>Пути длиннее 24 углов усекаются.</strong> Агент доходит до последнего угла и просит новый путь.</li>
+<li><strong>Результат GPU-разведения запаздывает на 1-3 кадра.</strong></li>
+<li><strong>Far-агенты</strong> идут строго по углам пути и не учитывают толчок соседей (<code>FarDeadReckoning</code>).</li>
+<li><strong>Прыжок по <code>NavMeshLink</code></strong> - прямая между концами связи, без дуги и анимации.</li>
+<li><strong>Предел для <code>GameObject</code>.</strong> Двигающиеся <code>GameObject</code> упираются в обработку <code>Transform</code> самим Unity (около 17-20 FPS на 21 000 в Editor, режим энергосбережения); больше - только <code>RenderMeshIndirect</code>.</li>
+<li><strong>Замеры сделаны в Editor.</strong> Значения для билда не снимались.</li>
+</ul>
+<h2 id="9-частые-грабли">9. Частые грабли</h2>
+<ul>
+<li><strong>Агент не двигается.</strong> <code>agent.isOnNavMesh == false</code> (спавн вне NavMesh), <code>pathStatus == Invalid</code>, <code>isStopped</code>.</li>
+<li><strong>Много <code>SetDestination</code> за один кадр.</strong> Пути считаются порциями по <code>PathRequestsPerFrame</code>: остальные стартуют позже.
+  Увеличьте бюджет, если задержка старта заметна и на воркерах есть запас.</li>
+<li><strong>Агенты под одним родителем.</strong> Запись <code>Transform</code> делится по иерархиям: тысячи под одним родителем считаются в один поток.</li>
+<li><strong>Домен Reload отключён.</strong> Статические данные переживают Stop/Play. <code>SwarmNavRuntime</code> сам сбрасывается при старте
+  Play (<code>RuntimeInitializeOnLoadMethod</code>).</li>
+<li><strong>Свой <code>SwarmNav</code> и <code>SwarmAgent</code> вместе.</strong> Это два независимых набора агентов (у каждого свой пул, свои джобы).
+  <code>SwarmNav.Instance</code> указывает на последний созданный <code>SwarmNav</code>; храните свою ссылку.</li>
+<li><strong>Данные агента из другого потока.</strong> <code>SwarmNav</code> не потокобезопасен: все вызовы только с главного потока.</li>
+</ul>
+<div class="pager"><a href="04-how-it-works.html"><span class="dir">Назад</span>Как это работает</a><a class="next" href="06-SwarmNav-recipes.html"><span class="dir">Дальше</span>Рецепты</a></div>
+</main>
+<aside class="onpage">
+  <div class="label">На этой странице</div>
+<a class="" href="#1-swarmnav-напрямую-агенты-без-gameobject">1. SwarmNav напрямую: агенты без GameObject</a>
+<a class="" href="#2-анимация-ходьбы">2. Анимация ходьбы</a>
+<a class="" href="#3-события-дошёл-до-цели">3. События «дошёл до цели»</a>
+<a class="" href="#4-высота">4. Высота</a>
+<a class="" href="#5-отладка">5. Отладка</a>
+<a class="" href="#6-rootmotion-transform-двигает-animator">6. RootMotion: Transform двигает Animator</a>
+<a class="" href="#7-реакция-на-удар-взрыв-частица">7. Реакция на удар (взрыв, частица)</a>
+<a class="" href="#8-известные-ограничения">8. Известные ограничения</a>
+<a class="" href="#9-частые-грабли">9. Частые грабли</a>
+</aside>
+</div>
+</body>
+</html>

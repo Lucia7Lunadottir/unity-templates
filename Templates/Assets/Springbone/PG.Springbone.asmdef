@@ -1,0 +1,19 @@
+{
+    "name": "PG.Springbone",
+    "rootNamespace": "",
+    "references": [
+        "Unity.Burst",
+        "Unity.Collections",
+        "Unity.Mathematics",
+        "Unity.Animation.Rigging"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

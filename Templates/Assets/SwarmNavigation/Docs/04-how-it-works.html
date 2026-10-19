@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Как это работает — SwarmNav</title>
+<style>
+:root {
+  --base: #1e1e2e; --mantle: #181825; --crust: #11111b;
+  --surface0: #313244; --surface1: #45475a; --surface2: #585b70;
+  --overlay0: #6c7086; --overlay1: #7f849c;
+  --text: #cdd6f4; --subtext1: #bac2de; --subtext0: #a6adc8;
+  --rosewater: #f5e0dc; --flamingo: #f2cdcd; --pink: #f5c2e7; --mauve: #cba6f7;
+  --red: #f38ba8; --maroon: #eba0ac; --peach: #fab387; --yellow: #f9e2af;
+  --green: #a6e3a1; --teal: #94e2d5; --sky: #89dceb; --sapphire: #74c7ec;
+  --blue: #89b4fa; --lavender: #b4befe;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0; background: var(--base); color: var(--text);
+  font-family: -apple-system, "Segoe UI", "Noto Sans", "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.7; font-size: 16px;
+}
+.layout {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr) 220px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+.sidebar {
+  position: sticky; top: 0; align-self: start; height: 100vh; overflow-y: auto;
+  padding: 1.8rem 1.2rem; border-right: 1px solid var(--surface1);
+}
+.sidebar .brand {
+  font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--crust); background: var(--mauve); display: inline-block;
+  padding: 0.15rem 0.6rem; border-radius: 999px; font-weight: 700; margin-bottom: 1.4rem;
+}
+.sidebar nav a {
+  display: block; padding: 0.5rem 0.7rem; margin: 0.1rem 0; border-radius: 7px;
+  color: var(--subtext1); text-decoration: none; font-size: 0.92rem; border-bottom: none;
+  transition: background 0.12s, color 0.12s;
+}
+.sidebar nav a:hover { background: var(--surface0); color: var(--text); }
+.sidebar nav a.active { background: var(--mauve); color: var(--crust); font-weight: 700; }
+.sidebar nav .part-label {
+  font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--overlay0);
+  margin: 1.1rem 0 0.3rem 0.7rem;
+}
+.content { padding: 2.6rem 2.6rem 5rem; min-width: 0; }
+.onpage {
+  position: sticky; top: 0; align-self: start; height: 100vh; overflow-y: auto;
+  padding: 2.6rem 1.2rem;
+}
+.onpage .label {
+  font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--overlay0);
+  margin-bottom: 0.6rem;
+}
+.onpage a {
+  display: block; padding: 0.28rem 0; color: var(--subtext0); text-decoration: none;
+  font-size: 0.86rem; border-bottom: none; border-left: 2px solid transparent; padding-left: 0.7rem;
+}
+.onpage a.h3 { padding-left: 1.4rem; font-size: 0.82rem; }
+.onpage a:hover { color: var(--sapphire); border-left-color: var(--sapphire); }
+
+h1, h2, h3 { font-weight: 700; line-height: 1.3; scroll-margin-top: 1.5rem; }
+h1 { font-size: 2rem; color: var(--mauve); margin: 0 0 0.6rem; }
+.page-kicker {
+  font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--peach);
+  font-weight: 700; margin-bottom: 0.5rem;
+}
+h2 { font-size: 1.4rem; color: var(--blue); margin: 2.4rem 0 1rem; padding-bottom: 0.4rem; border-bottom: 1px solid var(--surface1); }
+h3 { font-size: 1.1rem; color: var(--sky); margin: 1.8rem 0 0.8rem; }
+p { margin: 0.9rem 0; color: var(--text); }
+a { color: var(--sapphire); text-decoration: none; border-bottom: 1px solid rgba(116, 199, 236, 0.35); }
+a:hover { color: var(--lavender); border-bottom-color: var(--lavender); }
+strong { color: var(--peach); font-weight: 700; }
+code {
+  font-family: "JetBrains Mono", "Fira Code", Consolas, "Liberation Mono", monospace;
+  font-size: 0.86em; background: var(--surface0); color: var(--peach);
+  padding: 0.15em 0.4em; border-radius: 5px;
+}
+pre.code {
+  background: var(--mantle); border: 1px solid var(--surface1); border-radius: 10px;
+  padding: 1rem 1.2rem; overflow-x: auto; margin: 1.1rem 0;
+}
+pre.code code { background: none; color: var(--text); padding: 0; font-size: 0.85em; border-radius: 0; }
+.tok-kw { color: var(--mauve); font-weight: 600; }
+.tok-type { color: var(--yellow); }
+.tok-str { color: var(--green); }
+.tok-com { color: var(--overlay0); font-style: italic; }
+blockquote {
+  margin: 1.1rem 0; padding: 0.15rem 1.1rem; border-left: 3px solid var(--peach);
+  background: var(--surface0); border-radius: 0 8px 8px 0; color: var(--subtext1);
+}
+blockquote p { margin: 0.6rem 0; }
+ul, ol { padding-left: 1.4rem; margin: 0.9rem 0; }
+li { margin: 0.45rem 0; }
+hr { border: none; border-top: 1px solid var(--surface1); margin: 2.2rem 0; }
+.table-wrap { overflow-x: auto; margin: 1.1rem 0; }
+table { border-collapse: collapse; width: 100%; font-size: 0.92em; }
+th, td { border: 1px solid var(--surface1); padding: 0.55rem 0.8rem; text-align: left; vertical-align: top; }
+th { background: var(--surface0); color: var(--lavender); }
+tbody tr:nth-child(odd) { background: rgba(49, 50, 68, 0.35); }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+.card {
+  display: block; padding: 1.1rem 1.2rem; background: var(--mantle); border: 1px solid var(--surface1);
+  border-radius: 12px; text-decoration: none; border-bottom: 1px solid var(--surface1); transition: border-color 0.12s, transform 0.12s;
+}
+.card:hover { border-color: var(--mauve); transform: translateY(-2px); }
+.card .card-title { color: var(--text); font-weight: 700; font-size: 1rem; margin-bottom: 0.3rem; display: block; }
+.card .card-desc { color: var(--subtext0); font-size: 0.86rem; }
+.pager { display: flex; justify-content: space-between; margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--surface1); gap: 1rem; }
+.pager a {
+  border: 1px solid var(--surface1); border-radius: 10px; padding: 0.8rem 1.1rem; flex: 1;
+  border-bottom: 1px solid var(--surface1); color: var(--text);
+}
+.pager a:hover { border-color: var(--mauve); }
+.pager .dir { font-size: 0.72rem; text-transform: uppercase; color: var(--overlay0); display: block; margin-bottom: 0.2rem; }
+.pager .next { text-align: right; }
+::selection { background: var(--surface2); color: var(--rosewater); }
+@media (max-width: 1100px) {
+  .layout { grid-template-columns: 220px minmax(0, 1fr); }
+  .onpage { display: none; }
+}
+@media (max-width: 760px) {
+  .layout { grid-template-columns: 1fr; }
+  .sidebar { position: relative; height: auto; border-right: none; border-bottom: 1px solid var(--surface1); }
+  .content { padding: 1.6rem 1.2rem 3rem; }
+}
+
+</style>
+</head>
+<body>
+<div class="layout">
+<aside class="sidebar">
+  <span class="brand">Catppuccin Mocha</span>
+  <nav><div class="part-label">SwarmNav</div>
+<a class="" href="index.html">Обзор</a>
+<a class="" href="01-quickstart.html">Быстрый старт</a>
+<a class="" href="02-swarm-agent.html">SwarmAgent (просто)</a>
+<a class="" href="03-swarm-crowd.html">SwarmCrowd (Burst)</a>
+<a class="active" href="04-how-it-works.html">Как это работает</a>
+<a class="" href="05-advanced.html">Расширенные темы</a>
+<a class="" href="06-SwarmNav-recipes.html">Рецепты</a>
+<a class="" href="07-performance.html">Производительность (GPU)</a>
+<a class="" href="08-behaviour-and-lod.html">Поведение и LOD</a>
+<a class="" href="09-ai-integration.html">Подключение ИИ</a>
+</nav>
+</aside>
+<main class="content">
+<div class="page-kicker">SwarmNav</div>
+<h1 id="как-устроено-под-капотом">Как устроено под капотом</h1>
+<p>Читайте, если <code>SwarmAgent</code> не хватает: нужен свой контроль над движением, <code>RenderMeshIndirect</code> без <code>GameObject</code> или
+понять, почему агент ведёт себя так. Сначала краткая картина, потом по частям.</p>
+<h2 id="1-что-хранится">1. Что хранится</h2>
+<p><code>SwarmNav</code> держит данные агентов в <strong>параллельных массивах</strong> (индекс = слот агента), а не в объектах: Burst-джоб
+читает такие массивы подряд, без указателей и сборки мусора.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Массив</th>
+<th>Тип</th>
+<th>Что в нём</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Agents</code></td>
+<td><code>SwarmAgentState</code></td>
+<td><strong>Публичное</strong> состояние: <code>Position</code> (на NavMesh), <code>Velocity</code> (направление шага, длина 0..1), <code>Speed</code>, <code>Tier</code>, <code>Generation</code></td>
+</tr>
+<tr>
+<td><code>_nav</code></td>
+<td><code>SwarmAgentNav</code></td>
+<td>Внутреннее состояние: привязка <code>NavLocation Loc</code>, цель, <code>State</code>, статус пути, углы, прыжок по связи</td>
+</tr>
+<tr>
+<td><code>_corners</code></td>
+<td><code>float3</code></td>
+<td><code>MaxCorners</code> (24) углов пути на агента: слот <code>i * 24 ..</code></td>
+</tr>
+<tr>
+<td><code>_steps</code></td>
+<td><code>SwarmStep</code></td>
+<td>Результат <code>SteerJob</code> для <code>MoveJob</code>: направление шага и накопленное <code>dt</code></td>
+</tr>
+<tr>
+<td><code>_groupGoalPos/_groupGoalLoc</code></td>
+<td><code>float3</code> / <code>NavLocation</code></td>
+<td>Общие цели (погоня): позиция и её привязка к NavMesh</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Хэндл</strong> <code>SwarmNavHandle</code> = слот + <code>Generation</code>. При <code>UnregisterAgent</code> поколение растёт, и старый хэндл тихо
+перестаёт быть валидным, а не читает данные нового агента в том же слоте. Свободные слоты - «призраки» с позицией
+<code>(1e6, 0, 1e6)</code>, чтобы не попадать в хэш рядом с живыми.</p>
+<p><code>SwarmAgentNav.State</code>: <code>Idle</code> (нет пути или дошёл), <code>Requested</code> (ждёт расчёта), <code>Following</code> (идёт по углам).</p>
+<h2 id="2-кадр-swarmnav">2. Кадр SwarmNav</h2>
+<p><code>ScheduleTick(dt)</code> ставит цепочку джобов; каждый получает хэндл предыдущего (зависимости), поэтому порядок гарантирован,
+а независимые друг от друга джобы идут параллельно.</p>
+<pre class="code"><code>Tier (LOD) -&gt; [Hash, CPU-режим] -&gt; Steer -&gt; Move -&gt; Pack -&gt; [WriteTransforms]   основная цепочка, ждёт LateUpdate
+                                                   \-&gt; Collect -&gt; Paths x N     фон, ждёт следующий ScheduleTick
+Complete(): упакованные позиции -&gt; GPU (3 диспатча) -&gt; AsyncGPUReadback -&gt; Poll() -&gt; Steer следующих кадров
+</code></pre>
+<ol>
+<li><strong>LOD (<code>TierJob</code>).</strong> По расстоянию до фокуса камеры пишет <code>Tier</code> каждому агенту. Свободные слоты всегда Far;
+    без фокус-точки живые агенты - Near.</li>
+<li><strong>Hash (<code>BuildHashJob</code>, только CPU-режим).</strong> Позиции агентов -&gt; <code>NativeParallelMultiHashMap</code> по ячейкам размером <code>2 * AvoidanceRadius</code>.
+    Far-агенты в хэш не попадают (<code>SeparateFarAgents = false</code>). В GPU-режиме (по умолчанию) этой стадии нет: разведение считает ComputeShader (раздел 6).</li>
+<li><strong>Steer (<code>SwarmSteerJob</code>, <code>IJobParallelFor</code>).</strong> Для каждого агента с целью решает, куда идти: прямо (раздел 5), по
+    углам пути (раздел 4), прыжок по связи или прибытие; затем добавляет разведение с соседями (раздел 6).
+    Пишет только <code>Steps[i]</code> и свой <code>_nav[i]</code>.</li>
+<li><strong>Move (<code>SwarmMoveJob</code>).</strong> Делает шаг: <code>NavWorld.MoveLocation(loc, следующая точка)</code> возвращает новую привязку к
+    NavMesh; её <code>position</code> - новая позиция агента, <strong>с высотой поверхности</strong>. Стены учитываются: <code>MoveLocation</code> не выходит
+    за границу NavMesh.</li>
+<li><strong>Pack (GPU-режим).</strong> <code>SwarmPackAgentsJob</code> пакует позиции и флаги для GPU.</li>
+<li><strong>Collect + Paths (после Move, в фоне).</strong> <code>CollectRequestsJob</code> выбирает до <code>PathRequestsPerFrame</code> агентов, которым
+    нужен путь; <code>PathJob</code> на каждом воркере (по <code>NavQueryBuffer</code> на воркер) считает им пути.</li>
+</ol>
+<p>Почему пути идут <strong>после</strong> шага: агенту, получившему цель в этом кадре, всё равно нужен путь, а ждать его на
+критическом пути кадра нет смысла. Выбор заявок (<code>Collect</code>) входит в основную цепочку и копирует всё нужное в запрос
+(<code>SwarmPathRequest</code>: позиция, привязка, цель, номер <code>Serial</code>, <code>Generation</code>). Сам <code>PathJob</code> читает только запрос и пишет только результат
+(<code>SwarmPathResult</code>) и углы в общий массив <code>Corners</code>, поэтому вызовы API (которые пишут <code>Nav</code>/<code>Agents</code>) пути не ждут. В начале следующего
+кадра <code>SwarmMergePathsJob</code> переносит результаты в состояние агентов; результат отбрасывается, если агента удалили (<code>Generation</code>) или его цель/позиция менялись
+после запроса (<code>Serial</code> растёт при <code>SetDestination</code>, <code>ResetPath</code>, <code>Warp</code>). На замере 20 000 агентов это убрало 1-5 мс с критического пути (раздел 7 в
+<code>07-performance.md</code>).</p>
+<h2 id="3-синхронизация-и-безопасность-данных">3. Синхронизация и безопасность данных</h2>
+<p>Джобы владеют массивами, пока работают. Любой метод <code>SwarmNav</code>, который трогает данные агента из главного потока, вызывает
+<code>Sync()</code>: дожидается основной цепочки и фоновых путей. Первый такой вызов за кадр после <code>Update</code> драйвера ждёт, остальные
+бесплатны. <code>NavWorld</code> - read-only контейнер: все джобы регистрируются в нём через <code>AddDependency</code>, чтобы Unity не
+пересобрал NavMesh, пока они читают.</p>
+<h2 id="4-путь-navworld--funnel">4. Путь: NavWorld + funnel</h2>
+<p><code>PathJob</code> для каждой заявки:</p>
+<ol>
+<li>привязывает старт (<code>nav.Loc</code>) и цель (<code>MapLocation</code> в окне <code>QueryExtents</code>);</li>
+<li>ищет путь по полигонам: <code>BeginFindPath</code> -&gt; <code>ContinueFindPath</code> (по 512 узлов за шаг) -&gt; <code>EndFindPath</code>;</li>
+<li>читает статус из <code>EndFindPath</code>: флаг <strong><code>PartialResult</code> приходит именно там</strong>, а не в статусе цикла <code>ContinueFindPath</code>.
+    Он значит «цель недостижима, путь ведёт только к ближайшей достижимой точке»;</li>
+<li>строит <strong>углы</strong> кратчайшего пути внутри коридора полигонов алгоритмом <strong>funnel</strong> (Simple Stupid Funnel Algorithm).</li>
+</ol>
+<p><strong>Funnel</strong> работает на порталах - общих рёбрах соседних полигонов пути. Для каждого портала известны левая и правая
+точки. Алгоритм держит «воронку» от текущей вершины (apex) до левого и правого края и сужает её с каждым порталом; когда
+новый портал выходит за воронку, последний край становится углом пути и новой вершиной. Результат - ломаная, которая
+касается только углов стен и не петляет по серединам полигонов. Реализация - <code>SwarmFunnel.Run</code> в <code>SwarmNavJobs.cs</code>.</p>
+<p>Если полигонов с <code>NavMeshLink</code> в пути несколько, участки между ними считаются отдельно: последний угол участка
+отмечается в <code>LinkMask</code> как <strong>вход в связь</strong>, а следующий угол - выход. Углов не больше <code>MaxCorners</code> (24): если путь
+длиннее, он усекается, и дойдя до последнего угла, агент просит новый путь от места, где оказался.</p>
+<p><strong>Частичный путь.</strong> Конечная точка берётся в середине последнего портала (ближайшая достижимая), <code>Status = Partial</code>.
+Дойдя до неё, агент прибывает (<code>hasDestination</code> становится <code>false</code>).</p>
+<h2 id="5-прямой-ход">5. Прямой ход</h2>
+<p>Если цель ближе <code>DirectMoveRange</code> (30 м), <code>SteerJob</code> делает <code>NavWorld.Raycast(loc, цель)</code>. Нет препятствия - агент идёт
+напрямую к цели, путь не нужен (флаг <code>Direct</code>, пересчёт пути для него не запрашивается). Есть препятствие - обычный путь.
+Потерял прямую видимость - <code>State = Requested</code> и новый путь без <code>RepathCooldown</code>. Это дёшево (замер: 20 000 лучей
+~2,4 мс на одном потоке) и снимает основную нагрузку при погоне: ближние преследователи не расходуют бюджет путей.</p>
+<h2 id="6-разведение-соседей-gpu-по-умолчанию-и-cpu">6. Разведение соседей: GPU (по умолчанию) и CPU</h2>
+<p>Для каждого агента перебираются ячейки хэша 3x3 вокруг него, до <code>MaxNeighborsPerAgent</code> соседей. Для каждого ближе
+<code>AvoidanceRadius</code> суммируется отталкивание, убывающее с расстоянием. Результат смешивается с направлением к углу:
+<code>dir = normalize(flow * FlowWeight + separation * SeparationWeight)</code>. Потолок на число соседей нужен, чтобы стоимость
+не росла как O(N²), когда толпа стягивается в одну точку: почти все агенты окажутся в нескольких ячейках, и без
+потолка каждый перебирал бы всех остальных там.</p>
+<p><strong>GPU-вариант</strong> (<code>SwarmAvoidance.compute</code>, класс <code>SwarmAvoidanceGpu</code>). После основной цепочки <code>SwarmPackAgentsJob</code> пакует позиции агентов и флаги (активен, "прибыл", группа цели) в <code>float4</code>. В <code>Complete()</code> массив уходит в <code>GraphicsBuffer</code>, и три диспатча считают разведение для <strong>всех</strong> агентов, независимо от тира:</p>
+<ol>
+<li><code>CSClear</code> - обнуляет хэш-таблицу голов списков;</li>
+<li><code>CSBuild</code> - каждый агент вставляет себя в список своей ячейки (<code>InterlockedExchange</code> по <code>Heads[hash(ячейка)]</code>, <code>Next[i]</code> - прежняя голова). Без сортировки и префиксных сумм;</li>
+<li><code>CSSolve</code> - обход 3x3 ячеек (до <code>GpuMaxNeighbors</code> соседей): толчок, давление (число соседей в радиусе) и число касаний уже прибывших агентов своей группы.</li>
+</ol>
+<p>Толчок содержит ещё боковую составляющую (всегда в одну сторону), чтобы агенты лоб в лоб расходились, а не замирали; от прибывшего (неподвижного) отталкивание сильнее. Результат возвращается через <code>AsyncGPUReadback</code> с задержкой 1-3 кадра: колбэк копирует его в промежуточный массив, а <code>Poll()</code> (в начале следующего <code>ScheduleTick</code>, пока джобы не идут) переносит в массив, который читает <code>SteerJob</code>. Свои <code>NativeArray</code> в API readback не передаются: он требует массивы без защиты джоб-системы. Если никто не двигался в прошлом кадре (<code>MovedLastFrame == 0</code>), диспатч пропускается.</p>
+<p><strong>Правило прибытия (<code>ArrivalJam</code>).</strong> Группа агентов идёт к одной точке, а места вокруг неё ограничены (100 000 агентов с личным пространством 1 м занимают круг радиусом около 190 м). Агент, который коснулся уже прибывшего из <strong>своей</strong> группы и находится не дальше радиуса, который займёт вся группа, считает цель достигнутой и встаёт: стоящие становятся неподвижными препятствиями, и диск растёт наружу. "Прибывшим" считается только тот, кто дошёл по пути (<code>Complete</code>/<code>Partial</code>); агент с недействительным путём (<code>Invalid</code>) других не останавливает.</p>
+<p><strong>CPU-вариант</strong> (если нет compute или <code>GpuAvoidance = false</code>): перебор ячеек хэша 3x3, до <code>MaxNeighborsPerAgent</code> соседей, Far-агенты в хэш не попадают.</p>
+<p>Разведение даёт только направление шага. Шаг делает <code>MoveLocation</code>, поэтому оттолкнутый к стене агент упирается в
+границу NavMesh, а не выходит за неё.</p>
+<h2 id="7-lod-по-времени-и-far-агенты">7. LOD по времени и Far-агенты</h2>
+<p>Near шагает каждый кадр. Mid и Far - раз в <code>MidUpdateEveryNFrames</code>/<code>FarUpdateEveryNFrames</code> кадров (фаза <code>(frame + index)
+% N</code>, чтобы они не шагали все в один кадр), а пропущенное <code>dt</code> копится в <code>PendingDt</code> и применяется на следующем шаге.
+Скорость движения не меняется, только частота обновления позиции.</p>
+<p><strong>Far dead reckoning (<code>FarDeadReckoning</code>).</strong> Стоимость <code>MoveLocation</code> растёт с пройденным расстоянием (он обходит полигоны), а Far шагает раз в N кадров сразу на N шагов, так что LOD сам по себе её не экономит. Поэтому Far-агент идёт вдоль углов пути на <code>speed * dt</code> без <code>MoveLocation</code>: отрезки между углами лежат на NavMesh, высота интерполируется по углам. Привязка к полигону (<code>NavLocation</code>) при этом устаревает - у агента ставится флаг <code>LocStale</code>, и перед любым использованием (шаг после выхода из Far, путь, <code>Move</code>, толчок) выполняется <code>MapLocation</code>. Far-агент не учитывает толчок соседей и идёт строго по углам. Дальше <code>SwarmCrowd</code> сглаживает это визуально
+(<code>03-swarm-crowd.md</code>, раздел 5).</p>
+<h2 id="8-прыжок-по-navmeshlink">8. Прыжок по NavMeshLink</h2>
+<p>Дойдя до угла-входа, агент начинает прыжок: <code>Jump</code> растёт от 0 до 1 со скоростью <code>speed * LinkSpeedMultiplier / длина</code>,
+позиция - <code>lerp(вход, выход, Jump)</code>, <code>MoveLocation</code> не используется. На <code>Jump &gt;= 1</code> агент привязывается к полигону
+выхода через <code>MapLocation</code>. Если привязка не удалась, запрашивается новый путь.
+Прыжок - прямая между концами связи; дуги, анимации и обходов на нём нет.</p>
+<div class="pager"><a href="03-swarm-crowd.html"><span class="dir">Назад</span>SwarmCrowd (Burst)</a><a class="next" href="05-advanced.html"><span class="dir">Дальше</span>Расширенные темы</a></div>
+</main>
+<aside class="onpage">
+  <div class="label">На этой странице</div>
+<a class="" href="#1-что-хранится">1. Что хранится</a>
+<a class="" href="#2-кадр-swarmnav">2. Кадр SwarmNav</a>
+<a class="" href="#3-синхронизация-и-безопасность-данных">3. Синхронизация и безопасность данных</a>
+<a class="" href="#4-путь-navworld--funnel">4. Путь: NavWorld + funnel</a>
+<a class="" href="#5-прямой-ход">5. Прямой ход</a>
+<a class="" href="#6-разведение-соседей-gpu-по-умолчанию-и-cpu">6. Разведение соседей: GPU (по умолчанию) и CPU</a>
+<a class="" href="#7-lod-по-времени-и-far-агенты">7. LOD по времени и Far-агенты</a>
+<a class="" href="#8-прыжок-по-navmeshlink">8. Прыжок по NavMeshLink</a>
+</aside>
+</div>
+</body>
+</html>

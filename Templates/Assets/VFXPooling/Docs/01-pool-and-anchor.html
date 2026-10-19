@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Пул и пустышка — VFX Pool: эффекты из пула</title>
+<style>
+:root {
+  --base: #1e1e2e; --mantle: #181825; --crust: #11111b;
+  --surface0: #313244; --surface1: #45475a; --surface2: #585b70;
+  --overlay0: #6c7086; --overlay1: #7f849c;
+  --text: #cdd6f4; --subtext1: #bac2de; --subtext0: #a6adc8;
+  --rosewater: #f5e0dc; --flamingo: #f2cdcd; --pink: #f5c2e7; --mauve: #cba6f7;
+  --red: #f38ba8; --maroon: #eba0ac; --peach: #fab387; --yellow: #f9e2af;
+  --green: #a6e3a1; --teal: #94e2d5; --sky: #89dceb; --sapphire: #74c7ec;
+  --blue: #89b4fa; --lavender: #b4befe;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0; background: var(--base); color: var(--text);
+  font-family: -apple-system, "Segoe UI", "Noto Sans", "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.7; font-size: 16px;
+}
+.layout {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr) 220px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+.sidebar {
+  position: sticky; top: 0; align-self: start; height: 100vh; overflow-y: auto;
+  padding: 1.8rem 1.2rem; border-right: 1px solid var(--surface1);
+}
+.sidebar .brand {
+  font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--crust); background: var(--mauve); display: inline-block;
+  padding: 0.15rem 0.6rem; border-radius: 999px; font-weight: 700; margin-bottom: 1.4rem;
+}
+.sidebar nav a {
+  display: block; padding: 0.5rem 0.7rem; margin: 0.1rem 0; border-radius: 7px;
+  color: var(--subtext1); text-decoration: none; font-size: 0.92rem; border-bottom: none;
+  transition: background 0.12s, color 0.12s;
+}
+.sidebar nav a:hover { background: var(--surface0); color: var(--text); }
+.sidebar nav a.active { background: var(--mauve); color: var(--crust); font-weight: 700; }
+.sidebar nav .part-label {
+  font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--overlay0);
+  margin: 1.1rem 0 0.3rem 0.7rem;
+}
+.content { padding: 2.6rem 2.6rem 5rem; min-width: 0; }
+.onpage {
+  position: sticky; top: 0; align-self: start; height: 100vh; overflow-y: auto;
+  padding: 2.6rem 1.2rem;
+}
+.onpage .label {
+  font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--overlay0);
+  margin-bottom: 0.6rem;
+}
+.onpage a {
+  display: block; padding: 0.28rem 0; color: var(--subtext0); text-decoration: none;
+  font-size: 0.86rem; border-bottom: none; border-left: 2px solid transparent; padding-left: 0.7rem;
+}
+.onpage a.h3 { padding-left: 1.4rem; font-size: 0.82rem; }
+.onpage a:hover { color: var(--sapphire); border-left-color: var(--sapphire); }
+
+h1, h2, h3 { font-weight: 700; line-height: 1.3; scroll-margin-top: 1.5rem; }
+h1 { font-size: 2rem; color: var(--mauve); margin: 0 0 0.6rem; }
+.page-kicker {
+  font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--peach);
+  font-weight: 700; margin-bottom: 0.5rem;
+}
+h2 { font-size: 1.4rem; color: var(--blue); margin: 2.4rem 0 1rem; padding-bottom: 0.4rem; border-bottom: 1px solid var(--surface1); }
+h3 { font-size: 1.1rem; color: var(--sky); margin: 1.8rem 0 0.8rem; }
+p { margin: 0.9rem 0; color: var(--text); }
+a { color: var(--sapphire); text-decoration: none; border-bottom: 1px solid rgba(116, 199, 236, 0.35); }
+a:hover { color: var(--lavender); border-bottom-color: var(--lavender); }
+strong { color: var(--peach); font-weight: 700; }
+code {
+  font-family: "JetBrains Mono", "Fira Code", Consolas, "Liberation Mono", monospace;
+  font-size: 0.86em; background: var(--surface0); color: var(--peach);
+  padding: 0.15em 0.4em; border-radius: 5px;
+}
+pre.code {
+  background: var(--mantle); border: 1px solid var(--surface1); border-radius: 10px;
+  padding: 1rem 1.2rem; overflow-x: auto; margin: 1.1rem 0;
+}
+pre.code code { background: none; color: var(--text); padding: 0; font-size: 0.85em; border-radius: 0; }
+.tok-kw { color: var(--mauve); font-weight: 600; }
+.tok-type { color: var(--yellow); }
+.tok-str { color: var(--green); }
+.tok-com { color: var(--overlay0); font-style: italic; }
+blockquote {
+  margin: 1.1rem 0; padding: 0.15rem 1.1rem; border-left: 3px solid var(--peach);
+  background: var(--surface0); border-radius: 0 8px 8px 0; color: var(--subtext1);
+}
+blockquote p { margin: 0.6rem 0; }
+ul, ol { padding-left: 1.4rem; margin: 0.9rem 0; }
+li { margin: 0.45rem 0; }
+hr { border: none; border-top: 1px solid var(--surface1); margin: 2.2rem 0; }
+.table-wrap { overflow-x: auto; margin: 1.1rem 0; }
+table { border-collapse: collapse; width: 100%; font-size: 0.92em; }
+th, td { border: 1px solid var(--surface1); padding: 0.55rem 0.8rem; text-align: left; vertical-align: top; }
+th { background: var(--surface0); color: var(--lavender); }
+tbody tr:nth-child(odd) { background: rgba(49, 50, 68, 0.35); }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+.card {
+  display: block; padding: 1.1rem 1.2rem; background: var(--mantle); border: 1px solid var(--surface1);
+  border-radius: 12px; text-decoration: none; border-bottom: 1px solid var(--surface1); transition: border-color 0.12s, transform 0.12s;
+}
+.card:hover { border-color: var(--mauve); transform: translateY(-2px); }
+.card .card-title { color: var(--text); font-weight: 700; font-size: 1rem; margin-bottom: 0.3rem; display: block; }
+.card .card-desc { color: var(--subtext0); font-size: 0.86rem; }
+.pager { display: flex; justify-content: space-between; margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--surface1); gap: 1rem; }
+.pager a {
+  border: 1px solid var(--surface1); border-radius: 10px; padding: 0.8rem 1.1rem; flex: 1;
+  border-bottom: 1px solid var(--surface1); color: var(--text);
+}
+.pager a:hover { border-color: var(--mauve); }
+.pager .dir { font-size: 0.72rem; text-transform: uppercase; color: var(--overlay0); display: block; margin-bottom: 0.2rem; }
+.pager .next { text-align: right; }
+::selection { background: var(--surface2); color: var(--rosewater); }
+@media (max-width: 1100px) {
+  .layout { grid-template-columns: 220px minmax(0, 1fr); }
+  .onpage { display: none; }
+}
+@media (max-width: 760px) {
+  .layout { grid-template-columns: 1fr; }
+  .sidebar { position: relative; height: auto; border-right: none; border-bottom: 1px solid var(--surface1); }
+  .content { padding: 1.6rem 1.2rem 3rem; }
+}
+</style>
+</head>
+<body>
+<div class="layout">
+<aside class="sidebar">
+  <span class="brand">Catppuccin Mocha</span>
+  <nav><div class="part-label">Начало</div>
+<a class="" href="index.html">Обзор</a>
+<div class="part-label">Как устроено</div>
+<a class="active" href="01-pool-and-anchor.html">Пул и пустышка</a>
+<a class="" href="02-converter.html">Перевод ParticlesInvoker на пул</a></nav>
+</aside>
+<main class="content">
+<div class="page-kicker">Как устроено</div>
+<h1 id="пул-и-пустышка">Пул и пустышка</h1>
+<h2 id="пул-объектов">Пул объектов</h2>
+<p>Создать <code>GameObject</code> с <code>ParticleSystem</code> (<code>Instantiate</code>) и уничтожить его (<code>Destroy</code>) дорого: выделение памяти, регистрация в сцене, потом сборщик мусора. <strong>Пул</strong> - заранее созданный запас: вместо <code>Instantiate</code> объект берут из запаса (<code>Get</code>), вместо <code>Destroy</code> - кладут обратно (<code>Release</code>). <code>VFXPool</code> использует готовый <code>ObjectPool&lt;T&gt;</code> из Unity:</p>
+<pre class="code lang-csharp"><code><span class="tok-kw">var</span> pool = <span class="tok-kw">new</span> <span class="tok-type">ObjectPool</span>&lt;<span class="tok-type">ParticleSystem</span>&gt;(
+    createFunc: () =&gt; <span class="tok-type">CreateVFX</span>(vfx),          <span class="tok-com">// запас кончился - создать новый</span>
+    actionOnGet: (vfx) =&gt; <span class="tok-type">OnGetVFX</span>(vfx),       <span class="tok-com">// выдать: включить объект</span>
+    actionOnRelease: (vfx) =&gt; <span class="tok-type">OnReleaseVFX</span>(vfx)); <span class="tok-com">// вернуть: очистить частицы, выключить</span></code></pre>
+<p><strong>Прогрев.</strong> <code>ObjectPool</code> создаёт объекты лениво, поэтому первый удар платил бы за <code>Instantiate</code>. Поле <code>prewarm</code> в <code>VFXPrefabsContainer</code> говорит, сколько экземпляров создать при старте:</p>
+<pre class="code lang-csharp"><code><span class="tok-kw">for</span> (<span class="tok-kw">int</span> i = 0; i &lt; count; i++) created.<span class="tok-type">Add</span>(pool.<span class="tok-type">Get</span>());
+<span class="tok-kw">foreach</span> (<span class="tok-kw">var</span> vfx <span class="tok-kw">in</span> created) pool.<span class="tok-type">Release</span>(vfx);</code></pre>
+<h2 id="пустышка-задаёт-позу-и-размер">Пустышка задаёт позу и размер</h2>
+<p><code>VFXPoolElement</code> ставится туда, где раньше лежала <code>ParticleSystem</code>, с тем же положением, поворотом и масштабом. <code>Play()</code> берёт эффект из пула и копирует её мировую позу:</p>
+<pre class="code lang-csharp"><code><span class="tok-kw">bool</span> useLossyScale = vfx.main.scalingMode != <span class="tok-type">ParticleSystemScalingMode</span>.<span class="tok-type">Local</span>;
+<span class="tok-type">TransformSetter</span>.<span class="tok-type">SetTransform</span>(vfx.transformHandle, position, rotation,
+    useLossyScale ? anchor.lossyScale : anchor.localScale);</code></pre>
+<p><code>lossyScale</code> - итоговый масштаб с учётом всех родителей (медведь со scale 2 -&gt; эффект вдвое больше, как было у дочерней системы). Для систем с <code>Scaling Mode = Local</code> родители и раньше не влияли, поэтому берётся <code>localScale</code>.</p>
+<p><strong>Follow.</strong> Экземпляр из пула лежит под объектом <code>VFXPool</code>, а не под врагом, поэтому сам за лапой не поедет. Пустышка с включённым <code>_follow</code> попадает в список, и <code>VFXPool.LateUpdate</code> копирует её позу каждый кадр, пока эффект играет. <code>LateUpdate</code> - потому что кости Animator к этому моменту уже обновлены. Конвертер включает <code>_follow</code> у петель и у эффектов с <code>Simulation Space = Local</code> (частицы, которые должны двигаться вместе с источником).</p>
+<h2 id="частицы-на-поверхности-меша">Частицы на поверхности меша</h2>
+<p><code>Blood</code> и <code>Red Eyes</code> рождают частицы на поверхности меша зверя: модуль Shape с типом Skinned Mesh Renderer ссылается на рендерер тела или глаз. Префаб пула - ассет, а ассет не может ссылаться на объект на сцене или внутри другого префаба, поэтому ссылка при сохранении теряется, и Unity пишет <code>is trying to spawn on a mesh with zero surface area</code>.</p>
+<p>Рендерер хранит пустышка (<code>_shapeRenderer</code>), и пул подставляет его в Shape экземпляра <strong>до</strong> <code>Play()</code>, иначе первый выброс частиц ушёл бы в пустоту. У VAT-двойника тела - обычный <code>MeshRenderer</code>, тип Shape переключается сам:</p>
+<pre class="code lang-csharp"><code><span class="tok-kw">if</span> (renderer <span class="tok-kw">is</span> <span class="tok-type">SkinnedMeshRenderer</span> skinned) { shape.shapeType = <span class="tok-type">ParticleSystemShapeType</span>.<span class="tok-type">SkinnedMeshRenderer</span>; shape.skinnedMeshRenderer = skinned; }
+<span class="tok-kw">else</span> <span class="tok-kw">if</span> (renderer <span class="tok-kw">is</span> <span class="tok-type">MeshRenderer</span> meshRenderer) { shape.shapeType = <span class="tok-type">ParticleSystemShapeType</span>.<span class="tok-type">MeshRenderer</span>; shape.meshRenderer = meshRenderer; }</code></pre>
+<p>Конвертер заполняет <code>_shapeRenderer</code> сам, а <code>VATTwinSetup</code> переводит его на одноимённый рендерер двойника.</p>
+<h2 id="номер-запуска-чужой-эффект-не-остановить">Номер запуска: чужой эффект не остановить</h2>
+<p>Пустышка запоминает экземпляр, который ей выдали. Но эффект без петли пул забирает сам по таймеру (<code>duration</code> в контейнере) и может тут же выдать его другому волку. Если первая пустышка потом вызовет <code>Stop()</code> по старой ссылке, она погасит <strong>чужой</strong> эффект. Это известная ошибка «ABA»: ссылка та же, а объект за ней уже другой.</p>
+<p>Решение - номер запуска (как поколение у <code>SwarmNavHandle</code>): при каждом <code>Get</code> экземпляр получает новый номер, пустышка хранит пару «экземпляр + номер» и действует, только если номер совпал:</p>
+<pre class="code lang-csharp"><code><span class="tok-kw">public</span> <span class="tok-kw">bool</span> <span class="tok-type">IsPlaying</span>()
+{
+    <span class="tok-kw">return</span> _vfx != <span class="tok-kw">null</span> &amp;&amp; _playId != 0 &amp;&amp; <span class="tok-type">VFXPool</span>.instance.<span class="tok-type">GetPlayId</span>(_vfx) == _playId;
+}</code></pre>
+<h2 id="один-таймер-возврата-на-экземпляр">Один таймер возврата на экземпляр</h2>
+<p>У экземпляра бывает два способа вернуться: таймер <code>duration</code> и <code>StopVFX</code> (дождаться, пока частицы догорят). Раньше <code>StopVFX</code> запускал второй таймер, не отменив первый, и экземпляр возвращался в пул <strong>дважды</strong> - второй раз уже будучи выданным кому-то ещё. Теперь новый таймер отменяет старый:</p>
+<pre class="code lang-csharp"><code><span class="tok-kw">if</span> (activeVFXCoroutines.<span class="tok-type">TryGetValue</span>(vfx, <span class="tok-kw">out</span> <span class="tok-type">Coroutine</span> previous) &amp;&amp; previous != <span class="tok-kw">null</span>)
+    <span class="tok-type">StopCoroutine</span>(previous);
+activeVFXCoroutines[vfx] = coroutine;</code></pre>
+<h2 id="мелочи">Мелочи</h2>
+<ul><li><code>_stopWithDisable</code> (конвертер включает всегда): выключили врага - его эффект сразу вернулся в пул, как пропадали дочерние частицы.</li><li>Повторный <code>Play()</code> петли сначала останавливает прежний экземпляр, чтобы тот не остался играть без хозяина.</li><li><code>ParticleDamage</code> берёт <code>Camera.main</code> заново, если камера уничтожена: пул переживает смену сцены, а камера нет.</li><li>Без <code>VFXPool</code> на сцене <code>Play()</code> пишет предупреждение, а не падает.</li></ul>
+<div class="pager"><a class="prev" href="index.html"><span class="dir">Назад</span>Обзор</a><a class="next" href="02-converter.html"><span class="dir">Дальше</span>Перевод ParticlesInvoker на пул</a></div>
+</main>
+<aside class="onpage">
+  <div class="label">На этой странице</div>
+<a class="" href="#пул-объектов">Пул объектов</a>
+<a class="" href="#пустышка-задаёт-позу-и-размер">Пустышка задаёт позу и размер</a>
+<a class="" href="#частицы-на-поверхности-меша">Частицы на поверхности меша</a>
+<a class="" href="#номер-запуска-чужой-эффект-не-остановить">Номер запуска: чужой эффект не остановить</a>
+<a class="" href="#один-таймер-возврата-на-экземпляр">Один таймер возврата на экземпляр</a>
+<a class="" href="#мелочи">Мелочи</a>
+</aside>
+</div>
+</body>
+</html>

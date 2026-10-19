@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SwarmAgent (просто) — SwarmNav</title>
+<style>
+:root {
+  --base: #1e1e2e; --mantle: #181825; --crust: #11111b;
+  --surface0: #313244; --surface1: #45475a; --surface2: #585b70;
+  --overlay0: #6c7086; --overlay1: #7f849c;
+  --text: #cdd6f4; --subtext1: #bac2de; --subtext0: #a6adc8;
+  --rosewater: #f5e0dc; --flamingo: #f2cdcd; --pink: #f5c2e7; --mauve: #cba6f7;
+  --red: #f38ba8; --maroon: #eba0ac; --peach: #fab387; --yellow: #f9e2af;
+  --green: #a6e3a1; --teal: #94e2d5; --sky: #89dceb; --sapphire: #74c7ec;
+  --blue: #89b4fa; --lavender: #b4befe;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0; background: var(--base); color: var(--text);
+  font-family: -apple-system, "Segoe UI", "Noto Sans", "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.7; font-size: 16px;
+}
+.layout {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr) 220px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+.sidebar {
+  position: sticky; top: 0; align-self: start; height: 100vh; overflow-y: auto;
+  padding: 1.8rem 1.2rem; border-right: 1px solid var(--surface1);
+}
+.sidebar .brand {
+  font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--crust); background: var(--mauve); display: inline-block;
+  padding: 0.15rem 0.6rem; border-radius: 999px; font-weight: 700; margin-bottom: 1.4rem;
+}
+.sidebar nav a {
+  display: block; padding: 0.5rem 0.7rem; margin: 0.1rem 0; border-radius: 7px;
+  color: var(--subtext1); text-decoration: none; font-size: 0.92rem; border-bottom: none;
+  transition: background 0.12s, color 0.12s;
+}
+.sidebar nav a:hover { background: var(--surface0); color: var(--text); }
+.sidebar nav a.active { background: var(--mauve); color: var(--crust); font-weight: 700; }
+.sidebar nav .part-label {
+  font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--overlay0);
+  margin: 1.1rem 0 0.3rem 0.7rem;
+}
+.content { padding: 2.6rem 2.6rem 5rem; min-width: 0; }
+.onpage {
+  position: sticky; top: 0; align-self: start; height: 100vh; overflow-y: auto;
+  padding: 2.6rem 1.2rem;
+}
+.onpage .label {
+  font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--overlay0);
+  margin-bottom: 0.6rem;
+}
+.onpage a {
+  display: block; padding: 0.28rem 0; color: var(--subtext0); text-decoration: none;
+  font-size: 0.86rem; border-bottom: none; border-left: 2px solid transparent; padding-left: 0.7rem;
+}
+.onpage a.h3 { padding-left: 1.4rem; font-size: 0.82rem; }
+.onpage a:hover { color: var(--sapphire); border-left-color: var(--sapphire); }
+
+h1, h2, h3 { font-weight: 700; line-height: 1.3; scroll-margin-top: 1.5rem; }
+h1 { font-size: 2rem; color: var(--mauve); margin: 0 0 0.6rem; }
+.page-kicker {
+  font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--peach);
+  font-weight: 700; margin-bottom: 0.5rem;
+}
+h2 { font-size: 1.4rem; color: var(--blue); margin: 2.4rem 0 1rem; padding-bottom: 0.4rem; border-bottom: 1px solid var(--surface1); }
+h3 { font-size: 1.1rem; color: var(--sky); margin: 1.8rem 0 0.8rem; }
+p { margin: 0.9rem 0; color: var(--text); }
+a { color: var(--sapphire); text-decoration: none; border-bottom: 1px solid rgba(116, 199, 236, 0.35); }
+a:hover { color: var(--lavender); border-bottom-color: var(--lavender); }
+strong { color: var(--peach); font-weight: 700; }
+code {
+  font-family: "JetBrains Mono", "Fira Code", Consolas, "Liberation Mono", monospace;
+  font-size: 0.86em; background: var(--surface0); color: var(--peach);
+  padding: 0.15em 0.4em; border-radius: 5px;
+}
+pre.code {
+  background: var(--mantle); border: 1px solid var(--surface1); border-radius: 10px;
+  padding: 1rem 1.2rem; overflow-x: auto; margin: 1.1rem 0;
+}
+pre.code code { background: none; color: var(--text); padding: 0; font-size: 0.85em; border-radius: 0; }
+.tok-kw { color: var(--mauve); font-weight: 600; }
+.tok-type { color: var(--yellow); }
+.tok-str { color: var(--green); }
+.tok-com { color: var(--overlay0); font-style: italic; }
+blockquote {
+  margin: 1.1rem 0; padding: 0.15rem 1.1rem; border-left: 3px solid var(--peach);
+  background: var(--surface0); border-radius: 0 8px 8px 0; color: var(--subtext1);
+}
+blockquote p { margin: 0.6rem 0; }
+ul, ol { padding-left: 1.4rem; margin: 0.9rem 0; }
+li { margin: 0.45rem 0; }
+hr { border: none; border-top: 1px solid var(--surface1); margin: 2.2rem 0; }
+.table-wrap { overflow-x: auto; margin: 1.1rem 0; }
+table { border-collapse: collapse; width: 100%; font-size: 0.92em; }
+th, td { border: 1px solid var(--surface1); padding: 0.55rem 0.8rem; text-align: left; vertical-align: top; }
+th { background: var(--surface0); color: var(--lavender); }
+tbody tr:nth-child(odd) { background: rgba(49, 50, 68, 0.35); }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+.card {
+  display: block; padding: 1.1rem 1.2rem; background: var(--mantle); border: 1px solid var(--surface1);
+  border-radius: 12px; text-decoration: none; border-bottom: 1px solid var(--surface1); transition: border-color 0.12s, transform 0.12s;
+}
+.card:hover { border-color: var(--mauve); transform: translateY(-2px); }
+.card .card-title { color: var(--text); font-weight: 700; font-size: 1rem; margin-bottom: 0.3rem; display: block; }
+.card .card-desc { color: var(--subtext0); font-size: 0.86rem; }
+.pager { display: flex; justify-content: space-between; margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--surface1); gap: 1rem; }
+.pager a {
+  border: 1px solid var(--surface1); border-radius: 10px; padding: 0.8rem 1.1rem; flex: 1;
+  border-bottom: 1px solid var(--surface1); color: var(--text);
+}
+.pager a:hover { border-color: var(--mauve); }
+.pager .dir { font-size: 0.72rem; text-transform: uppercase; color: var(--overlay0); display: block; margin-bottom: 0.2rem; }
+.pager .next { text-align: right; }
+::selection { background: var(--surface2); color: var(--rosewater); }
+@media (max-width: 1100px) {
+  .layout { grid-template-columns: 220px minmax(0, 1fr); }
+  .onpage { display: none; }
+}
+@media (max-width: 760px) {
+  .layout { grid-template-columns: 1fr; }
+  .sidebar { position: relative; height: auto; border-right: none; border-bottom: 1px solid var(--surface1); }
+  .content { padding: 1.6rem 1.2rem 3rem; }
+}
+
+</style>
+</head>
+<body>
+<div class="layout">
+<aside class="sidebar">
+  <span class="brand">Catppuccin Mocha</span>
+  <nav><div class="part-label">SwarmNav</div>
+<a class="" href="index.html">Обзор</a>
+<a class="" href="01-quickstart.html">Быстрый старт</a>
+<a class="active" href="02-swarm-agent.html">SwarmAgent (просто)</a>
+<a class="" href="03-swarm-crowd.html">SwarmCrowd (Burst)</a>
+<a class="" href="04-how-it-works.html">Как это работает</a>
+<a class="" href="05-advanced.html">Расширенные темы</a>
+<a class="" href="06-SwarmNav-recipes.html">Рецепты</a>
+<a class="" href="07-performance.html">Производительность (GPU)</a>
+<a class="" href="08-behaviour-and-lod.html">Поведение и LOD</a>
+<a class="" href="09-ai-integration.html">Подключение ИИ</a>
+</nav>
+</aside>
+<main class="content">
+<div class="page-kicker">SwarmNav</div>
+<h1 id="swarmagent-просто-как-navmeshagent">SwarmAgent: просто, как NavMeshAgent</h1>
+<p><code>SwarmAgent</code> - компонент-обёртка над общим <code>SwarmCrowd</code>. Он спрятал <code>Tick</code>, пути, LOD и разведение - остаётся
+<code>SetDestination</code>, как у <code>NavMeshAgent</code>. Подготовка сцены - <code>01-quickstart.md</code>.</p>
+<h2 id="1-минимум">1. Минимум</h2>
+<ol>
+<li>Запеките <code>NavMeshSurface</code>.</li>
+<li>Киньте <code>SwarmAgent</code> на <code>GameObject</code>.</li>
+<li>Зовите <code>SetDestination</code>.</li>
+</ol>
+<pre class="code"><code>agent.SetDestination(new Vector3(10f, 0f, 5f));      // неподвижная точка
+agent.SetDestination(player.transformHandle);        // погоня: позиция читается каждый кадр сама
+</code></pre>
+<p><code>SetDestination(Vector3)</code> можно звать сколько угодно раз: старая цель заменяется, путь считается заново.
+<code>SetDestination(TransformHandle)</code> достаточно позвать один раз.</p>
+<h2 id="2-поля-и-методы">2. Поля и методы</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Поле/метод</th>
+<th>Смысл</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>SetDestination(Vector3 pos)</code></td>
+<td>Идти к неподвижной точке. Точка привязывается к ближайшей точке NavMesh в окне <code>QueryExtents</code>.</td>
+</tr>
+<tr>
+<td><code>SetDestination(TransformHandle target)</code></td>
+<td>Погоня за движущейся целью (игрок, враг). Позиция читается раз в кадр на всех, кто гонится за одним <code>Transform</code>.</td>
+</tr>
+<tr>
+<td><code>speed</code></td>
+<td>Скорость, м/с.</td>
+</tr>
+<tr>
+<td><code>stoppingDistance</code></td>
+<td>На каком расстоянии от цели считать, что дошли (по умолчанию 0,5).</td>
+</tr>
+<tr>
+<td><code>remainingDistance</code></td>
+<td>Расстояние по XZ до цели (обновляется на шагах агента; для дальних агентов - раз в N кадров).</td>
+</tr>
+<tr>
+<td><code>hasDestination</code></td>
+<td><code>true</code>, пока цель не достигнута. После прибытия к <strong>неподвижной</strong> цели становится <code>false</code>. У погони остаётся <code>true</code>: агент возобновит движение, когда цель отойдёт.</td>
+</tr>
+<tr>
+<td><code>pathStatus</code></td>
+<td><code>None</code>, <code>Pending</code> (путь считается), <code>Complete</code>, <code>Partial</code> (цель недостижима), <code>Invalid</code> (агент или цель вне NavMesh).</td>
+</tr>
+<tr>
+<td><code>pathPending</code></td>
+<td>То же, что <code>pathStatus == Pending</code>.</td>
+</tr>
+<tr>
+<td><code>isOnNavMesh</code></td>
+<td>Привязан ли агент к полигону NavMesh.</td>
+</tr>
+<tr>
+<td><code>isStopped</code></td>
+<td><code>true</code> - стоит, цель и путь сохраняются.</td>
+</tr>
+<tr>
+<td><code>Stop()</code></td>
+<td>То же, что <code>isStopped = true</code>.</td>
+</tr>
+<tr>
+<td><code>ResetPath()</code></td>
+<td>Снять цель совсем (<code>hasDestination</code> станет <code>false</code>), в отличие от <code>Stop()</code>.</td>
+</tr>
+<tr>
+<td><code>Warp(Vector3 pos)</code></td>
+<td>Телепорт: <code>Transform</code> и внутреннее состояние сразу, с привязкой к NavMesh. Цель сохраняется, путь пересчитывается.</td>
+</tr>
+<tr>
+<td><code>angularSpeed</code></td>
+<td>Скорость поворота, градусов/сек.</td>
+</tr>
+<tr>
+<td><code>acceleration</code></td>
+<td>Как у <code>NavMeshAgent</code>: разгон и торможение у цели, м/с² (по умолчанию 8). <code>0</code> - скорость сразу полная, как было раньше.</td>
+</tr>
+<tr>
+<td><code>radius</code></td>
+<td>Как у <code>NavMeshAgent</code>: два агента расходятся на сумму радиусов. <code>0</code> - половина <code>AvoidanceRadius</code> из настроек.</td>
+</tr>
+<tr>
+<td><code>baseOffset</code></td>
+<td>Смещение Y модели над поверхностью NavMesh (для куба с пивотом в центре - половина высоты).</td>
+</tr>
+<tr>
+<td><code>velocity</code></td>
+<td>Фактическая скорость: направление шага * текущая скорость (с учётом разгона).</td>
+</tr>
+<tr>
+<td><code>updatePosition</code>, <code>updateRotation</code></td>
+<td><code>false</code> - <code>Transform</code> двигает кто-то другой (RootMotion). См. <code>SyncPosition</code>/<code>Move</code>.</td>
+</tr>
+<tr>
+<td><code>SyncPosition(pos)</code>, <code>Move(offset)</code></td>
+<td>Для RootMotion (раздел 6 в <code>05-advanced.md</code>). <code>SyncPosition</code> - как <code>NavMeshAgent.nextPosition</code>: путь не пересчитывает.</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="3-путь-считается-не-мгновенно">3. Путь считается не мгновенно</h2>
+<p><code>SetDestination</code> лишь записывает цель. Путь считают воркеры в фоне после шага агентов, поэтому:</p>
+<ul>
+<li>сразу после вызова <code>pathStatus == Pending</code>; пока путь не готов, агент идёт к цели по прямой (<code>WalkWhilePathPending</code>, <code>MoveLocation</code> остановит у края NavMesh), а когда путь придёт, поправит маршрут;</li>
+<li>со следующего кадра он идёт по пути (цели ближе <code>DirectMoveRange</code> и без стен - сразу напрямую);</li>
+<li>за кадр считается не больше <code>PathRequestsPerFrame</code> путей (по умолчанию 128): если 5000 агентов получили цель
+  одновременно, они стартуют порциями, а не все в один кадр.</li>
+</ul>
+<p>Это так же, как у <code>NavMeshAgent</code> (<code>pathPending</code>), только без стоимости на главном потоке.</p>
+<h2 id="4-недостижимая-цель-острова-и-navmeshlink">4. Недостижимая цель, острова и NavMeshLink</h2>
+<p>NavMesh не обязан быть связным. Если цель в другой несвязанной части:</p>
+<ul>
+<li>без <code>NavMeshLink</code> <code>pathStatus</code> станет <code>Partial</code>: агент дойдёт до ближайшей достижимой точки и остановится
+  (<code>hasDestination == false</code>, <code>pathStatus == Partial</code>) - как <code>NavMeshAgent</code> с <code>PathPartial</code>;</li>
+<li>с <code>NavMeshLink</code> между частями путь <code>Complete</code>: агент идёт к входу связи, <strong>прыгает</strong> по прямой до выхода
+  (скорость <code>speed * LinkSpeedMultiplier</code>) и дальше продолжает путь.</li>
+</ul>
+<p>Плавающие острова - это просто ещё одна часть NavMesh: если <code>NavMeshSurface</code> запекает их (объём запекания
+охватывает остров), агенты ходят по ним так же, как по земле. Высота над островом берётся у поверхности NavMesh
+в точке агента, поэтому слои «земля под островом» и «поверхность острова» не путаются: агент привязан к тому
+полигону, на котором стоит.</p>
+<h2 id="5-погоня">5. Погоня</h2>
+<pre class="code"><code>foreach (SwarmAgent enemy in enemies) enemy.SetDestination(player.transformHandle);
+</code></pre>
+<ul>
+<li>Позиция игрока читается один раз за кадр на всех, кто гонится за ним.</li>
+<li>Пока игрок далеко, агент идёт по пути. Путь пересчитывается, когда игрок сместился больше чем на
+  <code>max(ChaseRepathDistance, ChaseRepathFraction * расстояние до игрока)</code> и прошёл <code>RepathCooldown</code> (Near 0,25 с,
+  Mid 1 с, Far 3 с). Дальний агент идёт к устаревшей точке и обновляет её реже - это и держит нагрузку.</li>
+<li>Когда игрок ближе <code>DirectMoveRange</code> (30 м) и до него нет стен, агент идёт напрямую по <code>Raycast</code> по NavMesh.</li>
+<li><code>stoppingDistance</code> - дистанция остановки у игрока (дистанция удара).</li>
+</ul>
+<h2 id="6-толпа">6. Толпа</h2>
+<p>Тот же компонент на каждом <code>GameObject</code>. Расход на агента - запись в массивы и один элемент
+<code>TransformAccessArray</code>; <code>Update()</code> нет ни у кого. Обход соседей включён по умолчанию; чтобы агенты проходили
+сквозь друг друга, поставьте <code>SeparationWeight = 0</code>.</p>
+<h2 id="7-что-проверено">7. Что проверено</h2>
+<p><code>SwarmAgentApiTest</code> (рядом со скриптами SwarmNav) на живой сцене проверяет: прибытие и <code>remainingDistance</code>,
+высоту агента относительно NavMesh с учётом <code>baseOffset</code>, <code>isStopped</code>, <code>ResetPath</code>, <code>Warp</code>, недостижимую цель
+(<code>Partial</code>), агента вне NavMesh (<code>Invalid</code>, без исключений), удаление соседнего агента. Результат последнего прогона -
+в разделе 7 <code>07-performance.md</code>.</p>
+<div class="pager"><a href="01-quickstart.html"><span class="dir">Назад</span>Быстрый старт</a><a class="next" href="03-swarm-crowd.html"><span class="dir">Дальше</span>SwarmCrowd (Burst)</a></div>
+</main>
+<aside class="onpage">
+  <div class="label">На этой странице</div>
+<a class="" href="#1-минимум">1. Минимум</a>
+<a class="" href="#2-поля-и-методы">2. Поля и методы</a>
+<a class="" href="#3-путь-считается-не-мгновенно">3. Путь считается не мгновенно</a>
+<a class="" href="#4-недостижимая-цель-острова-и-navmeshlink">4. Недостижимая цель, острова и NavMeshLink</a>
+<a class="" href="#5-погоня">5. Погоня</a>
+<a class="" href="#6-толпа">6. Толпа</a>
+<a class="" href="#7-что-проверено">7. Что проверено</a>
+</aside>
+</div>
+</body>
+</html>

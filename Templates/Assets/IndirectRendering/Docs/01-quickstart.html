@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Быстрый старт — Graphics.RenderMeshIndirect</title>
+<style>
+:root {
+  --base: #1e1e2e; --mantle: #181825; --crust: #11111b;
+  --surface0: #313244; --surface1: #45475a; --surface2: #585b70;
+  --overlay0: #6c7086; --overlay1: #7f849c;
+  --text: #cdd6f4; --subtext1: #bac2de; --subtext0: #a6adc8;
+  --rosewater: #f5e0dc; --flamingo: #f2cdcd; --pink: #f5c2e7; --mauve: #cba6f7;
+  --red: #f38ba8; --maroon: #eba0ac; --peach: #fab387; --yellow: #f9e2af;
+  --green: #a6e3a1; --teal: #94e2d5; --sky: #89dceb; --sapphire: #74c7ec;
+  --blue: #89b4fa; --lavender: #b4befe;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0; background: var(--base); color: var(--text);
+  font-family: -apple-system, "Segoe UI", "Noto Sans", "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.7; font-size: 16px;
+}
+.layout {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr) 220px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+.sidebar {
+  position: sticky; top: 0; align-self: start; height: 100vh; overflow-y: auto;
+  padding: 1.8rem 1.2rem; border-right: 1px solid var(--surface1);
+}
+.sidebar .brand {
+  font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--crust); background: var(--mauve); display: inline-block;
+  padding: 0.15rem 0.6rem; border-radius: 999px; font-weight: 700; margin-bottom: 1.4rem;
+}
+.sidebar nav a {
+  display: block; padding: 0.5rem 0.7rem; margin: 0.1rem 0; border-radius: 7px;
+  color: var(--subtext1); text-decoration: none; font-size: 0.92rem; border-bottom: none;
+  transition: background 0.12s, color 0.12s;
+}
+.sidebar nav a:hover { background: var(--surface0); color: var(--text); }
+.sidebar nav a.active { background: var(--mauve); color: var(--crust); font-weight: 700; }
+.sidebar nav .part-label {
+  font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--overlay0);
+  margin: 1.1rem 0 0.3rem 0.7rem;
+}
+.content { padding: 2.6rem 2.6rem 5rem; min-width: 0; }
+.onpage {
+  position: sticky; top: 0; align-self: start; height: 100vh; overflow-y: auto;
+  padding: 2.6rem 1.2rem;
+}
+.onpage .label {
+  font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--overlay0);
+  margin-bottom: 0.6rem;
+}
+.onpage a {
+  display: block; padding: 0.28rem 0; color: var(--subtext0); text-decoration: none;
+  font-size: 0.86rem; border-bottom: none; border-left: 2px solid transparent; padding-left: 0.7rem;
+}
+.onpage a.h3 { padding-left: 1.4rem; font-size: 0.82rem; }
+.onpage a:hover { color: var(--sapphire); border-left-color: var(--sapphire); }
+
+h1, h2, h3 { font-weight: 700; line-height: 1.3; scroll-margin-top: 1.5rem; }
+h1 { font-size: 2rem; color: var(--mauve); margin: 0 0 0.6rem; }
+.page-kicker {
+  font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--peach);
+  font-weight: 700; margin-bottom: 0.5rem;
+}
+h2 { font-size: 1.4rem; color: var(--blue); margin: 2.4rem 0 1rem; padding-bottom: 0.4rem; border-bottom: 1px solid var(--surface1); }
+h3 { font-size: 1.1rem; color: var(--sky); margin: 1.8rem 0 0.8rem; }
+p { margin: 0.9rem 0; color: var(--text); }
+a { color: var(--sapphire); text-decoration: none; border-bottom: 1px solid rgba(116, 199, 236, 0.35); }
+a:hover { color: var(--lavender); border-bottom-color: var(--lavender); }
+strong { color: var(--peach); font-weight: 700; }
+code {
+  font-family: "JetBrains Mono", "Fira Code", Consolas, "Liberation Mono", monospace;
+  font-size: 0.86em; background: var(--surface0); color: var(--peach);
+  padding: 0.15em 0.4em; border-radius: 5px;
+}
+pre.code {
+  background: var(--mantle); border: 1px solid var(--surface1); border-radius: 10px;
+  padding: 1rem 1.2rem; overflow-x: auto; margin: 1.1rem 0;
+}
+pre.code code { background: none; color: var(--text); padding: 0; font-size: 0.85em; border-radius: 0; }
+.tok-kw { color: var(--mauve); font-weight: 600; }
+.tok-type { color: var(--yellow); }
+.tok-str { color: var(--green); }
+.tok-com { color: var(--overlay0); font-style: italic; }
+blockquote {
+  margin: 1.1rem 0; padding: 0.15rem 1.1rem; border-left: 3px solid var(--peach);
+  background: var(--surface0); border-radius: 0 8px 8px 0; color: var(--subtext1);
+}
+blockquote p { margin: 0.6rem 0; }
+ul, ol { padding-left: 1.4rem; margin: 0.9rem 0; }
+li { margin: 0.45rem 0; }
+hr { border: none; border-top: 1px solid var(--surface1); margin: 2.2rem 0; }
+.table-wrap { overflow-x: auto; margin: 1.1rem 0; }
+table { border-collapse: collapse; width: 100%; font-size: 0.92em; }
+th, td { border: 1px solid var(--surface1); padding: 0.55rem 0.8rem; text-align: left; vertical-align: top; }
+th { background: var(--surface0); color: var(--lavender); }
+tbody tr:nth-child(odd) { background: rgba(49, 50, 68, 0.35); }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+.card {
+  display: block; padding: 1.1rem 1.2rem; background: var(--mantle); border: 1px solid var(--surface1);
+  border-radius: 12px; text-decoration: none; border-bottom: 1px solid var(--surface1); transition: border-color 0.12s, transform 0.12s;
+}
+.card:hover { border-color: var(--mauve); transform: translateY(-2px); }
+.card .card-title { color: var(--text); font-weight: 700; font-size: 1rem; margin-bottom: 0.3rem; display: block; }
+.card .card-desc { color: var(--subtext0); font-size: 0.86rem; }
+.pager { display: flex; justify-content: space-between; margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--surface1); gap: 1rem; }
+.pager a {
+  border: 1px solid var(--surface1); border-radius: 10px; padding: 0.8rem 1.1rem; flex: 1;
+  border-bottom: 1px solid var(--surface1); color: var(--text);
+}
+.pager a:hover { border-color: var(--mauve); }
+.pager .dir { font-size: 0.72rem; text-transform: uppercase; color: var(--overlay0); display: block; margin-bottom: 0.2rem; }
+.pager .next { text-align: right; }
+::selection { background: var(--surface2); color: var(--rosewater); }
+@media (max-width: 1100px) {
+  .layout { grid-template-columns: 220px minmax(0, 1fr); }
+  .onpage { display: none; }
+}
+@media (max-width: 760px) {
+  .layout { grid-template-columns: 1fr; }
+  .sidebar { position: relative; height: auto; border-right: none; border-bottom: 1px solid var(--surface1); }
+  .content { padding: 1.6rem 1.2rem 3rem; }
+}
+</style>
+</head>
+<body>
+<div class="layout">
+<aside class="sidebar">
+  <span class="brand">Catppuccin Mocha</span>
+  <nav><div class="part-label">Начало</div>
+<a class="" href="index.html">Обзор</a>
+<a class="" href="00-basics.html">Основы (CPU/GPU, буферы, шейдеры)</a>
+<div class="part-label">Часть 1 — практика</div>
+<a class="active" href="01-quickstart.html">Быстрый старт</a>
+<div class="part-label">Часть 2 — устройство</div>
+<a class="" href="02-architecture.html">Архитектура</a>
+<a class="" href="02b-compute-shaders.html">Свои ComputeShader</a>
+<a class="" href="03-culling.html">GPU-culling</a>
+<a class="" href="04-diagnostics.html">Диагностика и биты</a>
+<a class="" href="06-lod.html">LOD</a>
+<div class="part-label">Справочник</div>
+<a class="" href="05-gotchas.html">Грабли и шейдеры</a></nav>
+</aside>
+<main class="content">
+<div class="page-kicker">Часть 1 — практика</div>
+<h1 id="быстрый-старт">Быстрый старт</h1>
+<p>Как повесить компонент и получить работающую "поляну" инстансов, потом — как включить GPU-driven culling. Про то, ПОЧЕМУ это так устроено — на других страницах, здесь только практика.</p>
+<h2 id="как-настроить-с-нуля">Как настроить с нуля</h2>
+<p>Это про настройки самого компонента, не про то, как создать GameObject в Unity — это вы уже умеете.</p>
+<ol><li>Повесьте <code>IndirectMeshRenderer</code> на любой GameObject.</li><li><code>_mesh</code> / <code>_material</code> — необязательны: без меша возьмётся временный куб, без материала — общий <code>Custom/IndirectCube</code>. Задавайте вручную, если нужен свой меш или Shader Graph-материал (см. <a href="05-gotchas.html">Грабли и шейдеры</a>).</li><li><code>_instanceCount</code>, <code>_spread</code>, <code>_minScale</code>/<code>_maxScale</code>, <code>_minYRotation</code>/<code>_maxYRotation</code> — параметры генерации "поляны" инстансов (детали — <a href="02-architecture.html#как-расставляются-объекты">Как расставляются объекты</a>).</li><li><code>_targetCamera</code> — необязательно, по умолчанию берётся <code>Camera.main</code>. Указывайте явно, если в сцене несколько камер сразу (сплитскрин, миникарта) — иначе поймаете просадку FPS, разобранную в <a href="05-gotchas.html#камера-почему-rendermeshindirect-рисует-лишний-раз">разделе про камеру</a>.</li><li>Нажмите Play — увидите "поляну" кубов вокруг позиции объекта.</li></ol>
+<h2 id="как-включить-gpu-driven-culling">Как включить GPU-driven culling</h2>
+<ol><li>Назначьте ассет <code>IndirectCulling.compute</code> в поле <code>_cullingShader</code>.</li><li>Включите галочку <code>_useComputeCulling</code>.</li><li><code>_cullRadius</code> — радиус в мировых единицах вокруг <code>_targetCamera</code>, внутри которого инстанс вообще рассматривается как кандидат на отрисовку (грубый предварительный фильтр).</li></ol>
+<p>Дальше — три теста подряд (дистанция → frustum → occlusion), каждый со своей галочкой-переключателем:</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Поле</th><th>По умолчанию</th><th>Смысл</th></tr></thead>
+<tbody>
+<tr><td><code>_enableDistanceCulling</code></td><td>✅ включено</td><td>Тест 1 — сфера вокруг камеры, см. <a href="03-culling.html#тест-1-дистанция">Тест 1: дистанция</a></td></tr>
+<tr><td><code>_enableFrustumCulling</code></td><td>✅ включено</td><td>Тест 2 — конус обзора камеры, см. <a href="03-culling.html#тест-2-frustum-culling">Тест 2: frustum culling</a></td></tr>
+<tr><td><code>_enableOcclusionCulling</code></td><td>⚠️ <strong>выключено</strong></td><td>Тест 3 — что перекрыто другой геометрией, см. <a href="03-culling.html#тест-3-occlusion-culling-по-depth-буферу-прошлого-кадра">Тест 3: occlusion culling</a>. Выключено по умолчанию осознанно: исторически давал нестабильные ложные отбраковки, включайте только когда реально нужно и готовы проверить результат через диагностику</td></tr>
+<tr><td><code>_invertOcclusion</code></td><td>выключено</td><td>Диагностика: буквально переворачивает результат occlusion-теста</td></tr>
+<tr><td><code>_boundsRadiusOverride</code></td><td><code>0</code> (авто из <code>_mesh.bounds</code>)</td><td>Радиус ограничивающей сферы ОДНОГО инстанса для frustum-теста. Задайте руками, если авто-значение не соответствует реальному видимому размеру</td></tr>
+<tr><td><code>_boundsExtentsOverride</code></td><td><code>(0,0,0)</code> (авто из <code>_mesh.bounds.extents</code>)</td><td>Полу-размер по X/Y/Z для 6 сэмпл-точек occlusion-теста. <strong>Важно</strong>: должен примерно соответствовать реальным пропорциям меша — см. <a href="03-culling.html#известные-ограничения-occlusion-теста">известные ограничения</a></td></tr>
+</tbody></table></div>
+<p>Оба override-поля читаются <strong>каждый кадр</strong>, не только при старте — правки в инспекторе во время Play mode применяются сразу, в том числе к реальному GPU-тесту, а не только к диагностическим гизмо.</p>
+<p>Настраивать больше нечего для базового включения. Полный разбор всех трёх тестов — <a href="03-culling.html">GPU-culling</a>. Если что-то отбраковывается неправильно — <a href="04-diagnostics.html">Диагностика</a>.</p>
+<h2 id="как-двигать-инстансы">Как двигать инстансы</h2>
+<p>На <code>IndirectMeshRenderer</code> есть два готовых метода под нечастые изменения:</p>
+<pre class="code lang-csharp"><code><span class="tok-com">// Один конкретный инстанс - дёшево, для нечастых точечных правок.</span>
+renderer.<span class="tok-type">SetInstancePosition</span>(index: 42, worldPosition: <span class="tok-kw">new</span> <span class="tok-type">Vector3</span>(10f, 0f, 5f));
+
+<span class="tok-com">// Вся "поляна" разом, когда подвинули сам GameObject - дорого, вызывать редко/по событию.</span>
+renderer.<span class="tok-type">RecenterToTransform</span>();</code></pre>
+<p>Если вам нужно двигать МНОГО инстансов КАЖДЫЙ кадр (анимация, физика, ветер) — ни один из этих методов не подходит, нужна третья, GPU-side техника, которой в демо-компоненте нет, но которая разобрана полностью — см. <a href="02-architecture.html#как-менять-позицию-инстансов-общая-техника-не-два-конкретных-метода">Как менять позицию инстансов — общая техника</a> на странице Архитектура.</p>
+<h2 id="как-подключить-свой-шейдер-shader-graph">Как подключить свой шейдер / Shader Graph</h2>
+<p>Короткая версия (полная — на странице <a href="05-gotchas.html#как-подключить-это-к-shader-graph">Грабли и шейдеры</a>):</p>
+<ul><li>Любой шейдер, который <strong>сам явно читает</strong> <code>_InstanceBuffer</code> по <code>SV_InstanceID</code>/ноде <code>Instance ID</code>, подходит — не важно, написан он руками (<code>IndirectCube.shader</code>) или собран в Shader Graph (<code>IndirectInstancing.hlsl</code> + reflected-нода <code>Apply Instance Transform</code>).</li><li>Обычный готовый Lit/PBR-материал <strong>не подходит</strong>, пока в него не встроена эта логика — см. <a href="05-gotchas.html#какие-материалы-шейдеры-поддерживаются">Какие материалы/шейдеры поддерживаются</a>.</li></ul>
+<div class="pager"><a class="prev" href="00-basics.html"><span class="dir">Назад</span>Основы (CPU/GPU, буферы, шейдеры)</a><a class="next" href="02-architecture.html"><span class="dir">Дальше</span>Архитектура</a></div>
+</main>
+<aside class="onpage">
+  <div class="label">На этой странице</div>
+  <a class="" href="#как-настроить-с-нуля">Как настроить с нуля</a>
+<a class="" href="#как-включить-gpu-driven-culling">Как включить GPU-driven culling</a>
+<a class="" href="#как-двигать-инстансы">Как двигать инстансы</a>
+<a class="" href="#как-подключить-свой-шейдер-shader-graph">Как подключить свой шейдер / Shader Graph</a>
+</aside>
+</div>
+</body>
+</html>

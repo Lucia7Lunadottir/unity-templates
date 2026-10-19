@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Грабли и шейдеры — Graphics.RenderMeshIndirect</title>
+<style>
+:root {
+  --base: #1e1e2e; --mantle: #181825; --crust: #11111b;
+  --surface0: #313244; --surface1: #45475a; --surface2: #585b70;
+  --overlay0: #6c7086; --overlay1: #7f849c;
+  --text: #cdd6f4; --subtext1: #bac2de; --subtext0: #a6adc8;
+  --rosewater: #f5e0dc; --flamingo: #f2cdcd; --pink: #f5c2e7; --mauve: #cba6f7;
+  --red: #f38ba8; --maroon: #eba0ac; --peach: #fab387; --yellow: #f9e2af;
+  --green: #a6e3a1; --teal: #94e2d5; --sky: #89dceb; --sapphire: #74c7ec;
+  --blue: #89b4fa; --lavender: #b4befe;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0; background: var(--base); color: var(--text);
+  font-family: -apple-system, "Segoe UI", "Noto Sans", "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.7; font-size: 16px;
+}
+.layout {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr) 220px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+.sidebar {
+  position: sticky; top: 0; align-self: start; height: 100vh; overflow-y: auto;
+  padding: 1.8rem 1.2rem; border-right: 1px solid var(--surface1);
+}
+.sidebar .brand {
+  font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--crust); background: var(--mauve); display: inline-block;
+  padding: 0.15rem 0.6rem; border-radius: 999px; font-weight: 700; margin-bottom: 1.4rem;
+}
+.sidebar nav a {
+  display: block; padding: 0.5rem 0.7rem; margin: 0.1rem 0; border-radius: 7px;
+  color: var(--subtext1); text-decoration: none; font-size: 0.92rem; border-bottom: none;
+  transition: background 0.12s, color 0.12s;
+}
+.sidebar nav a:hover { background: var(--surface0); color: var(--text); }
+.sidebar nav a.active { background: var(--mauve); color: var(--crust); font-weight: 700; }
+.sidebar nav .part-label {
+  font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--overlay0);
+  margin: 1.1rem 0 0.3rem 0.7rem;
+}
+.content { padding: 2.6rem 2.6rem 5rem; min-width: 0; }
+.onpage {
+  position: sticky; top: 0; align-self: start; height: 100vh; overflow-y: auto;
+  padding: 2.6rem 1.2rem;
+}
+.onpage .label {
+  font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--overlay0);
+  margin-bottom: 0.6rem;
+}
+.onpage a {
+  display: block; padding: 0.28rem 0; color: var(--subtext0); text-decoration: none;
+  font-size: 0.86rem; border-bottom: none; border-left: 2px solid transparent; padding-left: 0.7rem;
+}
+.onpage a.h3 { padding-left: 1.4rem; font-size: 0.82rem; }
+.onpage a:hover { color: var(--sapphire); border-left-color: var(--sapphire); }
+
+h1, h2, h3 { font-weight: 700; line-height: 1.3; scroll-margin-top: 1.5rem; }
+h1 { font-size: 2rem; color: var(--mauve); margin: 0 0 0.6rem; }
+.page-kicker {
+  font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--peach);
+  font-weight: 700; margin-bottom: 0.5rem;
+}
+h2 { font-size: 1.4rem; color: var(--blue); margin: 2.4rem 0 1rem; padding-bottom: 0.4rem; border-bottom: 1px solid var(--surface1); }
+h3 { font-size: 1.1rem; color: var(--sky); margin: 1.8rem 0 0.8rem; }
+p { margin: 0.9rem 0; color: var(--text); }
+a { color: var(--sapphire); text-decoration: none; border-bottom: 1px solid rgba(116, 199, 236, 0.35); }
+a:hover { color: var(--lavender); border-bottom-color: var(--lavender); }
+strong { color: var(--peach); font-weight: 700; }
+code {
+  font-family: "JetBrains Mono", "Fira Code", Consolas, "Liberation Mono", monospace;
+  font-size: 0.86em; background: var(--surface0); color: var(--peach);
+  padding: 0.15em 0.4em; border-radius: 5px;
+}
+pre.code {
+  background: var(--mantle); border: 1px solid var(--surface1); border-radius: 10px;
+  padding: 1rem 1.2rem; overflow-x: auto; margin: 1.1rem 0;
+}
+pre.code code { background: none; color: var(--text); padding: 0; font-size: 0.85em; border-radius: 0; }
+.tok-kw { color: var(--mauve); font-weight: 600; }
+.tok-type { color: var(--yellow); }
+.tok-str { color: var(--green); }
+.tok-com { color: var(--overlay0); font-style: italic; }
+blockquote {
+  margin: 1.1rem 0; padding: 0.15rem 1.1rem; border-left: 3px solid var(--peach);
+  background: var(--surface0); border-radius: 0 8px 8px 0; color: var(--subtext1);
+}
+blockquote p { margin: 0.6rem 0; }
+ul, ol { padding-left: 1.4rem; margin: 0.9rem 0; }
+li { margin: 0.45rem 0; }
+hr { border: none; border-top: 1px solid var(--surface1); margin: 2.2rem 0; }
+.table-wrap { overflow-x: auto; margin: 1.1rem 0; }
+table { border-collapse: collapse; width: 100%; font-size: 0.92em; }
+th, td { border: 1px solid var(--surface1); padding: 0.55rem 0.8rem; text-align: left; vertical-align: top; }
+th { background: var(--surface0); color: var(--lavender); }
+tbody tr:nth-child(odd) { background: rgba(49, 50, 68, 0.35); }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+.card {
+  display: block; padding: 1.1rem 1.2rem; background: var(--mantle); border: 1px solid var(--surface1);
+  border-radius: 12px; text-decoration: none; border-bottom: 1px solid var(--surface1); transition: border-color 0.12s, transform 0.12s;
+}
+.card:hover { border-color: var(--mauve); transform: translateY(-2px); }
+.card .card-title { color: var(--text); font-weight: 700; font-size: 1rem; margin-bottom: 0.3rem; display: block; }
+.card .card-desc { color: var(--subtext0); font-size: 0.86rem; }
+.pager { display: flex; justify-content: space-between; margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--surface1); gap: 1rem; }
+.pager a {
+  border: 1px solid var(--surface1); border-radius: 10px; padding: 0.8rem 1.1rem; flex: 1;
+  border-bottom: 1px solid var(--surface1); color: var(--text);
+}
+.pager a:hover { border-color: var(--mauve); }
+.pager .dir { font-size: 0.72rem; text-transform: uppercase; color: var(--overlay0); display: block; margin-bottom: 0.2rem; }
+.pager .next { text-align: right; }
+::selection { background: var(--surface2); color: var(--rosewater); }
+@media (max-width: 1100px) {
+  .layout { grid-template-columns: 220px minmax(0, 1fr); }
+  .onpage { display: none; }
+}
+@media (max-width: 760px) {
+  .layout { grid-template-columns: 1fr; }
+  .sidebar { position: relative; height: auto; border-right: none; border-bottom: 1px solid var(--surface1); }
+  .content { padding: 1.6rem 1.2rem 3rem; }
+}
+</style>
+</head>
+<body>
+<div class="layout">
+<aside class="sidebar">
+  <span class="brand">Catppuccin Mocha</span>
+  <nav><div class="part-label">Начало</div>
+<a class="" href="index.html">Обзор</a>
+<a class="" href="00-basics.html">Основы (CPU/GPU, буферы, шейдеры)</a>
+<div class="part-label">Часть 1 — практика</div>
+<a class="" href="01-quickstart.html">Быстрый старт</a>
+<div class="part-label">Часть 2 — устройство</div>
+<a class="" href="02-architecture.html">Архитектура</a>
+<a class="" href="02b-compute-shaders.html">Свои ComputeShader</a>
+<a class="" href="03-culling.html">GPU-culling</a>
+<a class="" href="04-diagnostics.html">Диагностика и биты</a>
+<a class="" href="06-lod.html">LOD</a>
+<div class="part-label">Справочник</div>
+<a class="active" href="05-gotchas.html">Грабли и шейдеры</a></nav>
+</aside>
+<main class="content">
+<div class="page-kicker">Справочник</div>
+<h1 id="грабли-и-шейдеры">Грабли и шейдеры</h1>
+<p>Требования к камере, справочник частых ошибок, какие материалы/шейдеры поддерживаются, полное подключение к Shader Graph.</p>
+<h2 id="камера-почему-rendermeshindirect-рисует-лишний-раз">Камера: почему RenderMeshIndirect рисует "лишний раз"</h2>
+<p>Это отдельный раздел, потому что на нём легко потерять половину FPS и не понять почему.</p>
+<p><code>RenderParams.camera</code> по умолчанию <code>null</code>. Документация Unity прямым текстом:</p>
+<blockquote><p>If set to <code>null</code> (default) renders for all cameras.</p></blockquote>
+<p>То есть если камеру не указать явно, <code>Graphics.RenderMeshIndirect</code> рисует <strong>на каждую активную камеру, которая рендерится в этом кадре</strong> — не только на "основную" камеру игры. В редакторе это означает: пока открыта вкладка <strong>Scene</strong>, у неё тоже есть своя камера, и она тоже получает этот draw call, отдельно от Game view. Итог — вся сцена с кубами рисуется дважды за кадр только из-за того, что у вас на экране одновременно Scene и Game — совершенно независимо от размера сцены или качества кода.</p>
+<p>Отсюда правило: <strong>всегда явно указывать <code>RenderParams.camera</code></strong>, если рендер не должен быть виден одновременно в нескольких местах. В <code>IndirectMeshRenderer</code> для этого есть поле <code>_targetCamera</code> (по умолчанию берётся <code>Camera.main</code> в <code>OnEnable</code>, если не назначено вручную):</p>
+<pre class="code lang-csharp"><code><span class="tok-kw">var</span> rparams = <span class="tok-kw">new</span> <span class="tok-type">RenderParams</span>(_material)
+{
+    ...
+    camera = _targetCamera
+};</code></pre>
+<p>Если резкая просадка FPS появляется именно в редакторе, а в билде её нет (или наоборот, есть несколько активных <code>Camera</code> в сцене одновременно — сплитскрин, миникарта, камера для отражений) — проверяйте именно это в первую очередь, до всего остального в этом документе.</p>
+<h2 id="известные-грабли">Известные грабли</h2>
+<ul><li><strong>Camera = null рисует на все камеры.</strong> См. раздел выше — самая частая причина "необъяснимой" просадки FPS именно при работе в редакторе.</li><li><strong>Bounds всегда приблизительные.</strong> <code>Graphics.RenderMeshIndirect</code> не может сам вычислить bounding box — он не знает реальных данных в буфере (это можно посчитать только на GPU, а bounds для culling нужны CPU-стороне заранее, до отрисовки). Поэтому <code>RenderParams.worldBounds</code> задаётся руками с запасом. Если объекты пропадают при повороте камеры — bounds занижены.</li><li><strong>Диспоз буферов обязателен.</strong> <code>GraphicsBuffer</code> управляет нативной GPU-памятью, GC её не освобождает. <code>OnDisable</code> должен звать <code>Dispose()</code>, иначе на каждый Play/Stop в редакторе будет утечка (в редакторе это особенно заметно — Unity явно предупредит в консоли о неосвобождённых нативных ресурсах).</li><li><strong>Material без шейдера = исключение молча позже.</strong> Если <code>Shader.Find("Custom/IndirectCube")</code> не находит шейдер (опечатка в имени, ошибка компиляции шейдера), <code>new Material(null)</code> бросит исключение прямо в <code>OnEnable</code> — это самый частый первый запуск с ошибкой у новичков в этой теме.</li><li><strong>Порядок полей в C#-структуре обязан совпадать с HLSL.</strong> См. <a href="02-architecture.html#1-instance-буфер-graphicsbuffertargetstructured">Instance-буфер</a>.</li><li><strong>Culling по умолчанию выключен.</strong> Без <code>_useComputeCulling</code> рисуются буквально все <code>_instanceCount</code> инстансов каждый кадр, независимо от того, видны они камере или нет. Реальный ComputeShader-culling в проекте есть, но включается явно — см. <a href="03-culling.html">GPU-culling</a>.</li><li><strong>Забыли переключить буфер в шейдере при включении culling'а.</strong> Если пишете свой culling с нуля по образцу этого — не забудьте, что после фильтрации шейдер отрисовки должен читать буфер выживших, а не исходный (см. <a href="03-culling.html#критически-важный-нюанс-чей-буфер-читает-шейдер-рендера">Критически важный нюанс</a>). Иначе на экране окажутся не те инстансы, что реально прошли отбраковку.</li><li><strong>Отсутствует ShadowCaster pass в шейдере.</strong> <code>IndirectCube.shader</code> определяет только <code>LightMode = UniversalForward</code>. Даже с <code>shadowCastingMode = ShadowCastingMode.On</code> на <code>RenderParams</code> объект не отбрасывает тень — URP просто пропускает shadow-pass для шейдера, в котором нет подходящего pass'а, без ошибок и без затрат производительности. Это не баг, а недоделанная часть демо — тени пока не являются целью.</li><li><strong><code>namespace</code> в reflected-HLSL ломает компиляцию под Vulkan.</strong> Официальный пример Unity для Shader Function Reflection API оборачивает функции в <code>namespace { ... }</code>. На Linux/Vulkan это падает с ошибкой <code>glslang: '::' not supported</code> / <code>compilation terminated</code> — glslang (HLSL-фронтенд для Vulkan) не умеет в C++-style <code>::</code>, в отличие от DXC (D3D12). Поэтому <code>IndirectInstancing.hlsl</code> сейчас без namespace, а имена (<code>IndirectCubeInstanceData</code>, <code>IndirectCubeRotateByQuaternion</code>) сделаны достаточно уникальными руками, чтобы не пересекаться с другими файлами.</li><li><strong>glslang не любит несколько <code>return</code> с объявлением переменной после первого из них.</strong> В HLSL- функциях <code>IndirectCulling.compute</code> это давало предупреждение "use of potentially uninitialized variable" под Vulkan (DXC для D3D12 не жаловался — только glslang). Не косметика: часть путей выполнения реально могла читать непроинициализированный регистр. Лечится переписыванием в однопроходном стиле: посчитать все булевы условия безусловно, объединить через <code>&amp;&amp;</code>, один <code>return</code> в конце.</li><li><strong>Margin/radius должен применяться и к "объект перед камерой" проверке, не только к X/Y/Z-границам.</strong> Если тест сначала проверяет <code>clipPos.w &gt; 0</code> (сырое, без запаса), а уже потом добавляет <code>radius</code> к <code>w</code> для остальных осей — крупный объект мгновенно и полностью пропадает в момент, когда его <strong>пивот</strong> (не вся геометрия) пересекает плоскость камеры. Правильно — сравнивать с уже расширенным <code>w = clipPos.w + radius</code> на ВСЕХ этапах теста одинаково (см. <a href="03-culling.html#тест-2-frustum-culling">Тест 2: frustum culling</a>).</li><li><strong><code>GL.GetGPUProjectionMatrix</code> нужен КАЖДЫЙ раз, когда строите view-projection матрицу для ручного чтения clip space/depth-буфера</strong> — не только в одном месте файла. Если в одном месте матрица строится с коррекцией, а в другом — без, обе матрицы формально валидны сами по себе, но описывают РАЗНЫЕ конвенции clip space, и совместное использование их чисел (например, сравнение с реальным депсом) станет тихо неверным на конкретной платформе.</li><li><strong>Поля-override, которые читаются реже, чем меняются в инспекторе.</strong> Если закэшировать override-поле в обычное приватное поле один раз при <code>OnEnable</code> (а не пересчитывать каждый кадр из сериализованных полей), правки в инспекторе во время Play mode будут молча игнорироваться реальной логикой, даже если какой-нибудь диагностический гизмо (пересчитывающий их живьём отдельно) создаёт иллюзию, что всё применяется. При живой донастройке значений в инспекторе всегда перепроверяйте, ГДЕ именно поле реально читается.</li></ul>
+<h2 id="какие-материалы-шейдеры-поддерживаются">Какие материалы/шейдеры поддерживаются</h2>
+<p>Важно различать два уровня "поддержки":</p>
+<p><strong>Уровень API.</strong> <code>Graphics.RenderMeshIndirect</code> абсолютно всеяден — ему всё равно, какой шейдер у материала. Он просто issue'ит draw call с указанным мешем/материалом/буфером аргументов. Вы можете передать туда хоть стандартный URP/Lit материал без единой правки — компиляция и вызов пройдут без единой ошибки.</p>
+<p><strong>Уровень результата.</strong> Но чтобы каждый инстанс оказался на своей позиции/повороте/масштабе, <strong>шейдер обязан сам прочитать <code>_InstanceBuffer</code> по <code>SV_InstanceID</code></strong> — это не происходит автоматически. Обычный URP/Lit материал ничего не знает про наш буфер и про то, что рисуется через <code>RenderMeshIndirect</code>, а не через <code>Transform</code>. Результат — все <code>_instanceCount</code> копий меша отрисуются ровно в одном месте (там, куда их поставит <code>unity_ObjectToWorld</code> по умолчанию, т.е. фактически в мировом нуле), наложенные друг на друга.</p>
+<p>Отсюда практическое правило: <strong>для этой техники нужен либо шейдер, написанный вручную под неё (как <code>IndirectCube.shader</code>), либо Shader Graph с явно добавленной нодой чтения буфера</strong> — третьего не дано. Обычные PBR-материалы (Lit/Complex Lit/из ассет-стора) не подходят, пока в них не встроена эта логика.</p>
+<p>Что не имеет значения для этой техники:</p>
+<ul><li><strong>Opaque/Transparent</strong> — работает с обоими, <code>RenderMeshIndirect</code> не завязан на Queue.</li><li><strong>Forward+ или другой render path</strong> — этот механизм не зависит от SRP Batcher, GPU Resident Drawer или Batch Renderer Group, поэтому работает одинаково независимо от того, что происходит с остальной сценой.</li><li><strong>DOTS Instancing / "Enable GPU Instancing"</strong> — оба этих механизма тут не участвуют и не мешают (см. <a href="02-architecture.html#путь-одного-инстанса-от-буфера-до-пикселя">Путь одного инстанса</a>) — они решают другую задачу (per-instance-свойства из ограниченного набора, а не произвольный буфер).</li></ul>
+<p>Что стоит держать в голове:</p>
+<ul><li><strong>Прозрачность внутри одного indirect-вызова не сортируется по инстансам.</strong> GPU рисует все инстансы одного draw call'а в порядке из буфера, а не по глубине. Для непрозрачных объектов это не играет роли (Z-buffer сам разберётся), но для полупрозрачных материалов наложенные друг на друга инстансы могут отрисоваться в неправильном порядке.</li></ul>
+<h2 id="как-подключить-это-к-shader-graph">Как подключить это к Shader Graph</h2>
+<p>Раньше единственным способом прочитать буфер внутри Shader Graph был Custom Function Node — неудобная нода, где HLSL-код вставляется строкой прямо в инспектор. В Unity 6.5 появился <strong>Shader Function Reflection API</strong>: пишете обычный <code>.hlsl</code>-файл с функцией, помеченной <code>UNITY_EXPORT_REFLECTION</code>, — и Shader Graph сам находит её и рисует настоящую ноду с портами, основанными на сигнатуре функции. Никакого копипаста HLSL в инспектор ноды.</p>
+<p>Для этой механики уже написан <code>IndirectInstancing.hlsl</code> (лежит рядом, в той же папке) — та же математика, что в <code>IndirectCube.shader</code>, но оформленная как reflected-функция.</p>
+<h3 id="шаги-в-редакторе">Шаги в редакторе</h3>
+<ol><li><strong>Создайте Shader Graph</strong> (URP Lit или Unlit — не важно): ПКМ в Project → <code>Create</code> → <code>Shader Graph</code> → <code>URP</code> → <code>Lit Shader Graph</code> (или <code>Unlit</code>).</li><li>Откройте граф. Unity уже должен был подхватить <code>IndirectInstancing.hlsl</code> и зарегистрировать ноду <code>Apply Instance Transform</code> в категории <code>Custom/Indirect Rendering</code> (если файл сохранён после того, как редактор открыт — reflection hot-reload'ится, перезапуск не нужен).</li><li>Добавьте ноду <strong><code>Instance ID</code></strong> (Create Node → поиск "Instance ID", категория Input/Geometry).</li><li>Добавьте ноду <strong><code>Apply Instance Transform</code></strong> (поиск по названию или по категории <code>Custom/Indirect Rendering</code>). У неё будут порты: - <code>positionOS</code>, <code>normalOS</code> — уже предзаполнены значениями Object Space Position/Normal благодаря хинтам <code>&lt;Position/&gt;</code>/<code>&lt;Normal/&gt;</code> в <code>.hlsl</code>-файле, руками подключать не обязательно (но можно, если нужно что-то другое). - <code>instanceID</code> — сюда подключите выход ноды <code>Instance ID</code>. - <code>positionWS</code>, <code>normalWS</code> — выходы, которые нужно протянуть дальше.</li><li>В Master Stack откройте вершинный контекст (<strong>Vertex</strong>) и подключите <code>positionWS</code> в блок <strong>Position</strong>, <code>normalWS</code> — в блок <strong>Normal</strong> (если блок Normal не отображается в Vertex-контексте, включите его через шестерёнку настроек Master Stack — в некоторых версиях URP-таргета он скрыт по умолчанию).</li><li>Сохраните граф, создайте на его основе <code>Material</code>, назначьте его в поле <code>_material</code> компонента <code>IndirectMeshRenderer</code>.</li></ol>
+<h3 id="почему-буфер-не-появится-в-blackboard-и-почему-это-нормально">Почему буфер не появится в Blackboard — и почему это нормально</h3>
+<p>Blackboard — это панель слева в окне Shader Graph, куда добавляют параметры материала (цвет, текстуру, число), которые потом видно и можно менять в инспекторе на самом Material asset. Раз шейдер использует какой-то буфер с данными — логично ожидать, что он тоже появится там, как параметр, который можно найти и потрогать.</p>
+<p><strong>Он там не появится. Это ожидаемо, не баг и ничего чинить не надо.</strong></p>
+<p>Причина простая: у Blackboard в принципе нет типа параметра "буфер данных". Она умеет только числа, векторы, цвета, текстуры, булевы значения — и всё. Буферов там нет и не может быть, вне зависимости от того, что вы делаете.</p>
+<p>Буфер в этой механике живёт не в графе, а в обычном текстовом файле <code>IndirectInstancing.hlsl</code> — там прямо написано:</p>
+<pre class="code lang-hlsl"><code>StructuredBuffer&lt;InstanceData&gt; _InstanceBuffer;</code></pre>
+<p>Это ровно то же самое объявление переменной, что раньше было в написанном руками <code>IndirectCube.shader</code>. Shader Graph просто вставляет содержимое этого файла в итоговый шейдер как есть, целиком — он не пытается разобрать, что внутри, кроме одной конкретной функции, которую мы пометили для рефлексии (<code>ApplyInstanceTransform</code>). Всё остальное в файле, включая объявление буфера, доходит до итогового шейдера "как есть", в обход графа и Blackboard.</p>
+<p><strong>Что это значит на практике:</strong> ничего не меняется в C#-коде. Строчка в <code>IndirectMeshRenderer.cs</code>, которая кладёт данные в буфер —</p>
+<pre class="code lang-csharp"><code>_propertyBlock.<span class="tok-type">SetBuffer</span>(<span class="tok-type">InstanceBufferId</span>, _instances.<span class="tok-type">Buffer</span>);</code></pre>
+<p>— продолжает работать один в один что для шейдера, написанного руками, что для шейдера, собранного через Shader Graph. Вам не нужно ничего "выставлять" или "находить" для этого буфера в самом графе — там его просто не будет, и это правильно.</p>
+<div class="pager"><a class="prev" href="06-lod.html"><span class="dir">Назад</span>LOD</a><div></div></div>
+</main>
+<aside class="onpage">
+  <div class="label">На этой странице</div>
+  <a class="" href="#камера-почему-rendermeshindirect-рисует-лишний-раз">Камера: почему RenderMeshIndirect рисует &quot;лишний раз&quot;</a>
+<a class="" href="#известные-грабли">Известные грабли</a>
+<a class="" href="#какие-материалы-шейдеры-поддерживаются">Какие материалы/шейдеры поддерживаются</a>
+<a class="" href="#как-подключить-это-к-shader-graph">Как подключить это к Shader Graph</a>
+<a class="h3" href="#шаги-в-редакторе">Шаги в редакторе</a>
+<a class="h3" href="#почему-буфер-не-появится-в-blackboard-и-почему-это-нормально">Почему буфер не появится в Blackboard — и почему это нормально</a>
+</aside>
+</div>
+</body>
+</html>
