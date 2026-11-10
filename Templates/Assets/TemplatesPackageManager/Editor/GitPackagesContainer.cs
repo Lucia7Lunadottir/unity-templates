@@ -179,6 +179,11 @@ namespace PG.TemplatesPackageManager
                             packageId = "com.pg.localization-system"
                         }
                     }
+                },
+                new GitPackage {
+                    name      = "Timeline Tween",
+                    url       = "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/TimelineTween",
+                    packageId = "com.pg.timeline-tween"
                 }
             };
     }

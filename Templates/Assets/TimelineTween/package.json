@@ -1,0 +1,12 @@
+{
+  "name": "com.pg.timeline-tween",
+  "version": "1.0.0",
+  "displayName": "Timeline Tween",
+  "description": "Timeline track that tweens a Transform between two stored poses (position + rotation) in World or Local space, with Scene View handles. Timing follows the clip length or a fixed duration that survives trimming and splitting.",
+  "unity": "6000.6",
+  "author": "Lucia Lunadottir",
+  "type": "assets",
+  "dependencies": {
+    "com.unity.timeline": "6.6.0"
+  }
+}
