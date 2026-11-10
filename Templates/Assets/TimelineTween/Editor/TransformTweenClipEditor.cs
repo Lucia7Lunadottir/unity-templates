@@ -41,7 +41,9 @@ namespace PG.TimelineTween
         {
             var options = base.GetClipOptions(clip);
             if (clip.asset is TransformTweenClip tween)
-                options.tooltip = $"{tween.space} · {tween.timing}" + (tween.timing == TweenTiming.Fixed ? $" {tween.tweenDuration:0.##}s" : "");
+                options.tooltip = tween.mode == TweenMode.Place
+                    ? $"Place · {tween.space} · Root Motion {tween.rootMotion}"
+                    : $"{tween.space} · {tween.timing}" + (tween.timing == TweenTiming.Fixed ? $" {tween.tweenDuration:0.##}s" : "") + $" · Root Motion {tween.rootMotion}";
             return options;
         }
 
@@ -86,6 +88,12 @@ namespace PG.TimelineTween
 
                 Transform target = TransformTweenClipEditor.GetTarget(clip.GetParentTrack());
                 Transform parent = target != null ? target.parent : null;
+
+                if (tween.mode == TweenMode.Place)
+                {
+                    DrawPoint(tween, parent, true, "Place", StartColor);
+                    continue;
+                }
 
                 tween.GetPoint(true, parent, out var startPosition, out _);
                 tween.GetPoint(false, parent, out var endPosition, out _);

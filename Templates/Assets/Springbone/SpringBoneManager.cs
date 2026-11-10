@@ -110,6 +110,8 @@ namespace PonyPhysics
         private void LateUpdate()
         {
             if (!_ready || _boneCount == 0) return;
+            // Пауза (timeScale = 0): не считаем, иначе инерция кончиков тянет волосы дальше
+            if (Time.deltaTime <= 0f) return;
 
             UpdateRootVelocity();
             UploadInputsAndColliders();

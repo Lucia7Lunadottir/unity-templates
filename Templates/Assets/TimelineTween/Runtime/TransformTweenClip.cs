@@ -6,19 +6,27 @@ using UnityEngine.Timeline;
 
 namespace PG.TimelineTween
 {
+    public enum TweenMode { Tween, Place }
+
     public enum TweenSpace { World, Local }
 
     public enum TweenTiming { Clip, Fixed }
+
+    public enum RootMotionMode { Keep, Off, On }
 
     [Serializable]
     [DisplayName("Transform Tween Clip")]
     public class TransformTweenClip : PlayableAsset, ITimelineClipAsset
     {
+        [Tooltip("Tween: moves from Start to End. Place: holds the object at Start for the whole clip.")]
+        public TweenMode mode = TweenMode.Tween;
         [Tooltip("World: stored poses are world coordinates. Local: relative to the parent of the bound object. Switching does not convert the values.")]
         public TweenSpace space = TweenSpace.World;
         [Tooltip("Clip: the tween stretches over the clip length. Fixed: the tween lasts Tween Duration, so trimming or splitting the clip keeps its place on the curve.")]
         public TweenTiming timing = TweenTiming.Clip;
         [Min(0.01f)] public float tweenDuration = 1f;
+        [Tooltip("Animator.applyRootMotion while the clip plays; the previous value is restored when no clip is active.")]
+        public RootMotionMode rootMotion = RootMotionMode.Off;
 
         public bool tweenPosition = true;
         public bool tweenRotation = true;
@@ -31,11 +39,13 @@ namespace PG.TimelineTween
         [Tooltip("Values outside [0,1] overshoot the end points.")]
         public AnimationCurve curve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
 
-        public ClipCaps clipCaps => timing == TweenTiming.Fixed
+        bool IsFixed => mode == TweenMode.Tween && timing == TweenTiming.Fixed;
+
+        public ClipCaps clipCaps => IsFixed
             ? ClipCaps.Blending | ClipCaps.Extrapolation | ClipCaps.ClipIn
             : ClipCaps.Blending | ClipCaps.Extrapolation;
 
-        public override double duration => timing == TweenTiming.Fixed ? tweenDuration : base.duration;
+        public override double duration => IsFixed ? tweenDuration : base.duration;
 
         public override Playable CreatePlayable(PlayableGraph graph, GameObject owner)
         {
@@ -47,7 +57,9 @@ namespace PG.TimelineTween
         // localTime includes clipIn, so a split/trimmed Fixed clip continues from the same point on the curve.
         public float Evaluate(double localTime, double clipIn, double clipDuration)
         {
-            double t = timing == TweenTiming.Fixed
+            if (mode == TweenMode.Place)
+                return 0f;
+            double t = IsFixed
                 ? localTime / tweenDuration
                 : clipDuration > 0 ? (localTime - clipIn) / clipDuration : 1d;
             return curve != null ? curve.Evaluate(Mathf.Clamp01((float)t)) : Mathf.Clamp01((float)t);
