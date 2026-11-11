@@ -289,7 +289,8 @@ namespace PG.TimelineTween
         }
     }
 
-    // PlayerLoop step right after the Animator (PreLateUpdate.DirectorUpdateAnimationEnd); Timeline script tracks run before it.
+    // PlayerLoop step after the Animator and deferred director evaluation (PreLateUpdate.DirectorDeferredEvaluate), before LateUpdate scripts such as CinemachineBrain.
+    // Installed in Edit mode too, so Timeline preview poses are in place before Cinemachine reads its targets.
     static class TransformTweenLateApply
     {
         static readonly List<TransformTweenMixer> Pending = new List<TransformTweenMixer>();
@@ -299,6 +300,12 @@ namespace PG.TimelineTween
         [UnityEditor.InitializeOnLoadMethod]
         static void InstallPreview()
         {
+            Install();
+            UnityEditor.EditorApplication.playModeStateChanged += state =>
+            {
+                if (state == UnityEditor.PlayModeStateChange.EnteredEditMode)
+                    Install();
+            };
             RenderPipelineManager.beginContextRendering += (_, _) => ApplyPreview();
             Camera.onPreCull += _ => ApplyPreview();
         }
@@ -337,6 +344,12 @@ namespace PG.TimelineTween
 
         static void Run()
         {
+            if (!Application.isPlaying)
+            {
+                ApplyPreview();
+                return;
+            }
+
             bool sync = false;
             foreach (var mixer in Pending)
                 sync |= mixer.LateApply();
@@ -354,9 +367,11 @@ namespace PG.TimelineTween
                     continue;
 
                 var list = new List<PlayerLoopSystem>(systems[i].subSystemList);
-                if (list.Exists(s => s.type == typeof(TransformTweenLateApply)))
-                    return false;
-                int anchor = list.FindIndex(s => s.type == typeof(PreLateUpdate.DirectorUpdateAnimationEnd));
+                // Drop an entry from an older position or from before a domain reload.
+                list.RemoveAll(s => s.type != null && s.type.FullName == typeof(TransformTweenLateApply).FullName);
+                int anchor = list.FindIndex(s => s.type == typeof(PreLateUpdate.DirectorDeferredEvaluate));
+                if (anchor < 0)
+                    anchor = list.FindIndex(s => s.type == typeof(PreLateUpdate.DirectorUpdateAnimationEnd));
                 list.Insert(anchor + 1, new PlayerLoopSystem { type = typeof(TransformTweenLateApply), updateDelegate = Run });
                 systems[i].subSystemList = list.ToArray();
                 return true;
