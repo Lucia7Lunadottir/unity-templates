@@ -1,5 +1,4 @@
 using UnityEditor;
-using UnityEditor.Overlays;
 using UnityEditor.Timeline;
 using UnityEngine;
 using UnityEngine.Timeline;
@@ -129,54 +128,56 @@ namespace PG.TimelineTween
         }
     }
 
-    // Shown while a tween clip is selected: copies the bound object's current position + rotation into the clip.
-    [Overlay(typeof(SceneView), OverlayId, DisplayName)]
-    public class TransformTweenSceneOverlay : IMGUIOverlay, ITransientOverlay
+    // Default clip Inspector plus buttons that copy the bound object's current position + rotation into the clip.
+    [CustomEditor(typeof(TransformTweenClip))]
+    public class TransformTweenClipInspector : UnityEditor.Editor
     {
-        const string OverlayId = "Scene View/Transform Tween";
-        const string DisplayName = "Transform Tween";
-
-        public bool visible => SelectedTween(out _, out _);
-
-        public override void OnGUI()
+        public override void OnInspectorGUI()
         {
-            if (!SelectedTween(out var clip, out var tween))
-                return;
+            DrawDefaultInspector();
 
-            Transform target = TransformTweenClipEditor.GetTarget(clip.GetParentTrack());
+            var tween = (TransformTweenClip)target;
+            Transform bound = TransformTweenClipEditor.GetTarget(FindTrack(tween));
+
+            EditorGUILayout.Space();
             EditorGUI.BeginDisabledGroup(true);
-            EditorGUILayout.ObjectField(target, typeof(Transform), true);
+            EditorGUILayout.ObjectField("Bound Object", bound, typeof(Transform), true);
             EditorGUI.EndDisabledGroup();
 
-            EditorGUI.BeginDisabledGroup(target == null);
+            EditorGUI.BeginDisabledGroup(bound == null);
             if (tween.mode == TweenMode.Place)
             {
                 if (GUILayout.Button("Place ← Object"))
-                    CopyFrom(target, tween, true);
+                    CopyFrom(bound, tween, true);
             }
             else
             {
                 EditorGUILayout.BeginHorizontal();
                 if (GUILayout.Button("Start ← Object"))
-                    CopyFrom(target, tween, true);
+                    CopyFrom(bound, tween, true);
                 if (GUILayout.Button("End ← Object"))
-                    CopyFrom(target, tween, false);
+                    CopyFrom(bound, tween, false);
                 EditorGUILayout.EndHorizontal();
             }
             EditorGUI.EndDisabledGroup();
         }
 
-        static bool SelectedTween(out TimelineClip clip, out TransformTweenClip tween)
+        static TrackAsset FindTrack(TransformTweenClip tween)
         {
-            clip = TimelineEditor.selectedClip;
-            tween = clip?.asset as TransformTweenClip;
-            return tween != null;
+            var timeline = TimelineEditor.inspectedAsset;
+            if (timeline == null)
+                return null;
+            foreach (var track in timeline.GetOutputTracks())
+                foreach (var clip in track.GetClips())
+                    if (clip.asset == tween)
+                        return track;
+            return null;
         }
 
-        static void CopyFrom(Transform target, TransformTweenClip tween, bool start)
+        static void CopyFrom(Transform bound, TransformTweenClip tween, bool start)
         {
             Undo.RecordObject(tween, start ? "Copy Tween Start" : "Copy Tween End");
-            tween.SetPoint(start, target.parent, target.position, target.rotation);
+            tween.SetPoint(start, bound.parent, bound.position, bound.rotation);
             EditorUtility.SetDirty(tween);
             TimelineEditor.Refresh(RefreshReason.SceneNeedsUpdate);
         }
