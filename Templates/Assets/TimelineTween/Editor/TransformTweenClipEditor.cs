@@ -1,4 +1,5 @@
 using UnityEditor;
+using UnityEditor.Overlays;
 using UnityEditor.Timeline;
 using UnityEngine;
 using UnityEngine.Timeline;
@@ -123,6 +124,59 @@ namespace PG.TimelineTween
 
             Undo.RecordObject(tween, start ? "Move Tween Start" : "Move Tween End");
             tween.SetPoint(start, parent, position, rotation);
+            EditorUtility.SetDirty(tween);
+            TimelineEditor.Refresh(RefreshReason.SceneNeedsUpdate);
+        }
+    }
+
+    // Shown while a tween clip is selected: copies the bound object's current position + rotation into the clip.
+    [Overlay(typeof(SceneView), OverlayId, DisplayName)]
+    public class TransformTweenSceneOverlay : IMGUIOverlay, ITransientOverlay
+    {
+        const string OverlayId = "Scene View/Transform Tween";
+        const string DisplayName = "Transform Tween";
+
+        public bool visible => SelectedTween(out _, out _);
+
+        public override void OnGUI()
+        {
+            if (!SelectedTween(out var clip, out var tween))
+                return;
+
+            Transform target = TransformTweenClipEditor.GetTarget(clip.GetParentTrack());
+            EditorGUI.BeginDisabledGroup(true);
+            EditorGUILayout.ObjectField(target, typeof(Transform), true);
+            EditorGUI.EndDisabledGroup();
+
+            EditorGUI.BeginDisabledGroup(target == null);
+            if (tween.mode == TweenMode.Place)
+            {
+                if (GUILayout.Button("Place ← Object"))
+                    CopyFrom(target, tween, true);
+            }
+            else
+            {
+                EditorGUILayout.BeginHorizontal();
+                if (GUILayout.Button("Start ← Object"))
+                    CopyFrom(target, tween, true);
+                if (GUILayout.Button("End ← Object"))
+                    CopyFrom(target, tween, false);
+                EditorGUILayout.EndHorizontal();
+            }
+            EditorGUI.EndDisabledGroup();
+        }
+
+        static bool SelectedTween(out TimelineClip clip, out TransformTweenClip tween)
+        {
+            clip = TimelineEditor.selectedClip;
+            tween = clip?.asset as TransformTweenClip;
+            return tween != null;
+        }
+
+        static void CopyFrom(Transform target, TransformTweenClip tween, bool start)
+        {
+            Undo.RecordObject(tween, start ? "Copy Tween Start" : "Copy Tween End");
+            tween.SetPoint(start, target.parent, target.position, target.rotation);
             EditorUtility.SetDirty(tween);
             TimelineEditor.Refresh(RefreshReason.SceneNeedsUpdate);
         }

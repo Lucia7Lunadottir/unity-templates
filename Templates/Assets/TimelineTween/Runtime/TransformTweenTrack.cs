@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.LowLevel;
 using UnityEngine.Playables;
 using UnityEngine.PlayerLoop;
+using UnityEngine.Rendering;
 using UnityEngine.Timeline;
 
 namespace PG.TimelineTween
@@ -72,9 +73,9 @@ namespace PG.TimelineTween
         // Re-snapshot on every graph start so a moved object is not snapped back to an old pose.
         public override void OnGraphStart(Playable playable) => _target = null;
 
-        public override void OnGraphStop(Playable playable) => RestoreRootMotion();
+        public override void OnGraphStop(Playable playable) => Release();
 
-        public override void OnPlayableDestroy(Playable playable) => RestoreRootMotion();
+        public override void OnPlayableDestroy(Playable playable) => Release();
 
         public override void ProcessFrame(Playable playable, FrameData info, object playerData)
         {
@@ -127,6 +128,7 @@ namespace PG.TimelineTween
             {
                 RestoreRootMotion();
                 FinishLastClip(parent);
+                TransformTweenLateApply.ReleasePreview(this);
                 return;
             }
 
@@ -177,6 +179,22 @@ namespace PG.TimelineTween
             WritePose();
             if (Application.isPlaying)
                 TransformTweenLateApply.Enqueue(this);
+            else
+                TransformTweenLateApply.HoldPreview(this);
+        }
+
+        void Release()
+        {
+            RestoreRootMotion();
+            _hasPose = false;
+            TransformTweenLateApply.ReleasePreview(this);
+        }
+
+        // Timeline preview evaluates the Animator after script tracks, so the pose is written again right before rendering.
+        internal void ApplyPreview()
+        {
+            if (_hasPose && _target != null)
+                WritePose();
         }
 
         // Re-applied after the Animator so Animation Track offsets / root motion cannot move the object.
@@ -243,6 +261,32 @@ namespace PG.TimelineTween
     static class TransformTweenLateApply
     {
         static readonly List<TransformTweenMixer> Pending = new List<TransformTweenMixer>();
+        static readonly List<TransformTweenMixer> Preview = new List<TransformTweenMixer>();
+
+#if UNITY_EDITOR
+        [UnityEditor.InitializeOnLoadMethod]
+        static void InstallPreview()
+        {
+            RenderPipelineManager.beginContextRendering += (_, _) => ApplyPreview();
+            Camera.onPreCull += _ => ApplyPreview();
+        }
+#endif
+
+        internal static void HoldPreview(TransformTweenMixer mixer)
+        {
+            if (!Preview.Contains(mixer))
+                Preview.Add(mixer);
+        }
+
+        internal static void ReleasePreview(TransformTweenMixer mixer) => Preview.Remove(mixer);
+
+        static void ApplyPreview()
+        {
+            if (Application.isPlaying)
+                return;
+            foreach (var mixer in Preview)
+                mixer.ApplyPreview();
+        }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         static void Install()
