@@ -113,5 +113,7 @@ namespace PG.TimelineTween
         public TransformTweenClip clip;
         public double clipIn;
         public double clipDuration;
+        public double clipStart;
+        public double clipEnd;
     }
 }

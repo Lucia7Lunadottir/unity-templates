@@ -15,9 +15,14 @@ namespace PG.TimelineTween
     [DisplayName("PG/Transform Tween Track")]
     public class TransformTweenTrack : TrackAsset
     {
+        [Tooltip("Keep the object at the previous clip's end pose between clips (and at the first clip's start before it), so other tracks such as Animation Track offsets cannot move it.")]
+        public bool holdBetweenClips = true;
+
         public override Playable CreateTrackMixer(PlayableGraph graph, GameObject go, int inputCount)
         {
-            return ScriptPlayable<TransformTweenMixer>.Create(graph, inputCount);
+            var mixer = ScriptPlayable<TransformTweenMixer>.Create(graph, inputCount);
+            mixer.GetBehaviour().holdBetweenClips = holdBetweenClips;
+            return mixer;
         }
 
         protected override Playable CreatePlayable(PlayableGraph graph, GameObject gameObject, TimelineClip clip)
@@ -28,6 +33,8 @@ namespace PG.TimelineTween
                 var behaviour = ((ScriptPlayable<TransformTweenBehaviour>)playable).GetBehaviour();
                 behaviour.clipIn = clip.clipIn;
                 behaviour.clipDuration = clip.duration;
+                behaviour.clipStart = clip.start;
+                behaviour.clipEnd = clip.end;
             }
             return playable;
         }
@@ -54,6 +61,8 @@ namespace PG.TimelineTween
 
     public class TransformTweenMixer : PlayableBehaviour
     {
+        public bool holdBetweenClips;
+
         Transform _target;
         Animator _animator;
         bool _syncPhysics;
@@ -63,7 +72,6 @@ namespace PG.TimelineTween
         bool _rootMotionOverridden;
         bool _savedRootMotion;
 
-        Playable _lastInput;
         bool _hasPose;
         bool _poseMovesPosition;
         bool _poseMovesRotation;
@@ -120,39 +128,64 @@ namespace PG.TimelineTween
                 {
                     topWeight = weight;
                     rootMotion = clip.rootMotion;
-                    _lastInput = input;
                 }
             }
 
             if (topWeight <= 0f)
-            {
                 RestoreRootMotion();
-                FinishLastClip(parent);
-                TransformTweenLateApply.ReleasePreview(this);
+            else
+                ApplyRootMotion(rootMotion);
+
+            Vector3 basePosition = _initialPosition;
+            Quaternion baseRotation = _initialRotation;
+            bool holdsPosition = false, holdsRotation = false;
+            if (holdBetweenClips)
+                GetHeldPose(playable, parent, ref basePosition, ref baseRotation, out holdsPosition, out holdsRotation);
+
+            bool movesPosition = holdsPosition || positionWeight > 0f;
+            bool movesRotation = holdsRotation || rotationWeight > 0f;
+            if (!movesPosition && !movesRotation)
+            {
+                Release();
                 return;
             }
 
-            ApplyRootMotion(rootMotion);
-
-            position += _initialPosition * Mathf.Max(0f, 1f - positionWeight);
+            position += basePosition * Mathf.Max(0f, 1f - positionWeight);
             if (rotationWeight < 1f)
-                rotation = Accumulate(rotation, _initialRotation, 1f - rotationWeight);
-            SetPose(position, Quaternion.Normalize(rotation), positionWeight > 0f, rotationWeight > 0f);
+                rotation = Accumulate(rotation, baseRotation, 1f - rotationWeight);
+            SetPose(position, Quaternion.Normalize(rotation), movesPosition, movesRotation);
         }
 
-        // After the last clip ends, its playable is paused at the clip end; apply that pose once so it doesn't stop a frame short.
-        void FinishLastClip(Transform parent)
+        // Pose outside clips: end of the latest clip that already finished, otherwise start of the first clip.
+        void GetHeldPose(Playable playable, Transform parent, ref Vector3 position, ref Quaternion rotation, out bool holdsPosition, out bool holdsRotation)
         {
-            if (!_lastInput.IsValid())
-                return;
-            var input = (ScriptPlayable<TransformTweenBehaviour>)_lastInput;
-            _lastInput = Playable.Null;
-            var clip = input.GetBehaviour().clip;
-            if (clip == null)
-                return;
+            holdsPosition = holdsRotation = false;
+            double time = playable.GetGraph().GetResolver() is PlayableDirector director ? director.time : playable.GetTime();
 
-            Sample(input, parent, out var position, out var rotation);
-            SetPose(position, rotation, clip.tweenPosition, clip.tweenRotation);
+            TransformTweenBehaviour previous = null, first = null;
+            int inputCount = playable.GetInputCount();
+            for (int i = 0; i < inputCount; i++)
+            {
+                var behaviour = ((ScriptPlayable<TransformTweenBehaviour>)playable.GetInput(i)).GetBehaviour();
+                if (behaviour?.clip == null)
+                    continue;
+                if (behaviour.clipEnd <= time && (previous == null || behaviour.clipEnd > previous.clipEnd))
+                    previous = behaviour;
+                if (first == null || behaviour.clipStart < first.clipStart)
+                    first = behaviour;
+            }
+
+            var held = previous ?? first;
+            if (held == null)
+                return;
+            double localTime = previous != null ? held.clipIn + held.clipDuration : held.clipIn;
+            held.clip.GetPose(held.clip.Evaluate(localTime, held.clipIn, held.clipDuration), parent, out var heldPosition, out var heldRotation);
+            holdsPosition = held.clip.tweenPosition;
+            holdsRotation = held.clip.tweenRotation;
+            if (holdsPosition)
+                position = heldPosition;
+            if (holdsRotation)
+                rotation = heldRotation;
         }
 
         void Bind(Transform target)
@@ -163,7 +196,6 @@ namespace PG.TimelineTween
             _syncPhysics = target.TryGetComponent<CharacterController>(out _) || target.TryGetComponent<Rigidbody>(out _);
             _initialPosition = target.position;
             _initialRotation = target.rotation;
-            _lastInput = Playable.Null;
         }
 
         // Only the channels some active clip tweens are written, so Animator/gameplay keep the rest.
