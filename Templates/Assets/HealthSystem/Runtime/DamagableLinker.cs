@@ -17,11 +17,23 @@ namespace PG.HealthSystem
             _damagableObject.TryGetComponent(out damagable);
         }
 
+        private bool _damageApplied;
+
         public void OnDamage(float damage, bool ignoreDamage = false, GameObject damageObject = null)
         {
-            damagable?.OnDamage(damage, ignoreDamage);
+            if (damagable != null)
+            {
+                // Щит/кулдаун цели не пропустили удар - без крови и событий
+                _damageApplied = false;
+                damagable.damaged += OnTargetDamaged;
+                damagable.OnDamage(damage, ignoreDamage, damageObject);
+                damagable.damaged -= OnTargetDamaged;
+                if (!_damageApplied) return;
+            }
             _damageEvent?.Invoke();
-            damaged.Invoke(damage, damageObject);
+            damaged?.Invoke(damage, damageObject);
         }
+
+        private void OnTargetDamaged(float damage, GameObject damageObject) => _damageApplied = true;
     }
 }
