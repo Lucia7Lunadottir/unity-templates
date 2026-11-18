@@ -1,0 +1,90 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &6759786594913858388
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3363218720469231200}
+  - component: {fileID: 5682833174713381685}
+  m_Layer: 0
+  m_Name: Save Manager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3363218720469231200
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6759786594913858388}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &5682833174713381685
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6759786594913858388}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bcacfdee008438a40b2a7235095543c3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: PG.SaveSystem::SaveManager
+  _saveTimeMinutes: 5
+  _minIconVisibleSeconds: 0.6
+  _saveActionProperty:
+    m_UseReference: 0
+    m_Action:
+      m_Name: Save
+      m_Type: 1
+      m_ExpectedControlType: 
+      m_Id: af9b15e5-7aa9-4aa1-a967-d7cf274eeb27
+      m_Processors: 
+      m_Interactions: 
+      m_SingletonActionBindings:
+      - m_Name: 
+        m_Id: 4b31261e-1761-4c0d-a9d6-7275aa0e5d7a
+        m_Path: <Keyboard>/f5
+        m_Interactions: 
+        m_Processors: 
+        m_Groups: 
+        m_Action: Save
+        m_Flags: 0
+      m_Flags: 0
+      m_Priority: 0
+    m_Reference: {fileID: 0}
+  _loadActionProperty:
+    m_UseReference: 0
+    m_Action:
+      m_Name: Load
+      m_Type: 1
+      m_ExpectedControlType: 
+      m_Id: 5a18cf80-1e0e-46e7-a3c2-8ae0b394a833
+      m_Processors: 
+      m_Interactions: 
+      m_SingletonActionBindings:
+      - m_Name: 
+        m_Id: 6802d715-9891-42fd-880b-115646448251
+        m_Path: <Keyboard>/f9
+        m_Interactions: 
+        m_Processors: 
+        m_Groups: 
+        m_Action: Load
+        m_Flags: 0
+      m_Flags: 0
+      m_Priority: 0
+    m_Reference: {fileID: 0}

@@ -1,31 +1,30 @@
+using PG.MenuManagement;
 using UnityEngine;
-using UnityEngine.Events;
 
-namespace PG.SaveSystem
+public class SaveIconUI : MonoBehaviour
 {
-    // Hook the save icon show/hide (e.g. UIShowHide.Show/Hide) to these events
-    public class SaveIconUI : MonoBehaviour
+    [SerializeField] private SaveManager _saveManager;
+    [SerializeField] private UIShowHide _saveIcon;
+
+    private void OnEnable()
     {
-        [SerializeField] private SaveManager _saveManager;
-        [SerializeField] private UnityEvent _saveStarted;
-        [SerializeField] private UnityEvent _saveCompleted;
+        _saveManager.saveStarted += ShowIcon;
+        _saveManager.saveCompleted += HideIcon;
+    }
 
-        private void OnEnable()
-        {
-            if (_saveManager == null) _saveManager = FindAnyObjectByType<SaveManager>();
-            if (_saveManager == null) return;
-            _saveManager.saveStarted += OnSaveStarted;
-            _saveManager.saveCompleted += OnSaveCompleted;
-        }
+    private void OnDisable()
+    {
+        _saveManager.saveStarted -= ShowIcon;
+        _saveManager.saveCompleted -= HideIcon;
+    }
 
-        private void OnDisable()
-        {
-            if (_saveManager == null) return;
-            _saveManager.saveStarted -= OnSaveStarted;
-            _saveManager.saveCompleted -= OnSaveCompleted;
-        }
+    private void ShowIcon()
+    {
+        if (_saveIcon != null) _saveIcon.Show();
+    }
 
-        private void OnSaveStarted() => _saveStarted?.Invoke();
-        private void OnSaveCompleted() => _saveCompleted?.Invoke();
+    private void HideIcon()
+    {
+        if (_saveIcon != null) _saveIcon.Hide();
     }
 }

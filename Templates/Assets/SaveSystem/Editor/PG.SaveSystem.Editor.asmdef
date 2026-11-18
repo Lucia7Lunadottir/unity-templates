@@ -1,8 +1,8 @@
 {
     "name": "PG.SaveSystem.Editor",
-    "rootNamespace": "PG.SaveSystem.Editor",
+    "rootNamespace": "",
     "references": [
-        "GUID:202b437babb8345578105b370d3c4edd"
+        "PG.SaveSystem"
     ],
     "includePlatforms": [
         "Editor"

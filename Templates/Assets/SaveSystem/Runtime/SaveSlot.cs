@@ -1,88 +1,79 @@
+using System;
 using System.IO;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
 
-namespace PG.SaveSystem
+public class SaveSlot : MonoBehaviour
 {
-    // Menu button for one save slot: selects the slot, then fires New Game or Load
-    public class SaveSlot : MonoBehaviour
+    [SerializeField] private int _index = 1;
+    [SerializeField] private TMP_Text _dateText;
+    [SerializeField] private TMP_Text _titleText;
+    [SerializeField] private Button _deleteButton;
+    [SerializeField] private Button _loadButton;
+    [SerializeField] private Button _confirmDeleteButton;
+    
+    
+    [SerializeField] private UnityEvent _newGameEvent;
+    [SerializeField] private UnityEvent _loadEvent;
+    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    void Start()
     {
-        [SerializeField] private int _index = 1;
-        [SerializeField] private TMP_Text _dateText;
-        [SerializeField] private TMP_Text _titleText;
-        [SerializeField] private Button _deleteButton;
-        [SerializeField] private Button _loadButton;
-        [SerializeField] private Button _confirmDeleteButton;
+        Load();
+        _deleteButton.onClick.AddListener(RegisterDeleteButton);
+    }
 
-        [SerializeField] private UnityEvent _newGameEvent;
-        [SerializeField] private UnityEvent _loadEvent;
+    private void OnDestroy()
+    {
+        _deleteButton.onClick.RemoveListener(RegisterDeleteButton);
+    }
 
-        public int index => _index;
+    void RegisterDeleteButton()
+    {
+        _confirmDeleteButton.onClick.RemoveAllListeners();
+        _confirmDeleteButton.onClick.AddListener(Delete);
+    }
+    
+    public void Load()
+    {
+        RefreshUI();
+    }
 
-        void Start()
+    public void SelectIndex()
+    {
+        SaveManager.saveIndex = _index;
+        if (Directory.Exists(SaveManager.GetTargetSaveFolderPath(_index, false)))
         {
-            RefreshUI();
-            if (_deleteButton != null) _deleteButton.onClick.AddListener(RegisterDeleteButton);
+            _loadEvent?.Invoke();
         }
-
-        private void OnDestroy()
+        else
         {
-            if (_deleteButton != null) _deleteButton.onClick.RemoveListener(RegisterDeleteButton);
+            _newGameEvent?.Invoke();
         }
+    }
+    public void Delete()
+    {
+        Directory.Delete(SaveManager.GetTargetSaveFolderPath(_index, false), true);
+        RefreshUI();
+    }
+    // Update is called once per frame
+    public void RefreshUI()
+    {
+        _deleteButton.gameObject.SetActive(Directory.Exists(SaveManager.GetTargetSaveFolderPath(_index, false)));
+        _dateText.text = GetSaveDate(_index);
+    }
+    
+    public static string GetSaveDate(int index)
+    {
 
-        // Delete asks for confirmation; the confirm button is shared between slots
-        void RegisterDeleteButton()
+        if (Directory.Exists(SaveManager.GetTargetSaveFolderPath(index, false)))
         {
-            if (_confirmDeleteButton == null)
-            {
-                Delete();
-                return;
-            }
-            _confirmDeleteButton.onClick.RemoveAllListeners();
-            _confirmDeleteButton.onClick.AddListener(Delete);
-        }
-
-        public void Load()
-        {
-            RefreshUI();
-        }
-
-        public void SelectIndex()
-        {
-            SaveManager.saveIndex = _index;
-            GuidListSaveUtility.ClearCache();
-            if (SaveManager.SlotExists(_index))
-            {
-                _loadEvent?.Invoke();
-            }
-            else
-            {
-                _newGameEvent?.Invoke();
-            }
-        }
-
-        public void Delete()
-        {
-            SaveManager.Storage.DeleteDirectory(SaveManager.GetTargetSaveFolderPath(_index, false));
-            SaveManager.Storage.DeleteDirectory(SaveManager.GetCheckpointFolderPath(_index));
-            RefreshUI();
-        }
-
-        public void RefreshUI()
-        {
-            if (_deleteButton != null) _deleteButton.gameObject.SetActive(SaveManager.SlotExists(_index));
-            if (_dateText != null) _dateText.text = GetSaveDate(_index);
-        }
-
-        public static string GetSaveDate(int index)
-        {
-            string path = SaveManager.GetTargetSaveFolderPath(index, false);
-            if (!Directory.Exists(path)) return "";
-
-            System.DateTime lastWriteTime = Directory.GetLastWriteTime(path);
+            System.DateTime lastWriteTime = Directory.GetLastWriteTime(SaveManager.GetTargetSaveFolderPath(index, false));
+        
             return lastWriteTime.ToShortDateString() + " " + lastWriteTime.ToLongTimeString();
         }
+
+        return ""; 
     }
 }
