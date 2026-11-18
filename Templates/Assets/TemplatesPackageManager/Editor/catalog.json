@@ -1,0 +1,396 @@
+{
+  "packages": [
+    {
+      "name": "Save System",
+      "packageId": "com.pg.save-system",
+      "url": "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/SaveSystem",
+      "group": "Core",
+      "description": "Slots, checkpoints, ISaveable, position saver, slot UI (from WWT)",
+      "dependencies": [
+        "com.pg.core",
+        "com.pg.menu"
+      ]
+    },
+    {
+      "name": "Menu",
+      "packageId": "com.pg.menu",
+      "url": "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/Menu",
+      "group": "Core",
+      "description": "Main menu, pause, settings, console navigation",
+      "dependencies": [
+        "com.pg.pgtween",
+        "com.pg.localization-system",
+        "com.pg.input-prompts"
+      ]
+    },
+    {
+      "name": "PGTween",
+      "packageId": "com.pg.pgtween",
+      "url": "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/PGTween",
+      "group": "Core",
+      "description": "Tween animations",
+      "dependencies": []
+    },
+    {
+      "name": "Localization System",
+      "packageId": "com.pg.localization-system",
+      "url": "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/LocalizationSystem",
+      "group": "Core",
+      "description": "Localized text and assets",
+      "dependencies": []
+    },
+    {
+      "name": "Audio Management",
+      "packageId": "com.pg.audio-management",
+      "url": "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/AudioManagement",
+      "group": "Core",
+      "description": "Audio manager, pools, ambient music",
+      "dependencies": [
+        "com.pg.pgtween"
+      ]
+    },
+    {
+      "name": "Input Prompts",
+      "packageId": "com.pg.input-prompts",
+      "url": "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/InputPrompts",
+      "group": "Core",
+      "description": "Device input prompts",
+      "dependencies": []
+    },
+    {
+      "name": "Notification Management",
+      "packageId": "com.pg.notifications",
+      "url": "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/NotificationManagement",
+      "group": "Core",
+      "description": "Notifications",
+      "dependencies": [
+        "com.pg.menu",
+        "com.pg.pgtween",
+        "com.pg.localization-system"
+      ]
+    },
+    {
+      "name": "Module Management",
+      "packageId": "com.pg.module-management",
+      "url": "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/Module%20Management",
+      "group": "Core",
+      "description": "Modular components",
+      "dependencies": []
+    },
+    {
+      "name": "Subclass Serialization",
+      "packageId": "com.pg.subclass-serialization",
+      "url": "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/Subclass%20Serialization",
+      "group": "Core",
+      "description": "Serialize subclasses in inspector",
+      "dependencies": []
+    },
+    {
+      "name": "Interact System",
+      "packageId": "com.pg.interact-system",
+      "url": "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/InteractSystem",
+      "group": "Systems",
+      "description": "Camera interaction",
+      "dependencies": []
+    },
+    {
+      "name": "Health System",
+      "packageId": "com.pg.health-system",
+      "url": "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/HealthSystem",
+      "group": "Systems",
+      "description": "Health, hearts, game over",
+      "dependencies": []
+    },
+    {
+      "name": "Inventory System",
+      "packageId": "com.pg.inventory-system",
+      "url": "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/InventorySystem",
+      "group": "Systems",
+      "description": "Bag, items, crafting, dropped/placeable items, items and craft screens (from WWT)",
+      "dependencies": [
+        "com.pg.menu",
+        "com.pg.localization-system",
+        "com.pg.save-system",
+        "com.pg.audio-management",
+        "com.pg.notifications",
+        "com.pg.interact-system",
+        "com.pg.pgtween"
+      ]
+    },
+    {
+      "name": "Loot System",
+      "packageId": "com.pg.loot-system",
+      "url": "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/LootSystem",
+      "group": "Systems",
+      "description": "Loot drops",
+      "dependencies": [
+        "com.pg.inventory-system",
+        "com.pg.interact-system"
+      ]
+    },
+    {
+      "name": "Quest System",
+      "packageId": "com.pg.quest-system",
+      "url": "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/QuestSystem",
+      "group": "Systems",
+      "description": "Quests and HUD",
+      "dependencies": []
+    },
+    {
+      "name": "Hunger System",
+      "packageId": "com.pg.hunger-system",
+      "url": "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/HungerSystem",
+      "group": "Systems",
+      "description": "Hunger",
+      "dependencies": []
+    },
+    {
+      "name": "Battle System",
+      "packageId": "com.pg.battle-system",
+      "url": "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/BattleSystem",
+      "group": "Systems",
+      "description": "Battle",
+      "dependencies": []
+    },
+    {
+      "name": "Shoot System",
+      "packageId": "com.pg.shoot-system",
+      "url": "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/ShootSystem",
+      "group": "Systems",
+      "description": "Shooting",
+      "dependencies": []
+    },
+    {
+      "name": "Locomotion System",
+      "packageId": "com.pg.locomotion-system",
+      "url": "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/LocomotionSystem",
+      "group": "Systems",
+      "description": "Character locomotion",
+      "dependencies": [
+        "com.pg.module-management",
+        "com.pg.subclass-serialization"
+      ]
+    },
+    {
+      "name": "Swarm Navigation",
+      "packageId": "com.pg.swarm-navigation",
+      "url": "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/SwarmNavigation",
+      "group": "Rendering & VFX",
+      "description": "Crowd navigation",
+      "dependencies": []
+    },
+    {
+      "name": "Indirect Rendering",
+      "packageId": "com.pg.indirect-rendering",
+      "url": "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/IndirectRendering",
+      "group": "Rendering & VFX",
+      "description": "GPU-driven indirect rendering of terrain trees, grass and world objects (URP)",
+      "dependencies": []
+    },
+    {
+      "name": "VFX Pooling",
+      "packageId": "com.pg.vfx-pooling",
+      "url": "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/VFXPooling",
+      "group": "Rendering & VFX",
+      "description": "VFX pools",
+      "dependencies": []
+    },
+    {
+      "name": "VFX Control",
+      "packageId": "com.pg.vfx-control",
+      "url": "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/VFXControl",
+      "group": "Rendering & VFX",
+      "description": "VFX control",
+      "dependencies": []
+    },
+    {
+      "name": "Spring Bone",
+      "packageId": "com.pg.springbone",
+      "url": "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/Springbone",
+      "group": "Rendering & VFX",
+      "description": "Burst spring bones",
+      "dependencies": []
+    },
+    {
+      "name": "Timeline Tracks",
+      "packageId": "com.pg.timeline-tracks",
+      "url": "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/TimelineTracks",
+      "group": "Timeline & Story",
+      "description": "Custom Timeline tracks",
+      "dependencies": [
+        "com.pg.localization-system"
+      ]
+    },
+    {
+      "name": "Timeline Tween",
+      "packageId": "com.pg.timeline-tween",
+      "url": "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/TimelineTween",
+      "group": "Timeline & Story",
+      "description": "Tween track for Timeline",
+      "dependencies": []
+    },
+    {
+      "name": "PG Dialogue Graph",
+      "packageId": "com.pg.dialogue-graph",
+      "url": "https://github.com/Lucia7Lunadottir/Dialogue-Graph.git?path=/Dialogue%20Graph/Assets/Dialogue%20Graph",
+      "group": "Timeline & Story",
+      "description": "Dialogue graph",
+      "dependencies": []
+    },
+    {
+      "name": "PG Story Graph",
+      "packageId": "com.pg.story-graph",
+      "url": "https://github.com/Lucia7Lunadottir/Story-Graph.git?path=/Story%20Graph/Assets/PG/com.pg.story-graph",
+      "group": "Timeline & Story",
+      "description": "Story graph",
+      "dependencies": []
+    },
+    {
+      "name": "PG Hierarchy Folder Creator",
+      "packageId": "com.pg.hierarchy-folder-creator",
+      "url": "https://github.com/Lucia7Lunadottir/PG-Hierarchy-Folder-Creator.git?path=/Hierarchy%20Folder%20Creator/Assets/PG%20Hierarchy%20Folder%20Creator",
+      "group": "Tools",
+      "description": "Folder structure creator",
+      "dependencies": []
+    },
+    {
+      "name": "Package Window Updater",
+      "packageId": "com.pg.template-package-manager",
+      "url": "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/TemplatesPackageManager",
+      "group": "Tools",
+      "description": "This window",
+      "dependencies": []
+    },
+    {
+      "name": "PG Core",
+      "url": "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/Core",
+      "packageId": "com.pg.core",
+      "group": "Core",
+      "description": "Shared attributes: [TagDropdown]",
+      "dependencies": []
+    },
+    {
+      "name": "Buffs",
+      "url": "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/Buffs",
+      "packageId": "com.pg.buffs",
+      "group": "Systems",
+      "description": "Timed effects: poison, regeneration, active effects bar, own effects via CheckBuffType.Register",
+      "dependencies": [
+        "com.pg.health-system",
+        "com.pg.menu"
+      ]
+    },
+    {
+      "name": "Combat System",
+      "url": "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/CombatSystem",
+      "packageId": "com.pg.combat",
+      "group": "Systems",
+      "description": "Damagers, hitboxes, knockback, mob health, combat feedback, dodge and barrier (stamina bridge), buff damagers, enemy waves",
+      "dependencies": [
+        "com.pg.buffs",
+        "com.pg.core",
+        "com.pg.health-system",
+        "com.pg.pgtween",
+        "com.pg.swarm-navigation"
+      ]
+    },
+    {
+      "name": "Telekinesis",
+      "url": "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/Telekinesis",
+      "packageId": "com.pg.telekinesis",
+      "group": "Systems",
+      "description": "Grab, rotate and throw physical objects (bridge for bag and loot)",
+      "dependencies": [
+        "com.pg.localization-system",
+        "com.pg.menu"
+      ]
+    },
+    {
+      "name": "Building System",
+      "url": "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/BuildingSystem",
+      "packageId": "com.pg.building",
+      "group": "Systems",
+      "description": "Build mode: ghost placing, blueprints, materials from the bag, build screen",
+      "dependencies": [
+        "com.pg.inventory-system",
+        "com.pg.menu",
+        "com.pg.localization-system",
+        "com.pg.save-system",
+        "com.pg.interact-system",
+        "com.pg.core"
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Pony Core",
+      "packageIds": [
+        "com.pg.save-system",
+        "com.pg.menu",
+        "com.pg.localization-system",
+        "com.pg.audio-management",
+        "com.pg.input-prompts",
+        "com.pg.notifications",
+        "com.pg.interact-system",
+        "com.pg.health-system"
+      ]
+    },
+    {
+      "name": "Systems",
+      "packageIds": [
+        "com.pg.interact-system",
+        "com.pg.health-system",
+        "com.pg.inventory-system",
+        "com.pg.loot-system",
+        "com.pg.quest-system",
+        "com.pg.hunger-system",
+        "com.pg.battle-system",
+        "com.pg.shoot-system",
+        "com.pg.locomotion-system",
+        "com.pg.buffs",
+        "com.pg.combat",
+        "com.pg.telekinesis",
+        "com.pg.building"
+      ]
+    },
+    {
+      "name": "All",
+      "packageIds": [
+        "com.pg.save-system",
+        "com.pg.menu",
+        "com.pg.pgtween",
+        "com.pg.localization-system",
+        "com.pg.audio-management",
+        "com.pg.input-prompts",
+        "com.pg.notifications",
+        "com.pg.module-management",
+        "com.pg.subclass-serialization",
+        "com.pg.interact-system",
+        "com.pg.health-system",
+        "com.pg.inventory-system",
+        "com.pg.loot-system",
+        "com.pg.quest-system",
+        "com.pg.hunger-system",
+        "com.pg.battle-system",
+        "com.pg.shoot-system",
+        "com.pg.locomotion-system",
+        "com.pg.swarm-navigation",
+        "com.pg.indirect-rendering",
+        "com.pg.vfx-pooling",
+        "com.pg.vfx-control",
+        "com.pg.springbone",
+        "com.pg.timeline-tracks",
+        "com.pg.timeline-tween",
+        "com.pg.dialogue-graph",
+        "com.pg.story-graph",
+        "com.pg.hierarchy-folder-creator",
+        "com.pg.template-package-manager",
+        "com.pg.core",
+        "com.pg.buffs",
+        "com.pg.combat",
+        "com.pg.telekinesis",
+        "com.pg.building"
+      ]
+    }
+  ]
+}

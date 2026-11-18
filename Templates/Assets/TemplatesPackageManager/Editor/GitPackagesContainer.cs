@@ -1,190 +1,46 @@
 using System.Collections.Generic;
-using UnityEditor;
+using System.IO;
+using UnityEngine;
 
 namespace PG.TemplatesPackageManager
 {
-
-    public partial class GitPackageInstaller : EditorWindow
+    public static class GitPackagesContainer
     {
-        private List<GitPackage> packages = new List<GitPackage>
+        private const string CatalogFile = "Editor/catalog.json";
+
+        public static GitCatalog Load()
+        {
+            var info = UnityEditor.PackageManager.PackageInfo.FindForAssembly(typeof(GitPackagesContainer).Assembly);
+            var path = info == null ? null : Path.Combine(info.resolvedPath, CatalogFile);
+            if (path == null || !File.Exists(path))
             {
-                new GitPackage {
-                    name      = "Package Window Updater",
-                    url       = "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/TemplatesPackageManager",
-                    packageId = "com.pg.template-package-manager"
-                },
-                new GitPackage {
-                    name      = "Menu",
-                    url       = "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/Menu",
-                    packageId = "com.pg.menu",
-                    dependencies = new List<GitPackage>{
-                        new GitPackage {
-                            name      = "PGTween",
-                            url       = "https://github.com/Lucia7Lunadottir/PGTween.git",
-                            packageId = "com.pg.pgtween"
-                        }
-                    }
-                },
-                new GitPackage {
-                    name      = "Interact System",
-                    url       = "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/InteractSystem",
-                    packageId = "com.pg.interact-system"
-                },
-                new GitPackage {
-                    name      = "Quest System",
-                    url       = "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/QuestSystem",
-                    packageId = "com.pg.quest-system"
-                },
-                new GitPackage {
-                    name      = "Health System",
-                    url       = "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/HealthSystem",
-                    packageId = "com.pg.health-system"
-                },
-                new GitPackage {
-                    name      = "Localization System",
-                    url       = "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/LocalizationSystem",
-                    packageId = "com.pg.localization-system"
-                },
-                new GitPackage {
-                    name      = "Battle System",
-                    url       = "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/BattleSystem",
-                    packageId = "com.pg.battle-system"
-                },
-                new GitPackage {
-                    name      = "Locomotion System",
-                    url       = "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/LocomotionSystem",
-                    packageId = "com.pg.locomotion-system",
-                    dependencies = new List<GitPackage>
-                    {
-                        new GitPackage {
-                            name      = "PG Module Management",
-                            url       = "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/Module%20Management",
-                            packageId = "com.pg.module-management"
-                        },
-                        new GitPackage {
-                            name      = "PG Subclass Serialization",
-                            url       = "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/Subclass%20Serialization",
-                            packageId = "com.pg.subclass-serialization"
-                        }
-                    }
-                },
-                new GitPackage {
-                    name      = "VFX Control",
-                    url       = "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/VFXControl",
-                    packageId = "com.pg.vfx-control"
-                },
-                new GitPackage {
-                    name      = "Hunger System",
-                    url       = "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/HungerSystem",
-                    packageId = "com.pg.hunger-system"
-                },
-                new GitPackage {
-                    name      = "Inventory System",
-                    url       = "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/InventorySystem",
-                    packageId = "com.pg.inventory-system"
-                },
-                new GitPackage {
-                    name      = "Loot System",
-                    url       = "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/LootSystem",
-                    packageId = "com.pg.loot-system",
-                    dependencies = new List<GitPackage>
-                    {
-                        new GitPackage
-                        {
-                            name      = "Inventory System",
-                            url       = "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/InventorySystem",
-                            packageId = "com.pg.inventory-system"
-                        },
-                        new GitPackage {
-                            name      = "Interact System",
-                            url       = "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/InteractSystem",
-                            packageId = "com.pg.interact-system"
-                        }
-                    }
-                },
-                new GitPackage {
-                    name      = "Shoot System",
-                    url       = "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/ShootSystem",
-                    packageId = "com.pg.shoot-system"
-                },
-                new GitPackage {
-                    name      = "PG Dialogue Graph",
-                    url       = "https://github.com/Lucia7Lunadottir/Dialogue-Graph.git?path=/Dialogue%20Graph/Assets/Dialogue%20Graph",
-                    packageId = "com.pg.dialogue-graph"
-                },
-                new GitPackage {
-                    name      = "PG Story Graph",
-                    url       = "https://github.com/Lucia7Lunadottir/Story-Graph.git?path=/Story%20Graph/Assets/PG/com.pg.story-graph",
-                    packageId = "com.pg.story-graph"
-                },
-                new GitPackage {
-                    name      = "PGTween",
-                    url       = "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/PGTween",
-                    packageId = "com.pg.pgtween"
-                },
-                new GitPackage {
-                    name      = "SaveSystem",
-                    url       = "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/SaveSystem",
-                    packageId = "com.pg.save-system"
-                },
-                new GitPackage {
-                    name      = "PG Hierarchy Folder Creator",
-                    url       = "https://github.com/Lucia7Lunadottir/PG-Hierarchy-Folder-Creator.git?path=/Hierarchy%20Folder%20Creator/Assets/PG%20Hierarchy%20Folder%20Creator",
-                    packageId = "com.pg.hierarchy-folder-creator"
-                },
-                new GitPackage {
-                    name      = "PG Module Management",
-                    url       = "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/Module%20Management",
-                    packageId = "com.pg.module-management"
-                },
-                new GitPackage {
-                    name      = "PG Subclass Serialization",
-                    url       = "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/Subclass%20Serialization",
-                    packageId = "com.pg.subclass-serialization"
-                },
-                new GitPackage {
-                    name      = "Audio Management",
-                    url       = "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/AudioManagement",
-                    packageId = "com.pg.audio-management"
-                },
-                new GitPackage {
-                    name      = "Swarm Navigation",
-                    url       = "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/SwarmNavigation",
-                    packageId = "com.pg.swarm-navigation"
-                },
-                new GitPackage {
-                    name      = "Indirect Rendering",
-                    url       = "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/IndirectRendering",
-                    packageId = "com.pg.indirect-rendering"
-                },
-                new GitPackage {
-                    name      = "VFX Pooling",
-                    url       = "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/VFXPooling",
-                    packageId = "com.pg.vfx-pooling"
-                },
-                new GitPackage {
-                    name      = "Spring Bone",
-                    url       = "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/Springbone",
-                    packageId = "com.pg.springbone"
-                },
-                new GitPackage {
-                    name      = "Timeline Tracks",
-                    url       = "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/TimelineTracks",
-                    packageId = "com.pg.timeline-tracks",
-                    dependencies = new List<GitPackage>
-                    {
-                        new GitPackage {
-                            name      = "Localization System",
-                            url       = "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/LocalizationSystem",
-                            packageId = "com.pg.localization-system"
-                        }
-                    }
-                },
-                new GitPackage {
-                    name      = "Timeline Tween",
-                    url       = "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/TimelineTween",
-                    packageId = "com.pg.timeline-tween"
+                Debug.LogError($"Git Package Installer: {CatalogFile} not found");
+                return new GitCatalog();
+            }
+            return JsonUtility.FromJson<GitCatalog>(File.ReadAllText(path));
+        }
+
+        // Selected packages plus all their dependencies, each once, dependencies first
+        public static List<GitPackage> Resolve(GitCatalog catalog, IEnumerable<string> ids)
+        {
+            var byId = new Dictionary<string, GitPackage>();
+            foreach (var p in catalog.packages) byId[p.packageId] = p;
+
+            var result = new List<GitPackage>();
+            var seen = new HashSet<string>();
+            void Visit(string id)
+            {
+                if (!seen.Add(id)) return;
+                if (!byId.TryGetValue(id, out var pkg))
+                {
+                    Debug.LogWarning($"Git Package Installer: '{id}' is not in the catalog");
+                    return;
                 }
-            };
+                foreach (var dep in pkg.dependencies) Visit(dep);
+                result.Add(pkg);
+            }
+            foreach (var id in ids) Visit(id);
+            return result;
+        }
     }
 }

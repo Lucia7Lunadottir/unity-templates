@@ -1,21 +1,32 @@
-﻿using System.Collections.Generic;
-using UnityEditor.PackageManager.Requests;
+using System;
+using System.Collections.Generic;
+
 namespace PG.TemplatesPackageManager
 {
-
-
+    [Serializable]
     public class GitPackage
     {
-        // Display name
         public string name;
-        // Git URL
         public string url;
         // UPM package name from package.json ("name": "com.pg.xxx")
         public string packageId;
-        public List<GitPackage> dependencies = new List<GitPackage>();
-        public string status = "Waiting";
-        public bool isInstalling = false;
-        public bool isInstalled = false;
-        public AddRequest request;
+        public string group;
+        public string description;
+        // packageIds of packages that must be installed together (git URLs cannot be declared in package.json)
+        public List<string> dependencies = new List<string>();
+    }
+
+    [Serializable]
+    public class GitPreset
+    {
+        public string name;
+        public List<string> packageIds = new List<string>();
+    }
+
+    [Serializable]
+    public class GitCatalog
+    {
+        public List<GitPackage> packages = new List<GitPackage>();
+        public List<GitPreset> presets = new List<GitPreset>();
     }
 }
