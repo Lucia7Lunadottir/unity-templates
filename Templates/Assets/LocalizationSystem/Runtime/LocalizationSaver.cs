@@ -6,6 +6,7 @@ namespace PG.Localization
     public class LocalizationSaver : MonoBehaviour
     {
         [SerializeField] private string _localizationParameter = "Language";
+        private bool _subscribed;
         private void OnEnable()
         {
             Init();
@@ -13,11 +14,15 @@ namespace PG.Localization
         async void Init()
         {
             await Task.Yield();
+            if (!isActiveAndEnabled || LocalizationSystem.instance == null) return;
             LocalizationSystem.instance.localizationChanged += OnLocalizationChanged;
+            _subscribed = true;
         }
         private void OnDisable()
         {
-            LocalizationSystem.instance.localizationChanged -= OnLocalizationChanged;
+            if (_subscribed && LocalizationSystem.instance != null)
+                LocalizationSystem.instance.localizationChanged -= OnLocalizationChanged;
+            _subscribed = false;
         }
         void OnLocalizationChanged(string language)
         {

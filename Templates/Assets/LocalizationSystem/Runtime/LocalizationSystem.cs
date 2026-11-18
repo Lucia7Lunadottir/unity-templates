@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.IO;
 using Unity.Scripting.LifecycleManagement;
 using UnityEngine;
 
@@ -8,11 +7,6 @@ namespace PG.Localization
     public partial class LocalizationSystem : MonoBehaviour
     {
         private Dictionary<string, string> localizedText = new Dictionary<string, string>();
-        private const char Delimiter = ','; // Delimiter for CSV
-        public enum TableType { CSV, TSV }
-        [SerializeField] private TableType _tableType = TableType.CSV;
-        public TableType tableType => _tableType;
-
         [SerializeField] private TextAsset[] _localizationFiles; // Array of CSV files
         public string currentLanguage = "English";
 
@@ -80,116 +74,50 @@ namespace PG.Localization
                     continue;
                 }
 
-                using (StringReader reader = new StringReader(csvFile.text))
+                List<string[]> rows = LocalizationTable.ParseCSV(csvFile.text);
+                if (rows.Count == 0) continue;
+
+                string[] headers = rows[0];
+                int languageIndex = -1;
+                for (int i = 0; i < headers.Length; i++)
                 {
-                    string headerLine = reader.ReadLine(); // Skip the header
-                    if (string.IsNullOrEmpty(headerLine)) continue;
-
-                    string[] headers = new string[0];
-                    switch (_tableType)
+                    if (headers[i].Trim() == currentLanguage)
                     {
-                        case TableType.CSV:
-                            headers = headerLine.Split(Delimiter);
-                            break;
-                        case TableType.TSV:
-                            headers = headerLine.Split("\t");
-                            break;
+                        languageIndex = i;
+                        break;
                     }
+                }
 
-                    int languageIndex = -1;
-                    for (int i = 0; i < headers.Length; i++)
+                if (languageIndex == -1)
+                {
+#if UNITY_EDITOR
+                    Debug.LogError($"Language '{currentLanguage}' not found in localization file {csvFile.name}.");
+#endif
+                    continue;
+                }
+
+                for (int r = 1; r < rows.Count; r++)
+                {
+                    string[] fields = rows[r];
+                    string key = fields[0].Trim();
+                    if (key.Length == 0) continue;
+
+                    if (languageIndex >= fields.Length) continue;
+                    string value = fields[languageIndex];
+
+                    if (!localizedText.ContainsKey(key))
                     {
-                        if (headers[i].Trim() == currentLanguage)
-                        {
-                            languageIndex = i;
-                            break;
-                        }
+                        localizedText[key] = value;
                     }
-
-                    if (languageIndex == -1)
+                    else
                     {
 #if UNITY_EDITOR
-                        Debug.LogError($"Language '{currentLanguage}' not found in localization file {csvFile.name}.");
+                        Debug.LogWarning($"Key '{key}' from file {csvFile.name} already exists. Skipping.");
 #endif
-                        continue;
-                    }
-
-                    string line;
-                    while ((line = reader.ReadLine()) != null)
-                    {
-                        string[] fields = ParseCSVLine(line);
-                        if (fields.Length > languageIndex)
-                        {
-                            string key = fields[0];
-                            string value = fields[languageIndex];
-
-                            if (!localizedText.ContainsKey(key))
-                            {
-                                localizedText[key] = value;
-                            }
-                            else
-                            {
-#if UNITY_EDITOR
-                                Debug.LogWarning($"Key '{key}' from file {csvFile.name} already exists. Skipping.");
-#endif
-                            }
-                        }
                     }
                 }
             }
             localizationChanged?.Invoke(currentLanguage);
-        }
-
-        private string[] ParseCSVLine(string line)
-        {
-            List<string> fields = new List<string>();
-            bool inQuotes = false;
-            string currentField = "";
-
-            for (int i = 0; i < line.Length; i++)
-            {
-                char c = line[i];
-
-                switch (_tableType)
-                {
-                    case TableType.CSV:
-                        if (c == Delimiter && line[i + 1] == ' ')
-                        {
-                            // Toggle quote state
-                            inQuotes = true;
-                        }
-                        else if (c == Delimiter && line[i + 1] != ' ')
-                        {
-                            inQuotes = false;
-                        }
-                        break;
-                    case TableType.TSV:
-                        if (c == '\t')
-                        {
-                            inQuotes = !inQuotes;
-                        }
-                        break;
-                }
-                if (c == Delimiter && !inQuotes)
-                {
-                    // Delimiter outside quotes — end of field
-                    fields.Add(currentField.Trim());
-                    currentField = "";
-                }
-                else
-                {
-                    // Append character to current field
-                    currentField += c;
-                }
-            }
-
-            // Add the last field if present
-            if (!string.IsNullOrEmpty(currentField))
-            {
-                fields.Add(currentField.Trim());
-            }
-
-            return fields.ToArray();
         }
 
         public void SetLanguage(string value)

@@ -6,6 +6,7 @@ namespace PG.Localization
     public class LocalizeText : MonoBehaviour
     {
         [SerializeField] private TMP_Text _textObject;
+        [LocalizedKey]
         [SerializeField] private string _key;
         public string key
         {
@@ -26,8 +27,13 @@ namespace PG.Localization
         }
         public void Localize()
         {
+            if (_textObject == null || LocalizationSystem.instance == null) return;
             _textObject.text = LocalizationSystem.instance.GetLocalizedValue(_key, _textObject.text);
         }
-        public string GetLocalizedValue() => LocalizationSystem.instance.GetLocalizedValue(_key, _textObject.text);
+        public string GetLocalizedValue()
+        {
+            if (_textObject == null || LocalizationSystem.instance == null) return _key;
+            return LocalizationSystem.instance.GetLocalizedValue(_key, _textObject.text);
+        }
     }
 }
