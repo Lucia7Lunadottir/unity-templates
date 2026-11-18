@@ -1,0 +1,18 @@
+using PG.BuffSystem;
+using UnityEngine;
+
+// Свой эффект: наследуем Buff и в ApplyBuff делаем что нужно каждые delay секунд
+public class ColdBuff : Buff
+{
+    protected override void ApplyBuff()
+    {
+        Debug.Log("Cold tick");
+    }
+}
+
+public static class ColdBuffBridge
+{
+    // Регистрация один раз при старте: после неё урон и умения находят бафф по BuffType.Frozen
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void Register() => CheckBuffType.Register(BuffType.Frozen, typeof(ColdBuff));
+}

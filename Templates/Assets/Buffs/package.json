@@ -1,0 +1,16 @@
+{
+  "name": "com.pg.buffs",
+  "version": "1.0.0",
+  "displayName": "Buffs",
+  "description": "Timed effects on a character: Buff base class, BuffManager, BuffLinker, BuffData, the active effects bar, poison and regeneration. Other effects (fire, cold, heat) are your own Buff subclasses registered with CheckBuffType.Register. Needs com.pg.health-system and com.pg.menu.",
+  "unity": "6000.6",
+  "author": "Lucia Lunadottir",
+  "type": "assets",
+  "samples": [
+    {
+      "displayName": "Own buff",
+      "description": "A custom Buff and its registration with CheckBuffType.Register. After import remove the .txt from the file name.",
+      "path": "Samples~/OwnBuff"
+    }
+  ]
+}
