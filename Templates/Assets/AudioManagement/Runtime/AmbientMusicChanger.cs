@@ -54,7 +54,7 @@ public class AmbientMusicChanger : MonoBehaviour
         _targetIndex = value;
         for (int i = 0; i < _musicElements.Length; i++)
         {
-            // Ñîçäàåì ëîêàëüíóþ ïåðåìåííóþ âíóòðè öèêëà!
+            // Ð¡Ð¾Ð·Ð´Ð°ÐµÐ¼ Ð»Ð¾ÐºÐ°Ð»ÑŒÐ½ÑƒÑŽ Ð¿ÐµÑ€ÐµÐ¼ÐµÐ½Ð½ÑƒÑŽ Ð²Ð½ÑƒÑ‚Ñ€Ð¸ Ñ†Ð¸ÐºÐ»Ð°!
             int currentIndex = i;
 
             if (value == currentIndex)

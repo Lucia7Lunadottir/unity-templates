@@ -1,5 +1,6 @@
 using Unity.Scripting.LifecycleManagement;
 using UnityEngine;
+
 public partial class AudioManager : MonoBehaviour
 {
     [field:SerializeField] public AudioManagerProfile profile {  get; private set; }

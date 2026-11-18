@@ -4,7 +4,7 @@ using UnityEngine.Audio;
 public class ImpactAudioResourceStacker : MonoBehaviour
 {
     public AudioResource impactResource;
-    public int poolSize = 3; // Сколько звуков может звучать одновременно
+    public int poolSize = 3; // РЎРєРѕР»СЊРєРѕ Р·РІСѓРєРѕРІ РјРѕР¶РµС‚ Р·РІСѓС‡Р°С‚СЊ РѕРґРЅРѕРІСЂРµРјРµРЅРЅРѕ
     public float velocityThreshold = 1.0f;
     public float volumeMultiplier = 0.2f;
 
@@ -17,7 +17,7 @@ public class ImpactAudioResourceStacker : MonoBehaviour
         for (int i = 0; i < poolSize; i++)
         {
             _sources[i] = gameObject.AddComponent<AudioSource>();
-            _sources[i].spatialBlend = 1.0f; // 3D звук
+            _sources[i].spatialBlend = 1.0f; // 3D Р·РІСѓРє
             _sources[i].playOnAwake = false;
         }
     }
@@ -35,7 +35,7 @@ public class ImpactAudioResourceStacker : MonoBehaviour
             source.volume = Mathf.Clamp(impactForce * volumeMultiplier, 0.05f, 1.0f);
             source.Play();
 
-            // Переходим к следующему источнику в пуле, чтобы не прерывать текущий
+            // РџРµСЂРµС…РѕРґРёРј Рє СЃР»РµРґСѓСЋС‰РµРјСѓ РёСЃС‚РѕС‡РЅРёРєСѓ РІ РїСѓР»Рµ, С‡С‚РѕР±С‹ РЅРµ РїСЂРµСЂС‹РІР°С‚СЊ С‚РµРєСѓС‰РёР№
             _currentSourceIndex = (_currentSourceIndex + 1) % poolSize;
         }
     }
