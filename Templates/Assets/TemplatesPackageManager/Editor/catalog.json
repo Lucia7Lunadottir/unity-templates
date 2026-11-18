@@ -137,6 +137,17 @@
       "dependencies": []
     },
     {
+      "name": "Day and Night",
+      "url": "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/DayNight",
+      "packageId": "com.pg.day-night",
+      "group": "Systems",
+      "description": "Day and night cycle, hour, day counter, sun/fog/skybox; temperature via bridge",
+      "dependencies": [
+        "com.pg.save-system",
+        "com.pg.core"
+      ]
+    },
+    {
       "name": "Hunger System",
       "packageId": "com.pg.hunger-system",
       "url": "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/HungerSystem",
@@ -216,9 +227,10 @@
       "packageId": "com.pg.timeline-tracks",
       "url": "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/TimelineTracks",
       "group": "Timeline & Story",
-      "description": "Custom Timeline tracks",
+      "description": "Custom Timeline tracks, cutscene director (input bridge)",
       "dependencies": [
-        "com.pg.localization-system"
+        "com.pg.localization-system",
+        "com.pg.pgtween"
       ]
     },
     {
@@ -266,7 +278,7 @@
       "url": "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/Core",
       "packageId": "com.pg.core",
       "group": "Core",
-      "description": "Shared attributes: [TagDropdown]",
+      "description": "Shared building blocks: [TagDropdown], GameTime (global time multiplier)",
       "dependencies": []
     },
     {
@@ -350,7 +362,8 @@
         "com.pg.buffs",
         "com.pg.combat",
         "com.pg.telekinesis",
-        "com.pg.building"
+        "com.pg.building",
+        "com.pg.day-night"
       ]
     },
     {
@@ -389,7 +402,8 @@
         "com.pg.buffs",
         "com.pg.combat",
         "com.pg.telekinesis",
-        "com.pg.building"
+        "com.pg.building",
+        "com.pg.day-night"
       ]
     }
   ]
