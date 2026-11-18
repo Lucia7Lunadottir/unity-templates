@@ -4,7 +4,7 @@
     "references": [
         "GUID:c99ee3b49c8130d489e40a46515865bb",
         "GUID:75469ad4d38634e559750d17036d5f7c",
-        "GUID:61c516324bf995045a0103466352546c"
+        "PG.InventorySystem"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

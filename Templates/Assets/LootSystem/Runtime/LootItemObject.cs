@@ -3,7 +3,7 @@ using UnityEngine;
 namespace PG.RandomLoot
 {
     using PG.InteractSystem;
-    using PG.InventorySystem;
+    using PG.InventoryManagement;
     using UnityEngine.Events;
     using UnityEngine.InputSystem;
 
