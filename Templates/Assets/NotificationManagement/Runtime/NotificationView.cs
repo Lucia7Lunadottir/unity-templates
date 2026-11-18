@@ -17,7 +17,7 @@ namespace PG.NotificationManagement
         private Action<NotificationView> _returnToPoolCallback;
         private Coroutine _displayCoroutine;
 
-        // Инициализация отображения
+        // РРЅРёС†РёР°Р»РёР·Р°С†РёСЏ РѕС‚РѕР±СЂР°Р¶РµРЅРёСЏ
         public void Setup(NotificationData data, float duration, Action<NotificationView> returnCallback)
         {
             _returnToPoolCallback = returnCallback;
@@ -31,7 +31,7 @@ namespace PG.NotificationManagement
                 _iconImage.sprite = data.icon;
             }
 
-            // Запускаем процесс показа
+            // Р—Р°РїСѓСЃРєР°РµРј РїСЂРѕС†РµСЃСЃ РїРѕРєР°Р·Р°
             if (_displayCoroutine != null) StopCoroutine(_displayCoroutine);
             _displayCoroutine = StartCoroutine(DisplayRoutine(duration));
         }
@@ -40,7 +40,7 @@ namespace PG.NotificationManagement
         {
             _showHide.Show();
 
-            // Ждем указанное время
+            // Р–РґРµРј СѓРєР°Р·Р°РЅРЅРѕРµ РІСЂРµРјСЏ
             yield return new WaitForSeconds(duration);
 
             Hide();
@@ -48,14 +48,14 @@ namespace PG.NotificationManagement
 
         public void Hide()
         {
-            // После анимации скрытия вызываем колбэк для возврата в пул
+            // РџРѕСЃР»Рµ Р°РЅРёРјР°С†РёРё СЃРєСЂС‹С‚РёСЏ РІС‹Р·С‹РІР°РµРј РєРѕР»Р±СЌРє РґР»СЏ РІРѕР·РІСЂР°С‚Р° РІ РїСѓР»
             _showHide.Hide(() =>
             {
                 _returnToPoolCallback?.Invoke(this);
             });
         }
 
-        // Метод для мгновенного сброса (если нужно принудительно очистить)
+        // РњРµС‚РѕРґ РґР»СЏ РјРіРЅРѕРІРµРЅРЅРѕРіРѕ СЃР±СЂРѕСЃР° (РµСЃР»Рё РЅСѓР¶РЅРѕ РїСЂРёРЅСѓРґРёС‚РµР»СЊРЅРѕ РѕС‡РёСЃС‚РёС‚СЊ)
         public void ForceReset()
         {
             StopAllCoroutines();

@@ -2,8 +2,11 @@
     "name": "PG.NotificationManagement",
     "rootNamespace": "",
     "references": [
-        "GUID:a6850bf06e4cc274d95cec0470bd7189",
-        "GUID:6055be8ebefd69e48b49212b09b47b2f"
+        "PG.MenuManagement",
+        "Unity.TextMeshPro",
+        "UnityEngine.UI",
+        "PGTween",
+        "Unity.InputSystem"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

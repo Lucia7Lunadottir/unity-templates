@@ -10,29 +10,31 @@ namespace PG.NotificationManagement
         [SerializeField] private Transform _cellContainer;
         [SerializeField] private NotificationView _prefab;
         [SerializeField] private float _duration = 2f;
-        [SerializeField] private int _initialPoolSize = 5; 
+        [SerializeField] private int _initialPoolSize = 5; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 
-        
+        // пїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅ пїЅпїЅпїЅ)
         private Stack<NotificationView> _pool = new Stack<NotificationView>();
 
         [AutoStaticsCleanup]
         public static NotificationSystem instance;
 
-        void InitializeInstance()
+        bool InitializeInstance()
         {
-            if (instance != null && instance != this)
-            {
-                Destroy(gameObject);
-            }
+            //if (instance != null && instance != this)
+            //{
+            //    Destroy(gameObject);
+            //    return false;
+            //}
             instance = this;
-            transformHandle.SetParent(default);
-            DontDestroyOnLoad(instance.gameObject);
+            //transformHandle.SetParent(default);
+            //DontDestroyOnLoad(instance.gameObject);
+            return true;
         }
         private void Awake()
         {
-            InitializeInstance();
+            if (!InitializeInstance()) return;
 
-            // Предварительное создание объектов, чтобы не лагало при первом уведомлении
+            // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
             for (int i = 0; i < _initialPoolSize; i++)
             {
                 CreateNewItemAndAddToPool();
@@ -47,30 +49,27 @@ namespace PG.NotificationManagement
 
         private void ShowNotification(NotificationData data)
         {
-            NotificationView view;
+            NotificationView view = null;
 
-            // 1. Берем из пула или создаем новый
-            if (_pool.Count > 0)
-            {
+            // 1. пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
+            // Skip views destroyed with their container
+            while (view == null && _pool.Count > 0)
                 view = _pool.Pop();
-            }
-            else
-            {
+            if (view == null)
                 view = InstantiateView();
-            }
 
-            // 2. Активируем и помещаем в конец списка (чтобы порядок в LayoutGroup был верным)
+            // 2. пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ LayoutGroup пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ)
             view.transform.SetAsLastSibling();
             view.gameObject.SetActive(true);
 
-            // 3. Настраиваем и передаем метод возврата в пул
+            // 3. пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅ
             view.Setup(data, _duration, ReturnToPool);
         }
 
         private void ReturnToPool(NotificationView view)
         {
-            view.gameObject.SetActive(false); // Выключаем объект
-            _pool.Push(view); // Возвращаем в стек
+            view.gameObject.SetActive(false); // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
+            _pool.Push(view); // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅ
         }
 
         private NotificationView InstantiateView()
