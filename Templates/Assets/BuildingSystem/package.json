@@ -1,0 +1,9 @@
+{
+  "name": "com.pg.building",
+  "version": "1.0.0",
+  "displayName": "Building System",
+  "description": "Build mode from World without Time: place things from blueprints or from the bag with a ghost, rotate, dismantle, materials taken from the inventory, build catalog, blueprint pickups and unlocks, build screen and no-build zones. Requires com.pg.inventory-system, com.pg.menu, com.pg.localization-system, com.pg.save-system, com.pg.interact-system. Magic, flight, telekinesis, dialogue, input contexts and achievements are connected through BuildBridge.",
+  "unity": "6000.6",
+  "author": "Lucia Lunadottir",
+  "type": "assets"
+}

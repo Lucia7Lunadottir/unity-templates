@@ -1,0 +1,29 @@
+{
+    "name": "PG.Building",
+    "rootNamespace": "",
+    "references": [
+        "PG.InventorySystem",
+        "PG.MenuManagement",
+        "PG.Localization",
+        "PG.SaveSystem",
+        "PG.InteractSystem",
+        "PG.AudioManagement",
+        "PGTween",
+        "Unity.TextMeshPro",
+        "UnityEngine.UI",
+        "Unity.InputSystem",
+        "Unity.Mathematics",
+        "Unity.Burst",
+        "Unity.Collections",
+        "PG.Core"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
