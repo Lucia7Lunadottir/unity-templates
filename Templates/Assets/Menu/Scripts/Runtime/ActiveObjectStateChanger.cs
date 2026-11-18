@@ -51,8 +51,8 @@ namespace PG.MenuManagement
 
                     if (_enableCounts[obj] <= 0)
                     {
-                        obj.SetActive(false);
                         _enableCounts.Remove(obj);
+                        DisableNextFrame(obj);
                     }
                 }
             }
@@ -72,6 +72,17 @@ namespace PG.MenuManagement
                     }
                 }
             }
+        }
+
+        // Disable one frame later: when the tab changes TabsController may disable the old one before enabling the new one,
+        // and a shared object (the book camera) would blink. If someone took it again meanwhile, leave it alone.
+        private static async void DisableNextFrame(GameObject obj)
+        {
+            try { await Awaitable.NextFrameAsync(); }
+            catch (System.OperationCanceledException) { return; }
+            // Do not touch the editor scene after leaving Play mode
+            if (!Application.isPlaying) return;
+            if (obj != null && !_enableCounts.ContainsKey(obj)) obj.SetActive(false);
         }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
