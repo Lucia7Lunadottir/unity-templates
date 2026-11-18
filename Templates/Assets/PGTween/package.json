@@ -1,8 +1,9 @@
 {
   "name": "com.pg.pgtween",
-  "version": "1.3.2",
+  "version": "2.0.0",
   "displayName": "PGTween",
   "description": "",
-  "unity": "2022.3",
-  "type": "plugin"
+  "unity": "6000.3",
+  "type": "plugin",
+  "_fingerprint": "518044650cc67a6a9feee9898af6fe05eab50437"
 }
