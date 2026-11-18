@@ -134,7 +134,9 @@
       "url": "https://github.com/Lucia7Lunadottir/unity-templates.git?path=/Templates/Assets/QuestSystem",
       "group": "Systems",
       "description": "Quests and HUD",
-      "dependencies": []
+      "dependencies": [
+        "com.pg.save-system"
+      ]
     },
     {
       "name": "Day and Night",
