@@ -1,0 +1,9 @@
+{
+  "name": "com.pg.day-night",
+  "version": "1.0.0",
+  "displayName": "Day and Night",
+  "description": "Day and night cycle: timer with transitions, hour, day counter, events (night started / ended), config modes, save. DayNightSystem adds sun light, fog and skybox. Temperature is a bridge: implement IResilienceTarget. Needs com.pg.save-system and com.pg.core.",
+  "unity": "6000.6",
+  "author": "Lucia Lunadottir",
+  "type": "assets"
+}

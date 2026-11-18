@@ -1,0 +1,19 @@
+{
+    "name": "PG.DayNight",
+    "rootNamespace": "",
+    "references": [
+        "PG.SaveSystem",
+        "PG.Core",
+        "Unity.TextMeshPro",
+        "UnityEngine.UI"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
