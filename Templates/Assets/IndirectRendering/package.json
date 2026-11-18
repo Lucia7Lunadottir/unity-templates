@@ -1,6 +1,6 @@
 {
   "name": "com.pg.indirect-rendering",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "displayName": "Indirect Rendering",
   "description": "GPU-driven indirect rendering of terrain trees, grass and world objects with compute culling, LODs and impostors (URP). Docs in Docs/.",
   "unity": "6000.6",
@@ -11,7 +11,8 @@
     "com.unity.collections": "6.6.0",
     "com.unity.mathematics": "1.4.0",
     "com.unity.render-pipelines.core": "17.6.0",
-    "com.unity.render-pipelines.universal": "17.6.0"
+    "com.unity.render-pipelines.universal": "17.6.0",
+    "com.unity.modules.terrain": "1.0.0"
   },
   "samples": [
     {
