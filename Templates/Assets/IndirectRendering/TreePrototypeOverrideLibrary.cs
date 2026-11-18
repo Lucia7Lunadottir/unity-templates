@@ -12,7 +12,7 @@ namespace PG.Rendering
     public class TreePrototypeOverrideLibrary : ScriptableObject
     {
         private const string ResourcePath = "TreePrototypeOverrideLibrary";
-        private const string AssetFolder = "Assets/Resources";
+        private const string AssetFolder = "Assets/Scripts/Rendering/IndirectRendering/Resources";
 
         [System.Serializable]
         public struct Entry
@@ -124,33 +124,17 @@ namespace PG.Rendering
             return false;
         }
 
+        // Мост: источник готового импостора по имени префаба. Пакет не зависит от ассета, который их запекает
+        // (например AmplifyImpostors) - игра регистрирует свой поиск (см. AmplifyImpostorBridge в проекте).
+        public delegate bool ImpostorFinder(string baseName, out Mesh mesh, out Material material);
+
+        public static ImpostorFinder impostorFinder;
+
         private static bool TryFindImpostorByBaseName(string baseName, out Mesh mesh, out Material material)
         {
             mesh = null;
             material = null;
-            string folderName = baseName + "_Impostor";
-
-            foreach (string guid in UnityEditor.AssetDatabase.FindAssets($"{folderName} t:AmplifyImpostorAsset"))
-            {
-                string path = UnityEditor.AssetDatabase.GUIDToAssetPath(guid);
-                if (System.IO.Path.GetFileNameWithoutExtension(path) != folderName) continue; // точное имя, не "содержит"
-
-                // Без compile-зависимости от AmplifyImpostors: поле Mesh читаем через SerializedObject
-                var impostorAsset = UnityEditor.AssetDatabase.LoadMainAssetAtPath(path);
-                if (impostorAsset == null) continue;
-                var impostorMesh = new UnityEditor.SerializedObject(impostorAsset).FindProperty("Mesh")?.objectReferenceValue as Mesh;
-                if (impostorMesh == null) continue;
-
-                string indirectMatPath = System.IO.Path.Combine(
-                    System.IO.Path.GetDirectoryName(path) ?? "", folderName + "_Indirect.mat");
-                Material indirectMat = UnityEditor.AssetDatabase.LoadAssetAtPath<Material>(indirectMatPath);
-                if (indirectMat == null) continue;
-
-                mesh = impostorMesh;
-                material = indirectMat;
-                return true;
-            }
-            return false;
+            return impostorFinder != null && impostorFinder(baseName, out mesh, out material);
         }
 
         // Первое обращение к Instance в Editor'е, пока ассета ещё нет на диске - создаёт его сама,
@@ -158,7 +142,7 @@ namespace PG.Rendering
         private static TreePrototypeOverrideLibrary CreateLibraryAsset()
         {
             if (!UnityEditor.AssetDatabase.IsValidFolder(AssetFolder))
-                UnityEditor.AssetDatabase.CreateFolder("Assets", "Resources"); // ассет проекта, не пакета: папка пакета только для чтения
+                UnityEditor.AssetDatabase.CreateFolder("Assets/Scripts/Rendering/IndirectRendering", "Resources");
 
             var asset = CreateInstance<TreePrototypeOverrideLibrary>();
             string path = AssetFolder + "/" + ResourcePath + ".asset";

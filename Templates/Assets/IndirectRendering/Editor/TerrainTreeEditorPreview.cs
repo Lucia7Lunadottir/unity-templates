@@ -168,7 +168,7 @@ namespace PG.Rendering
             Clear();
             if (!Enabled || Application.isPlaying || EditorApplication.isCompiling) return;
 
-            var groups = new Dictionary<(Mesh, Material), Group>();
+            var groups = new Dictionary<(Mesh, Material, string), Group>();
             Bounds? worldBounds = null;
 
             var renderers = Object.FindObjectsByType<TerrainTreeIndirectRenderer>(FindObjectsSortMode.None);
@@ -192,7 +192,10 @@ namespace PG.Rendering
 
                 if (GetField(DisableTreesField, renderer, true) && !s_hiddenTrees.ContainsKey(terrain))
                 {
-                    s_hiddenTrees[terrain] = terrain.treeDistance;
+                    // Исходное значение - ещё и в SessionState: статика теряется при перезагрузке скриптов,
+                    // и тогда уже спрятанный 0 запомнился бы как "исходный"
+                    if (terrain.treeDistance > 0f) SessionState.SetFloat(TreeDistanceKey(terrain), terrain.treeDistance);
+                    s_hiddenTrees[terrain] = SessionState.GetFloat(TreeDistanceKey(terrain), terrain.treeDistance);
                     terrain.treeDistance = 0f;
                 }
 
@@ -224,7 +227,7 @@ namespace PG.Rendering
         }
 
         private static void AddTerrain(TerrainTreeIndirectRenderer renderer, Terrain terrain, float cullRadius,
-                                       Dictionary<(Mesh, Material), Group> groups)
+                                       Dictionary<(Mesh, Material, string), Group> groups)
         {
             var overrides = GetField<TerrainIndirectRendererBase.PrototypeOverride[]>(OverridesField, renderer, null);
             float rotationOffset = GetField(RotationOffsetField, renderer, 0f);
@@ -248,14 +251,12 @@ namespace PG.Rendering
                 if (p < 0 || p >= prototypes.Length) continue;
 
                 GameObject prefab = prototypes[p].prefab;
-                MeshFilter mf = prefab != null ? prefab.GetComponentInChildren<MeshFilter>() : null;
-                Quaternion localRot = mf != null ? mf.transformHandle.localRotation : Quaternion.identity;
                 if (rendererScale[p] <= 0f)
                     rendererScale[p] = ResolveRendererScaleMethod != null
                         ? (float)ResolveRendererScaleMethod.Invoke(null, new object[] { prefab })
                         : 1f;
-                //float scaleMultiplier = rendererScale[p];
-                float scaleMultiplier = mf.transformHandle.lossyScale.y;
+                // Тот же масштаб, что в Play (ResolveRendererScale): у запечённых детей - только корень
+                float scaleMultiplier = rendererScale[p];
 
                 float angleDeg = t.rotation * Mathf.Rad2Deg * (invertRotation ? -1f : 1f) + rotationOffset;
                 float instanceScale = t.widthScale;
@@ -264,7 +265,8 @@ namespace PG.Rendering
                 {
                     Position = origin + Vector3.Scale(t.position, size),
                     Scale = instanceScale * scaleMultiplier,
-                    Rotation = Quaternion.Euler(0f, angleDeg, 0f) * localRot
+                    // Только поворот с террейна, как в Play: поворот ребёнка уже запечён в меш (BakeIntoRootSpace)
+                    Rotation = Quaternion.Euler(0f, angleDeg, 0f)
                 });
             }
 
@@ -287,12 +289,16 @@ namespace PG.Rendering
                 if (ResolveIndirectMaterialMethod != null)
                     material = (Material)ResolveIndirectMaterialMethod.Invoke(renderer, new object[] { material });
 
-                var key = (mesh, material);
+                // Ключ - вся LOD-цепочка (меши/материалы), как в рантайме: одинаковый ствол с разной листвой не сливается
+                float avgScale = scaleSum[p] / list.Count * rendererScale[p];
+                MeshLevel[] levels = BuildLevels(renderer, prefab, mesh, over, cullRadius, avgScale);
+                string signature = string.Join("|", Array.ConvertAll(levels, l =>
+                    $"{(l.Mesh != null ? l.Mesh.GetHashCode().ToString() : "-")}/{(l.Material != null ? l.Material.GetHashCode().ToString() : "-")}/{l.ForceMeshLod}/{l.DisableShadows}"));
+                var key = (mesh, material, signature);
                 if (!groups.TryGetValue(key, out Group group))
                 {
                     groups[key] = group = new Group();
-                    float avgScale = scaleSum[p] / list.Count * rendererScale[p];
-                    group.Levels = BuildLevels(renderer, prefab, mesh, over, cullRadius, avgScale);
+                    group.Levels = levels;
                 }
                 group.Data.AddRange(list);
             }
@@ -307,19 +313,7 @@ namespace PG.Rendering
         {
             TerrainIndirectRendererBase.PrototypeOverride local =
                 overrides != null && index >= 0 && index < overrides.Length ? overrides[index] : default;
-
-            if (prefab == null) return local;
-            TreePrototypeOverrideLibrary library = TreePrototypeOverrideLibrary.Instance;
-            if (library == null) return local;
-
-            bool hasMeaningfulLocal = (local.LodLevels != null && local.LodLevels.Length > 0) ||
-                                       local.ImpostorMesh != null || local.ImpostorMaterial != null;
-            if (hasMeaningfulLocal)
-            {
-                library.Set(prefab, local);
-                return local;
-            }
-            return library.TryGet(prefab, out TerrainIndirectRendererBase.PrototypeOverride shared) ? shared : local;
+            return TerrainIndirectRendererBase.ResolveOverride(local, prefab);
         }
 
             // То же правило, что у ResolveBaseMeshMaterial в базовом классе: первая часть с мешем из
@@ -401,9 +395,19 @@ namespace PG.Rendering
             private static void RestoreTerrains()
             {
                 foreach (var kvp in s_hiddenTrees)
-                    if (kvp.Key != null) kvp.Key.treeDistance = kvp.Value;
-                    s_hiddenTrees.Clear();
+                    if (kvp.Key != null && kvp.Value > 0f) kvp.Key.treeDistance = kvp.Value;
+                s_hiddenTrees.Clear();
+                // Спрятанные до перезагрузки скриптов (в словаре их уже нет) - по копии из SessionState
+                foreach (Terrain terrain in Object.FindObjectsByType<Terrain>(FindObjectsInactive.Include))
+                {
+                    if (terrain.treeDistance > 0f) continue;
+                    float saved = SessionState.GetFloat(TreeDistanceKey(terrain), 0f);
+                    if (saved > 0f) terrain.treeDistance = saved;
+                }
             }
+
+            private static string TreeDistanceKey(Terrain terrain) =>
+                "PG.TerrainTreeEditorPreview.TreeDistance." + GlobalObjectId.GetGlobalObjectIdSlow(terrain);
 
             // Следим за числом деревьев: Terrain-кисть добавляет/удаляет деревья, а наш буфер - снимок.
             // Когда число перестало меняться на 0.4 с (кисть отпущена) - пересобираем.
@@ -460,7 +464,7 @@ namespace PG.Rendering
                 {
                     EnableDistance = true,
                     EnableFrustum = true,
-                    EnableOcclusion = false, // в редакторе нет нужного depth-буфера
+                    EnableOcclusion = false,
                     CullRadius = s_cullRadius,
                     DebugInstanceIndex = -1
                 };

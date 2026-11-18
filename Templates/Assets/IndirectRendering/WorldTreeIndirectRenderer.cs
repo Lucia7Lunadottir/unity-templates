@@ -40,9 +40,14 @@ namespace PG.Rendering
             // Прототип: шейдер грузится напрямую по пути для теста в редакторе. В билде так нельзя -
             // UnityEditor недоступен вне редактора; для прод-версии шейдер должен быть полем
             // сериализуемого ассета настроек или явной ссылкой, не AssetDatabase.
-            // По GUID IndirectCulling.compute: путь разный в Assets и в установленном пакете
-            renderer._cullingShader = UnityEditor.AssetDatabase.LoadAssetAtPath<ComputeShader>(
-                UnityEditor.AssetDatabase.GUIDToAssetPath("a769792e3c827a10ba7e2b91d457c1e3"));
+            // Ищется по имени, чтобы работать и из пакета, и из папки в Assets
+            foreach (string guid in UnityEditor.AssetDatabase.FindAssets("IndirectCulling t:ComputeShader"))
+            {
+                string path = UnityEditor.AssetDatabase.GUIDToAssetPath(guid);
+                if (System.IO.Path.GetFileNameWithoutExtension(path) != "IndirectCulling") continue;
+                renderer._cullingShader = UnityEditor.AssetDatabase.LoadAssetAtPath<ComputeShader>(path);
+                break;
+            }
 #endif
             if (renderer._cullingShader == null)
                 Debug.LogWarning("WorldTreeIndirectRenderer: _cullingShader не найден автоматически - " +

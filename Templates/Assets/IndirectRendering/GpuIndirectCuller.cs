@@ -57,6 +57,7 @@ namespace PG.Rendering
             // на границе кадра ложно считаются "вне frustum" и пропадают (см. Docs/03-culling.html).
             internal readonly float BoundsRadius;
             internal readonly Vector3 BoundsExtents;
+            internal readonly Vector3 BoundsCenter; // центр bounds относительно корня - у дерева середина кроны, а не земля
 
             internal Level(Mesh mesh, Material material, int forceMeshLod, bool disableShadows, float minDistance, float maxDistance,
                 GraphicsBuffer visibleBuffer, GraphicsBuffer commandBuffer,
@@ -71,6 +72,7 @@ namespace PG.Rendering
                 VisibleBuffer = visibleBuffer;
                 CommandBuffer = commandBuffer;
                 Vector3 meshExtents = mesh != null ? mesh.bounds.extents : Vector3.zero;
+                BoundsCenter = mesh != null ? mesh.bounds.center : Vector3.zero;
                 BoundsExtents = boundsExtentsOverride != Vector3.zero ? boundsExtentsOverride : meshExtents;
                 BoundsRadius = boundsRadiusOverride > 0f ? boundsRadiusOverride : BoundsExtents.magnitude;
             }
@@ -83,22 +85,50 @@ namespace PG.Rendering
         // источником GC Alloc каждый кадр (см. обсуждение производительности/Profiler).
         public Level[] Levels => _levels;
 
+        // Вид камеры для отсечения
+        private struct View
+        {
+            public Vector3 Position;
+            public Matrix4x4 ViewProj;
+            public Vector4[] Planes;
+            public Vector3 ShadowSweep;
+        }
+
+        // Направление солнца для теневого прохода: RenderSettings.sun, иначе первый направленный свет
+        private static Light s_sun;
+
+        private static Vector3 SunDirection()
+        {
+            if (s_sun == null || !s_sun.isActiveAndEnabled) s_sun = RenderSettings.sun;
+            if (s_sun == null || !s_sun.isActiveAndEnabled)
+                foreach (Light light in Object.FindObjectsByType<Light>(FindObjectsInactive.Exclude))
+                    if (light.type == LightType.Directional) { s_sun = light; break; }
+            return s_sun != null ? s_sun.transform.forward : Vector3.down;
+        }
+
+        private static readonly Plane[] s_planes = new Plane[6];
+
+        private static View CaptureView(Camera camera)
+        {
+            GeometryUtility.CalculateFrustumPlanes(camera, s_planes);
+            var planes = new Vector4[6];
+            for (int i = 0; i < 6; i++) planes[i] = new Vector4(s_planes[i].normal.x, s_planes[i].normal.y, s_planes[i].normal.z, s_planes[i].distance);
+            return new View { Position = camera.transform.position, ViewProj = GpuIndirectCullerHelpers.BuildViewProjMatrix(camera), Planes = planes };
+        }
+
         private readonly ComputeShader _shader;
         private readonly int _kernel;
         private readonly GraphicsBuffer _instanceBuffer;
         private readonly int _instanceCount;
         private readonly Level[] _levels;
 
-        private readonly GraphicsBuffer _debugClipPos;
-        private readonly GraphicsBuffer _debugOcclusion;
-        private readonly GraphicsBuffer _debugOccludedMask;
-        private readonly Vector4[] _debugClipPosReadback = new Vector4[1];
-        private readonly Vector4[] _debugOcclusionReadback = new Vector4[1];
-        private readonly uint[] _debugOccludedMaskReadback = new uint[1];
-        private float _debugLogTimer;
+        // Отдельные буферы теневого прохода, создаются при первом DispatchShadows
+        private GraphicsBuffer[] _shadowVisibleBuffers;
+        private GraphicsBuffer[] _shadowCommandBuffers;
 
-        private Matrix4x4 _prevViewProj;
-        private bool _hasPrevViewProj;
+        private readonly GraphicsBuffer _debugClipPos;
+        private readonly Vector4[] _debugClipPosReadback = new Vector4[1];
+        private float _debugLogTimer;
 
         // boundsRadiusOverride/boundsExtentsOverride - ручная поправка ПОВЕРХ автоопределения по
         // mesh.bounds каждого уровня (см. Level.BoundsRadius/BoundsExtents), на случай если у
@@ -138,24 +168,48 @@ namespace PG.Rendering
             }
 
             _debugClipPos = new GraphicsBuffer(GraphicsBuffer.Target.Structured, 1, sizeof(float) * 4);
-            _debugOcclusion = new GraphicsBuffer(GraphicsBuffer.Target.Structured, 1, sizeof(float) * 4);
-            _debugOccludedMask = new GraphicsBuffer(GraphicsBuffer.Target.Structured, 1, sizeof(uint));
         }
 
         public void Dispatch(Camera camera, CullingSettings settings)
         {
-            if (!_hasPrevViewProj)
-            {
-                _prevViewProj = GpuIndirectCullerHelpers.BuildViewProjMatrix(camera);
-                _hasPrevViewProj = true;
-            }
-
-            Matrix4x4 viewProjection = GpuIndirectCullerHelpers.BuildViewProjMatrix(camera);
+            View view = CaptureView(camera);
             foreach (Level level in _levels)
-                DispatchLevel(level, camera, settings, viewProjection);
+                DispatchInto(level, level.VisibleBuffer, level.CommandBuffer, level.MaxDistance, camera, settings, view);
 
             LogDebugInstanceIfDue(settings.DebugInstanceIndex);
-            _prevViewProj = GpuIndirectCullerHelpers.BuildViewProjMatrix(camera);
+        }
+
+        public GraphicsBuffer ShadowVisibleBuffer(int levelIndex) => _shadowVisibleBuffers?[levelIndex];
+        public GraphicsBuffer ShadowCommandBuffer(int levelIndex) => _shadowCommandBuffers?[levelIndex];
+
+        // Отбор для теневого прохода: только ближе shadowDistance (дальше URP тени не рисует), без occlusion
+        public void DispatchShadows(Camera camera, CullingSettings settings, float shadowDistance)
+        {
+            if (_shadowVisibleBuffers == null) CreateShadowBuffers();
+
+            settings.EnableOcclusion = false;
+            View view = CaptureView(camera);
+            // Дерево за кадром отбрасывает тень в кадр - отбор по кадру, протянутому против света на дальность теней
+            view.ShadowSweep = SunDirection() * shadowDistance;
+            for (int i = 0; i < _levels.Length; i++)
+            {
+                Level level = _levels[i];
+                if (level.DisableShadows || level.MinDistance >= shadowDistance) continue;
+                DispatchInto(level, _shadowVisibleBuffers[i], _shadowCommandBuffers[i],
+                    Mathf.Min(level.MaxDistance, shadowDistance), camera, settings, view);
+            }
+        }
+
+        private void CreateShadowBuffers()
+        {
+            _shadowVisibleBuffers = new GraphicsBuffer[_levels.Length];
+            _shadowCommandBuffers = new GraphicsBuffer[_levels.Length];
+            for (int i = 0; i < _levels.Length; i++)
+            {
+                if (_levels[i].DisableShadows) continue;
+                _shadowVisibleBuffers[i] = new GraphicsBuffer(GraphicsBuffer.Target.Append, _instanceCount, InstanceData.Stride);
+                _shadowCommandBuffers[i] = GpuIndirectCullerHelpers.BuildCommandBuffer(_levels[i].Mesh, _instanceCount, _levels[i].ForceMeshLod);
+            }
         }
 
         public void Dispose()
@@ -165,39 +219,41 @@ namespace PG.Rendering
                 level.VisibleBuffer?.Dispose();
                 level.CommandBuffer?.Dispose();
             }
+            if (_shadowVisibleBuffers != null)
+            {
+                for (int i = 0; i < _levels.Length; i++)
+                {
+                    _shadowVisibleBuffers[i]?.Dispose();
+                    _shadowCommandBuffers[i]?.Dispose();
+                }
+            }
             _debugClipPos?.Dispose();
-            _debugOcclusion?.Dispose();
-            _debugOccludedMask?.Dispose();
         }
 
-        private void DispatchLevel(Level level, Camera camera, CullingSettings settings, Matrix4x4 viewProjection)
+        private void DispatchInto(Level level, GraphicsBuffer visibleBuffer, GraphicsBuffer commandBuffer, float maxDistance,
+            Camera camera, CullingSettings settings, View view)
         {
-            level.VisibleBuffer.SetCounterValue(0);
+            visibleBuffer.SetCounterValue(0);
 
             _shader.SetBuffer(_kernel, "_AllInstances", _instanceBuffer);
-            _shader.SetBuffer(_kernel, "_VisibleInstances", level.VisibleBuffer);
-            _shader.SetTextureFromGlobal(_kernel, "_CameraDepthTexture", "_CameraDepthTexture");
+            _shader.SetBuffer(_kernel, "_VisibleInstances", visibleBuffer);
             _shader.SetInt("_InstanceCount", _instanceCount);
-            _shader.SetVector("_CullOrigin", camera.transform.position);
-            _shader.SetFloat("_CullRadius", level.MaxDistance);
+            _shader.SetVector("_CullOrigin", view.Position);
+            _shader.SetFloat("_CullRadius", maxDistance);
             _shader.SetFloat("_LodMinDistance", level.MinDistance);
             _shader.SetFloat("_MeshBoundsRadius", level.BoundsRadius);
             _shader.SetVector("_MeshBoundsExtents", level.BoundsExtents);
-            _shader.SetMatrix("_ViewProjection", viewProjection);
-            _shader.SetMatrix("_PrevViewProj", _prevViewProj);
-            _shader.SetVector("_ScreenSize", new Vector2(camera.pixelWidth, camera.pixelHeight));
-            _shader.SetInt("_UsesReversedZ", SystemInfo.usesReversedZBuffer ? 1 : 0);
+            _shader.SetVector("_MeshBoundsCenter", level.BoundsCenter);
+            _shader.SetMatrix("_ViewProjection", view.ViewProj);
+            _shader.SetVectorArray("_FrustumPlanes", view.Planes);
+            _shader.SetVector("_ShadowSweep", view.ShadowSweep);
             _shader.SetInt("_EnableDistance", settings.EnableDistance ? 1 : 0);
             _shader.SetInt("_EnableFrustum", settings.EnableFrustum ? 1 : 0);
-            _shader.SetInt("_EnableOcclusion", settings.EnableOcclusion ? 1 : 0);
-            _shader.SetInt("_InvertOcclusion", settings.InvertOcclusion ? 1 : 0);
             _shader.SetBuffer(_kernel, "_DebugClipPos", _debugClipPos);
-            _shader.SetBuffer(_kernel, "_DebugOcclusion", _debugOcclusion);
-            _shader.SetBuffer(_kernel, "_DebugOccludedMask", _debugOccludedMask);
             _shader.SetInt("_DebugInstanceIndex", Mathf.Max(settings.DebugInstanceIndex, 0));
 
             _shader.Dispatch(_kernel, Mathf.CeilToInt(_instanceCount / 64f), 1, 1);
-            GraphicsBuffer.CopyCount(level.VisibleBuffer, level.CommandBuffer, sizeof(uint));
+            GraphicsBuffer.CopyCount(visibleBuffer, commandBuffer, sizeof(uint));
         }
 
         private void LogDebugInstanceIfDue(int debugInstanceIndex)
@@ -211,23 +267,6 @@ namespace PG.Rendering
             Vector4 c = _debugClipPosReadback[0];
             Debug.Log($"GpuIndirectCuller instance[{debugInstanceIndex}]: clipPos.xyz=({c.x:F2}, {c.y:F2}, {c.z:F2}), " +
                       $"w(+radius)={c.w:F2} - внутри frustum'а если |x|<=w и |y|<=w и z<=w и w>0");
-
-            _debugOcclusion.GetData(_debugOcclusionReadback);
-            Vector4 o = _debugOcclusionReadback[0];
-            bool withinPrevFrame = o.x >= 0f && o.x <= 1f && o.y >= 0f && o.y <= 1f;
-            bool occludedByDepth = SystemInfo.usesReversedZBuffer ? o.w < o.z : o.w > o.z;
-            Debug.Log($"GpuIndirectCuller instance[{debugInstanceIndex}] occlusion: uv=({o.x:F3}, {o.y:F3}), " +
-                      $"sceneDepth={o.z:F5}, instanceDepth={o.w:F5}, withinPrevFrame={withinPrevFrame}, " +
-                      $"occludedByDepth={occludedByDepth}");
-
-            _debugOccludedMask.GetData(_debugOccludedMaskReadback);
-            uint mask = _debugOccludedMaskReadback[0];
-            int occludedCount = 0;
-            for (int bit = 0; bit < 7; bit++)
-                if ((mask & (1u << bit)) != 0) occludedCount++;
-            Debug.Log($"GpuIndirectCuller instance[{debugInstanceIndex}] occlusion 7 точек: " +
-                      $"occludedCount={occludedCount}/7 (mask={System.Convert.ToString((int)mask, 2).PadLeft(7, '0')}, " +
-                      $"биты 0..6 = центр, +Y, -Y, +X, -X, +Z, -Z)");
         }
     }
 }

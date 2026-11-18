@@ -10,40 +10,38 @@ struct InstanceData
 
 StructuredBuffer<InstanceData> _AllInstances;
 AppendStructuredBuffer<InstanceData> _VisibleInstances;
-Texture2D<float> _CameraDepthTexture; // depth прошлого кадра, читается через Load(), без сэмплера
 
 uint _InstanceCount;
 float3 _CullOrigin;
 float _CullRadius;
 float _LodMinDistance; // 0, если LOD не используется - см. Docs/06-lod.html
 float _MeshBoundsRadius;
+float3 _MeshBoundsCenter; // центр bounds меша относительно корня (у дерева - середина кроны, не земля)
 float3 _MeshBoundsExtents;
 float4x4 _ViewProjection; // GL.GetGPUProjectionMatrix(camera.projectionMatrix) * camera.worldToCameraMatrix
-float4x4 _PrevViewProj;
-float2 _ScreenSize;
-int _UsesReversedZ;
+float4 _FrustumPlanes[6]; // GeometryUtility.CalculateFrustumPlanes: xyz - нормаль внутрь, w - distance
+float3 _ShadowSweep;      // теневой проход: направление света * дальность теней (тень дерева вне кадра может упасть в кадр), иначе 0
 int _EnableDistance;
 int _EnableFrustum;
-int _EnableOcclusion;
-int _InvertOcclusion;
 
-// Диагностические выходы для _DebugInstanceIndex - см. Docs/04-diagnostics.html.
+// Диагностический выход для _DebugInstanceIndex - см. Docs/04-diagnostics.html.
 RWStructuredBuffer<float4> _DebugClipPos;
-RWStructuredBuffer<float4> _DebugOcclusion;
-RWStructuredBuffer<uint> _DebugOccludedMask;
 uint _DebugInstanceIndex;
 
-// Clip-space frustum-тест (без построения 6 плоскостей). Docs/03-culling.html.
+// Сфера против 6 плоскостей камеры. Clip-space вариант (|x| <= w + r) занижал радиус в ~1/tan(fov/2) раз
+// и отрезал большие деревья, частично попадающие в кадр у края
 bool IsInsideFrustum(float3 worldPos, float radius)
 {
-    float4 clipPos = mul(_ViewProjection, float4(worldPos, 1.0));
-    float w = clipPos.w + radius;
-
-    bool inFront = w > 0.0;
-    bool withinDepth = clipPos.z <= w;
-    bool withinX = clipPos.x >= -w && clipPos.x <= w;
-    bool withinY = clipPos.y >= -w && clipPos.y <= w;
-    return inFront && withinDepth && withinX && withinY;
+    bool inside = true;
+    [unroll]
+    for (int i = 0; i < 6; i++)
+    {
+        // Сфера, протянутая вдоль света (капсула): внутри плоскости, если внутри хотя бы один её конец
+        float d0 = dot(_FrustumPlanes[i].xyz, worldPos) + _FrustumPlanes[i].w;
+        float d1 = dot(_FrustumPlanes[i].xyz, worldPos + _ShadowSweep) + _FrustumPlanes[i].w;
+        inside = inside && max(d0, d1) >= -radius;
+    }
+    return inside;
 }
 
 float3 RotateByQuaternion(float3 v, float4 q)
@@ -51,70 +49,9 @@ float3 RotateByQuaternion(float3 v, float4 q)
     return v + 2.0 * cross(q.xyz, cross(q.xyz, v) + q.w * v);
 }
 
-// Fail-open: точка за кадром/за камерой в прошлом кадре считается видимой.
-bool IsPointOccluded(float3 worldPos)
+float3 BoundsCenterWS(InstanceData inst)
 {
-    float4 clipPos = mul(_PrevViewProj, float4(worldPos, 1.0));
-    float3 ndc = clipPos.xyz / clipPos.w;
-    float2 uv = ndc.xy * 0.5 + 0.5;
-    int2 pixelCoord = int2(uv * _ScreenSize);
-    float sceneDepth = _CameraDepthTexture.Load(int3(pixelCoord, 0)).r;
-    float instanceDepth = ndc.z;
-
-    bool inFrontOfCamera = clipPos.w > 0.0;
-    bool withinPrevFrame = uv.x >= 0.0 && uv.x <= 1.0 && uv.y >= 0.0 && uv.y <= 1.0;
-    bool occludedByDepth = _UsesReversedZ != 0 ? (instanceDepth < sceneDepth) : (instanceDepth > sceneDepth);
-    return inFrontOfCamera && withinPrevFrame && occludedByDepth;
-}
-
-// Центр + 6 точек на гранях bounding box. Скрыт, только если скрыты ВСЕ 7. Docs/03-culling.html.
-bool IsOccluded(float3 center, float scale, float4 rotation)
-{
-    float3 extents = _MeshBoundsExtents * scale;
-    float3 localOffsets[7] = {
-        float3(0, 0, 0),
-        float3(0, extents.y, 0), float3(0, -extents.y, 0),
-        float3(extents.x, 0, 0), float3(-extents.x, 0, 0),
-        float3(0, 0, extents.z), float3(0, 0, -extents.z)
-    };
-
-    [unroll]
-    for (int i = 0; i < 7; i++)
-    {
-        float3 samplePos = center + RotateByQuaternion(localOffsets[i], rotation);
-        if (!IsPointOccluded(samplePos)) return false;
-    }
-    return true;
-}
-
-void WriteDebugOutputs(InstanceData inst)
-{
-    float radiusDbg = _MeshBoundsRadius * inst.scale;
-    float4 clipPosDbg = mul(_ViewProjection, float4(inst.position, 1.0));
-    _DebugClipPos[0] = float4(clipPosDbg.xyz, clipPosDbg.w + radiusDbg);
-
-    float4 prevClipDbg = mul(_PrevViewProj, float4(inst.position, 1.0));
-    float3 prevNdcDbg = prevClipDbg.xyz / prevClipDbg.w;
-    float2 prevUvDbg = prevNdcDbg.xy * 0.5 + 0.5;
-    int2 prevPixelDbg = int2(prevUvDbg * _ScreenSize);
-    float sceneDepthDbg = _CameraDepthTexture.Load(int3(prevPixelDbg, 0)).r;
-    _DebugOcclusion[0] = float4(prevUvDbg.x, prevUvDbg.y, sceneDepthDbg, prevNdcDbg.z);
-
-    float3 extentsDbg = _MeshBoundsExtents * inst.scale;
-    float3 offsetsDbg[7] = {
-        float3(0, 0, 0),
-        float3(0, extentsDbg.y, 0), float3(0, -extentsDbg.y, 0),
-        float3(extentsDbg.x, 0, 0), float3(-extentsDbg.x, 0, 0),
-        float3(0, 0, extentsDbg.z), float3(0, 0, -extentsDbg.z)
-    };
-    uint occludedMaskDbg = 0;
-    [unroll]
-    for (int j = 0; j < 7; j++)
-    {
-        float3 samplePosDbg = inst.position + RotateByQuaternion(offsetsDbg[j], inst.rotation);
-        if (IsPointOccluded(samplePosDbg)) occludedMaskDbg |= (1u << j);
-    }
-    _DebugOccludedMask[0] = occludedMaskDbg;
+    return inst.position + RotateByQuaternion(_MeshBoundsCenter * inst.scale, inst.rotation);
 }
 
 [numthreads(64, 1, 1)]
@@ -126,7 +63,10 @@ void CSMain(uint3 id : SV_DispatchThreadID)
     InstanceData inst = _AllInstances[index];
 
     if (index == _DebugInstanceIndex)
-        WriteDebugOutputs(inst);
+    {
+        float4 clipPosDbg = mul(_ViewProjection, float4(BoundsCenterWS(inst), 1.0));
+        _DebugClipPos[0] = float4(clipPosDbg.xyz, clipPosDbg.w + _MeshBoundsRadius * inst.scale);
+    }
 
     if (_EnableDistance != 0)
     {
@@ -137,14 +77,7 @@ void CSMain(uint3 id : SV_DispatchThreadID)
     if (_EnableFrustum != 0)
     {
         float radius = _MeshBoundsRadius * inst.scale;
-        if (!IsInsideFrustum(inst.position, radius)) return;
-    }
-
-    if (_EnableOcclusion != 0)
-    {
-        bool occluded = IsOccluded(inst.position, inst.scale, inst.rotation);
-        if (_InvertOcclusion != 0) occluded = !occluded;
-        if (occluded) return;
+        if (!IsInsideFrustum(BoundsCenterWS(inst), radius)) return;
     }
 
     _VisibleInstances.Append(inst);

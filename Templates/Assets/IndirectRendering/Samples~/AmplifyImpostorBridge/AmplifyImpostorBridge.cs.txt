@@ -1,0 +1,39 @@
+using UnityEditor;
+using UnityEngine;
+
+namespace PG.Rendering
+{
+    // Мост к AmplifyImpostors для пакета com.pg.indirect-rendering: автопоиск готового импостора по имени префаба.
+    // Соглашение об именах: Assets/ScriptableData/World/Imposters/.../{BaseName}_Impostor/ и рядом {BaseName}_Impostor_Indirect.mat.
+    internal static class AmplifyImpostorBridge
+    {
+        [InitializeOnLoadMethod]
+        private static void Register() => TreePrototypeOverrideLibrary.impostorFinder = TryFind;
+
+        private static bool TryFind(string baseName, out Mesh mesh, out Material material)
+        {
+            mesh = null;
+            material = null;
+            string folderName = baseName + "_Impostor";
+
+            foreach (string guid in AssetDatabase.FindAssets($"{folderName} t:AmplifyImpostorAsset"))
+            {
+                string path = AssetDatabase.GUIDToAssetPath(guid);
+                if (System.IO.Path.GetFileNameWithoutExtension(path) != folderName) continue; // точное имя, не "содержит"
+
+                var impostorAsset = AssetDatabase.LoadAssetAtPath<AmplifyImpostors.AmplifyImpostorAsset>(path);
+                if (impostorAsset == null || impostorAsset.Mesh == null) continue;
+
+                string indirectMatPath = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(path) ?? "", folderName + "_Indirect.mat");
+                Material indirectMat = AssetDatabase.LoadAssetAtPath<Material>(indirectMatPath);
+                if (indirectMat == null) continue;
+
+                mesh = impostorAsset.Mesh;
+                material = indirectMat;
+                return true;
+            }
+            return false;
+        }
+    }
+}

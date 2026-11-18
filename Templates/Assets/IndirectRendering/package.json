@@ -1,6 +1,6 @@
 {
   "name": "com.pg.indirect-rendering",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "displayName": "Indirect Rendering",
   "description": "GPU-driven indirect rendering of terrain trees, grass and world objects with compute culling, LODs and impostors (URP). Docs in Docs/.",
   "unity": "6000.6",
@@ -10,6 +10,14 @@
     "com.unity.burst": "2.0.0",
     "com.unity.collections": "6.6.0",
     "com.unity.mathematics": "1.4.0",
-    "com.unity.render-pipelines.core": "17.6.0"
-  }
+    "com.unity.render-pipelines.core": "17.6.0",
+    "com.unity.render-pipelines.universal": "17.6.0"
+  },
+  "samples": [
+    {
+      "displayName": "Amplify Impostor bridge",
+      "description": "Connects Amplify Impostors to tree prototypes. Needs the Amplify Impostors asset. After import remove the .txt from the file name.",
+      "path": "Samples~/AmplifyImpostorBridge"
+    }
+  ]
 }

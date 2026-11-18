@@ -22,22 +22,38 @@ namespace PG.Rendering
 
         private float _originalTreeDistance;
 
-        // Ключ слияния - "совпадают по материалам и мешам" из задачи: одинаковый (mesh, material)
-        // с разных тайлов сливается в один батч, даже если это разные TreePrototype/префабы.
+        // Ключ слияния: базовый (mesh, material) + меши/материалы всей LOD-цепочки. Батч рисует levels первого
+        // вклада, поэтому прототипы с одинаковым стволом, но разной листвой/LOD сливаться не должны.
+        // Дистанции не сравниваются - они зависят от среднего масштаба деревьев тайла, а тайлы должны сливаться.
         private readonly struct BatchKey : System.IEquatable<BatchKey>
         {
             public readonly Mesh Mesh;
             public readonly Material Material;
+            private readonly MeshLevel[] _levels;
+            private readonly int _levelsHash;
 
-            public BatchKey(Mesh mesh, Material material)
+            public BatchKey(Mesh mesh, Material material, MeshLevel[] levels)
             {
                 Mesh = mesh;
                 Material = material;
+                _levels = levels ?? System.Array.Empty<MeshLevel>();
+                var hash = new System.HashCode();
+                foreach (MeshLevel l in _levels) hash.Add(System.HashCode.Combine(l.Mesh, l.Material, l.ForceMeshLod, l.DisableShadows));
+                _levelsHash = hash.ToHashCode();
             }
 
-            public bool Equals(BatchKey other) => Mesh == other.Mesh && Material == other.Material;
+            public bool Equals(BatchKey other)
+            {
+                if (Mesh != other.Mesh || Material != other.Material || _levelsHash != other._levelsHash || _levels.Length != other._levels.Length) return false;
+                for (int i = 0; i < _levels.Length; i++)
+                {
+                    MeshLevel a = _levels[i], b = other._levels[i];
+                    if (a.Mesh != b.Mesh || a.Material != b.Material || a.ForceMeshLod != b.ForceMeshLod || a.DisableShadows != b.DisableShadows) return false;
+                }
+                return true;
+            }
             public override bool Equals(object obj) => obj is BatchKey other && Equals(other);
-            public override int GetHashCode() => System.HashCode.Combine(Mesh, Material);
+            public override int GetHashCode() => System.HashCode.Combine(Mesh, Material, _levelsHash);
         }
 
         // Вклад одного тайла в общий батч по BatchKey. Levels (LOD-цепочка) у всех вкладов одного
@@ -196,7 +212,7 @@ namespace PG.Rendering
                 Debug.Log($"TerrainTreeIndirectRenderer[{p}] {prefab?.name}: AutoScale(root*child)={rendererScale:0.###} (ScaleMultiplier отключён), " +
                           string.Join(" | ", System.Array.ConvertAll(levels, l => $"{l.Mesh?.name}[{l.MinDistance:0.#}-{l.MaxDistance:0.#}]")), this);
 
-                RegisterContribution(new BatchKey(mesh, material), data, levels, bounds);
+                RegisterContribution(new BatchKey(mesh, material, levels), data, levels, bounds);
             }
         }
 
@@ -207,9 +223,27 @@ namespace PG.Rendering
         // надёжнее просто перемножить localScale каждого звена, как сделала бы ручная подстановка.
         // Если в префабе несколько Renderer'ов (несколько частей LOD) - усредняем их цепочки между
         // собой тоже, на случай если масштаб применён не ко всем одинаково.
+        // Все дети с непустым локальным трансформом запекаются (меш читаемый) - см. BakeIntoRootSpace
+        private static bool ChildTransformsBaked(GameObject prefab)
+        {
+            Transform root = prefab.transform;
+            foreach (Renderer renderer in prefab.GetComponentsInChildren<Renderer>(true))
+            {
+                MeshFilter filter = renderer.GetComponent<MeshFilter>();
+                if (filter == null || filter.sharedMesh == null) continue;
+                Matrix4x4 toRoot = root.worldToLocalMatrix * renderer.transform.localToWorldMatrix;
+                if (!IsNearlyIdentity(toRoot) && !filter.sharedMesh.isReadable) return false;
+            }
+            return true;
+        }
+
         private static float ResolveRendererScale(GameObject prefab)
         {
             if (prefab == null) return 1f;
+
+            // Трансформы детей (поворот -90/90 из Blender, масштаб) запечены в меши - масштаб только корня,
+            // иначе масштаб ребёнка умножится второй раз (кедр синего леса был вдвое больше)
+            if (ChildTransformsBaked(prefab)) return prefab.transform.localScale.y;
 
             Renderer firstRenderer = prefab.GetComponentInChildren<Renderer>();
             return firstRenderer.transformHandle.lossyScale.y;

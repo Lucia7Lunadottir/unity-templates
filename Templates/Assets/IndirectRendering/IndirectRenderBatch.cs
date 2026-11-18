@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
 
 namespace PG.Rendering
 {
@@ -60,8 +61,16 @@ namespace PG.Rendering
             }
 
             Culler.Dispatch(targetCamera, settings);
-            foreach (GpuIndirectCuller.Level level in Culler.Levels)
+
+            // Тени отдельным проходом с отбором по shadowDistance - иначе каждый видимый инстанс до cullRadius рисуется во все каскады
+            bool splitShadows = lighting.ShadowCastingMode == ShadowCastingMode.On;
+            float shadowDistance = splitShadows ? CurrentShadowDistance() : 0f;
+            if (splitShadows) Culler.DispatchShadows(targetCamera, settings, shadowDistance);
+
+            GpuIndirectCuller.Level[] levels = Culler.Levels;
+            for (int i = 0; i < levels.Length; i++)
             {
+                GpuIndirectCuller.Level level = levels[i];
                 _propertyBlock.SetBuffer(InstanceBufferId, level.VisibleBuffer);
                 rparams.matProps = _propertyBlock;
                 rparams.material = level.Material != null ? level.Material : Material;
@@ -70,10 +79,19 @@ namespace PG.Rendering
                 // lighting.ShadowCastingMode ТОЛЬКО для этого уровня - rparams переиспользуется
                 // между итерациями, поэтому ветка else обязательна, иначе следующий уровень
                 // унаследовал бы Off от предыдущего импостора.
-                rparams.shadowCastingMode = level.DisableShadows ? ShadowCastingMode.Off : lighting.ShadowCastingMode;
+                rparams.shadowCastingMode = level.DisableShadows || splitShadows ? ShadowCastingMode.Off : lighting.ShadowCastingMode;
                 Graphics.RenderMeshIndirect(rparams, level.Mesh, level.CommandBuffer);
+
+                if (!splitShadows || level.DisableShadows || level.MinDistance >= shadowDistance) continue;
+                _propertyBlock.SetBuffer(InstanceBufferId, Culler.ShadowVisibleBuffer(i));
+                rparams.matProps = _propertyBlock;
+                rparams.shadowCastingMode = ShadowCastingMode.ShadowsOnly;
+                Graphics.RenderMeshIndirect(rparams, level.Mesh, Culler.ShadowCommandBuffer(i));
             }
         }
+
+        private static float CurrentShadowDistance() =>
+            GraphicsSettings.currentRenderPipeline is UniversalRenderPipelineAsset urp ? urp.shadowDistance : QualitySettings.shadowDistance;
 
         public void Dispose()
         {
