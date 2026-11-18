@@ -1,260 +1,395 @@
+using PG.Localization;
+using PG.NotificationManagement;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using PG.MenuManagement;
 using TMPro;
-using UnityEditor.Overlays;
 using UnityEngine;
-using UnityEngine.AddressableAssets;
-using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.UI;
 
-namespace PG.InventorySystem
+namespace PG.InventoryManagement
 {
-    public class Inventory : MonoBehaviour
+    public class Inventory : MonoBehaviour, ISaveable
     {
-        [Header("Config")]
-        public InventoryViewMode viewMode = InventoryViewMode.Grid;
-        public int columns = 4;
+        [field: SerializeField] public Transform bagPoint { get; private set; }
+        [field: SerializeField] public ItemContainer itemContainer { get; private set; }
+        public List<RuntimeItem> items = new List<RuntimeItem>();
+        [Min(0)] public float maxWeight = 100;
+        public float weight 
+        { 
+            get => _weight; 
+            private set { 
+                _weight = value;
+                if (_weightCountText != null) _weightCountText.text = $"{_weight}/{maxWeight}";
+            } 
+        }
+        [SerializeField, Min(0)] private float _weight = 100;
+        [SerializeField] private TMP_Text _weightCountText;
 
-        [Header("DB")]
-        public ItemContainer itemContainer; // ���� ���� ������!
+        [SerializeField] private Transform _cellContainer;
+        [SerializeField] private InventoryCell _cellPrefab;
+        [SerializeField] private Selectable _itemsSelectable;
 
-        [Header("UI")]
-        public Transform cellContainer;
-        public AssetReferenceGameObject addressableCell; // label/key �������!
-        public Image largeIconPanel;
-        public TMP_Text descriptionPanel;
+        public Transform cellContainer => _cellContainer;
 
-        private IInventoryView _lineView = new InventoryLineView();
-        private IInventoryView _gridView = new InventoryGridView();
-        private IInventoryView _currentView;
+        [SerializeField] private UIShowHide _cantAddItemsText;
+        
+        public event System.Action<RuntimeItem> itemAdded;
+        public event System.Action<RuntimeItem> itemRemoved;
 
-        private InventoryItem[] _items;
-        private ItemCell[] _cells;
-        private int? dragSourceID = null;
-        public int selectedID { get; private set; }
-        public int Count => _items.Length;
+        public event System.Action<Item> itemUsed;
+        public event System.Action<Item> itemDropped;
 
-        public InventoryItem GetSelected() => _items[selectedID];
+        [SerializeField] private bool _autoSave = true;
+        [SerializeField] private string _filename = "Inventory.json";
+        private string _filePath => Path.Combine(SaveManager.GetCurrentSaveFolderPath(), _filename);
+        private SaveInventory _saveInventory = new SaveInventory();
 
-        [SerializeField] private string _fileName = "Inventory.json";
-        private string SavePath => Path.Combine(Application.persistentDataPath, _fileName);
-        private InventorySaveData _saveData = new InventorySaveData();
+        public static Inventory instance { get; private set; }
 
-        public System.Action OnReady; // ������� ����� ������ �������
+        [System.Serializable]
+        public class RuntimeItem
+        {
+            public Item item; // ������ ������ �������� � ��������
+            public int count;
 
+            public RuntimeItem(Item item, int count = 1)
+            {
+                this.item = item;
+                this.count = count;
+            }
+        }
+        private void OnEnable()
+        {
+            if (LocalizationSystem.instance != null)
+            {
+                LocalizationSystem.instance.localizationChanged += DisplayLocalizedItems;
+            }
+        }
+        private void OnDisable()
+        {
+            if (LocalizationSystem.instance != null)
+            {
+                LocalizationSystem.instance.localizationChanged -= DisplayLocalizedItems;
+            }
+        }
         private void Awake()
         {
-            CreateCellsAsync(); 
+            instance = this;
+            
             Load();
         }
 
-        public void Save()
+        // Start is called once before the first execution of Update after the MonoBehaviour is created
+        void Start()
         {
-            _saveData.items.Clear();
-            for (int i = 0; i < _items.Length; i++)
+            DisplayItems();
+        }
+
+        void DisplayLocalizedItems(string language)
+        {
+            DisplayItems();
+        }
+        public int GetItemID(Item item)
+        {
+            for (int i = 0; i < items.Count; i++)
             {
-                if (_items[i] != null && _items[i].item != null)
+                if (items[i].item == item)
                 {
-                    var slot = new InventorySaveData.ItemSlot();
-                    slot.itemId = itemContainer.Items.IndexOf(_items[i].item);
-                    slot.count = _items[i].count;
-                    _saveData.items.Add(slot);
+                    return i;
                 }
             }
-            string json = JsonUtility.ToJson(_saveData, true);
-            File.WriteAllText(SavePath, json);
+            return -1;
+        }
+
+        public int GetItemCount(int itemID)
+        {
+            return itemID < 0 || itemID >= items.Count ? 0 : items[itemID].count;
+        }
+
+        public int GetItemCount(Item item)
+        {
+            int total = 0;
+            for (int i = 0; i < items.Count; i++)
+            {
+                if (items[i].item == item)
+                    total += items[i].count;
+            }
+            return total;
+        }
+
+        public bool CheckItem(Item item)
+        {
+            for (int i = 0; i < items.Count; i++)
+            {
+                if (items[i].item == item)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public bool CheckItem(Item item, out int id)
+        {
+            id = 0;
+            for (int i = 0; i < items.Count; i++)
+            {
+                if (items[i].item == item)
+                {
+                    id = i;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public void AddItemForUnityEvent(Item item) => AddItem(item);
+        public bool AddItem(Item item) => AddItem(item, 1);
+
+        // Влезет ли по весу вместе с этим (раньше проверялся вес до добавления - при 99/100 проходил предмет любого веса)
+        public bool CanCarry(Item item, int count = 1) => item != null && weight + item.weight * count <= maxWeight;
+
+        // count штук разом: одна перерисовка, одно сохранение, одно уведомление; itemAdded - по разу на штуку, как раньше (CheckItemNode считает вызовы)
+        public bool AddItem(Item item, int count)
+        {
+            if (item == null || count <= 0) return false;
+            if (!CanCarry(item, count))
+            {
+                _cantAddItemsText.Show();
+                UIAudioManager.Instance.PlayClick();
+                return false;
+            }
+            for (int n = 0; n < count; n++)
+            {
+                if (item.isStackable && CheckItem(item, out int id))
+                {
+                    items[id].count++;
+                    itemAdded?.Invoke(items[id]);
+                }
+                else
+                {
+                    RuntimeItem runtimeItem = new RuntimeItem(item);
+                    items.Add(runtimeItem);
+                    itemAdded?.Invoke(runtimeItem);
+                }
+            }
+            weight += item.weight * count;
+            DisplayItems();
+            if (_autoSave)
+            {
+                Save();
+            }
+
+            NotificationSystem.instance.Add(count > 1 ? "×" + count : "", item.GetNameKey(), item.icon);
+            return true;
+        }
+
+        public void RemoveItem(Item item) => RemoveItem(item, 1);
+
+        // Убрать до count штук разом (из любых стопок); вернёт, сколько убрано. itemRemoved - по разу на штуку
+        public int RemoveItem(Item item, int count)
+        {
+            int removed = 0;
+            for (int i = items.Count - 1; i >= 0 && removed < count; i--)
+            {
+                if (items[i].item != item) continue;
+                while (items[i].count > 0 && removed < count)
+                {
+                    items[i].count--;
+                    removed++;
+                    itemRemoved?.Invoke(items[i]);
+                }
+                if (items[i].count <= 0) items.RemoveAt(i);
+            }
+
+            weight -= item != null ? item.weight * removed : 0f;
+            DisplayItems();
+            if (_autoSave)
+            {
+                Save();
+            }
+            return removed;
+        }
+
+        public void RemoveItem(int itemID)
+        {
+            if (itemID < 0 || itemID >= items.Count)
+            {
+                return;
+            }
+
+            items[itemID].count--;
+            itemRemoved?.Invoke(items[itemID]);
+            weight -= items[itemID].item.weight;
+
+            Item droppedItem = items[itemID].item;
+
+            if (items[itemID].count <= 0)
+            {
+                items.RemoveAt(itemID);
+            }
+
+            itemDropped?.Invoke(droppedItem);
+
+            DisplayItems();
+            if (_autoSave)
+            {
+                Save();
+            }
+        }
+
+        public void UseItem(int itemIndex)
+        {
+            if (itemIndex < 0 || itemIndex >= items.Count)
+            {
+                return;
+            }
+
+            items[itemIndex].item.Interact(this);
+            itemUsed?.Invoke(items[itemIndex].item);
+
+            RemoveItem(itemIndex);
+        }
+        // Новое меню вещей (ItemsMenuView) рисует ячейки в свою сетку своим шаблоном - номер ячейки по-прежнему = номер предмета
+        public void UseCellContainer(Transform container, InventoryCell cellTemplate)
+        {
+            if (container == null || cellTemplate == null || container == _cellContainer) return;
+            _cellContainer = container;
+            _cellPrefab = cellTemplate;
+            DisplayItems();
+        }
+
+        void DisplayItems()
+        {
+            // Сетку подключает ItemsMenuView при первом открытии «Вещей» - до этого рисовать некуда
+            if (_cellContainer == null || _cellPrefab == null) return;
+            if (items.Count > _cellContainer.childCount)
+            {
+                for (int i = _cellContainer.childCount; i < items.Count; i++)
+                {
+                    Instantiate(_cellPrefab, _cellContainer);
+                }
+            }
+            else if (items.Count < _cellContainer.childCount)
+            {
+                // Destroy срабатывает в конце кадра: без отсоединения удаление + добавление в одном кадре (крафт) рисовало предмет в уничтожаемую ячейку
+                for (int i = _cellContainer.childCount - 1; i >= items.Count; i--)
+                {
+                    var cell = _cellContainer.GetChild(i);
+                    cell.SetParent(null, false);
+                    Destroy(cell.gameObject);
+                }
+            }
+
+            if (items.Count == 0)
+            {
+                _itemsSelectable?.Select();
+            }
+
+
+            for (int i = 0; i < items.Count; i++)
+            {
+                if (_cellContainer.GetChild(i).TryGetComponent(out InventoryCell cell))
+                {
+                    cell.Render(items[i]);
+                }
+            }
+        }
+        
+
+        public void Save()
+        {
+            _saveInventory = new SaveInventory();
+            _saveInventory.items = new SaveInventory.SaveItem[items.Count];
+            for (int i = 0; i < _saveInventory.items.Length; i++)
+            {
+                _saveInventory.items[i] = new SaveInventory.SaveItem(itemContainer.GetItemID(items[i].item), items[i].count);
+            }
+            _saveInventory.weight = weight;
+            _saveInventory.maxWeight = maxWeight;
+
+            string json = JsonUtility.ToJson(_saveInventory);
+            File.WriteAllText(_filePath, json);
         }
 
         public void Load()
         {
-            if (!File.Exists(SavePath))
+            if (!File.Exists(_filePath))
             {
-                Display(); // ����� ������ ��������� ����� �����������
                 return;
             }
 
-            string json = File.ReadAllText(SavePath);
-            JsonUtility.FromJsonOverwrite(json, _saveData);
-
-            for (int i = 0; i < _items.Length; i++)
-                _items[i] = null;
-
-            for (int i = 0; i < _saveData.items.Count && i < _items.Length; i++)
+            try
             {
-                var slot = _saveData.items[i];
-                if (slot.itemId >= 0 && slot.itemId < itemContainer.Items.Count)
+                string json = File.ReadAllText(_filePath);
+                JsonUtility.FromJsonOverwrite(json, _saveInventory);
+
+                // Safety check: Ensure itemContainer is assigned
+                if (itemContainer == null || itemContainer.items == null)
                 {
-                    _items[i] = new InventoryItem(itemContainer.Items[slot.itemId], slot.count);
+                    Debug.LogError("Inventory: ItemContainer is missing or empty!");
+                    return;
                 }
-            }
-            Display();
-        }
-        // ���������� ������ ������ ����� Addressables!
-        private void CreateCellsAsync()
-        {
-            int cellCount = columns * columns;
-            _items = new InventoryItem[cellCount];
-            _cells = new ItemCell[cellCount];
 
-            int created = 0;
-            for (int i = 0; i < cellCount; i++)
-            {
-                Addressables.InstantiateAsync(addressableCell, cellContainer).Completed += (op) =>
+                items = new List<RuntimeItem>(_saveInventory.items.Length);
+
+                if (_saveInventory.items.Length > 0)
                 {
-                    var cell = op.Result.GetComponent<ItemCell>();
-                    int id = created;
-                    cell.Init(this, id);
-                    _cells[id] = cell;
-                    _items[id] = null;
-                    created++;
-                    if (created == cellCount)
+                    for (int i = 0; i < _saveInventory.items.Length; i++)
                     {
-                        SwitchView(viewMode);
-                        Display();
-                        OnReady?.Invoke();
+                        if (_saveInventory.items[i] != null)
+                        {
+                            int savedID = _saveInventory.items[i].id;
+
+                            // --- FIX STARTS HERE ---
+                            // Check if the saved ID is actually within the bounds of your current ItemContainer
+                            if (savedID >= 0 && savedID < itemContainer.items.Count()) // Or .Length if it's an array
+                            {
+                                items.Add(new RuntimeItem(itemContainer.items[savedID], _saveInventory.items[i].count));
+                            }
+                            else
+                            {
+                                Debug.LogWarning($"Inventory Load: Item ID {savedID} was found in save file but does not exist in ItemContainer. Item skipped.");
+                            }
+                            // --- FIX ENDS HERE ---
+                        }
                     }
-                };
+                }
+
+                // Вес по тому, что реально загрузилось: пропущенные предметы не должны оставлять «невидимый» вес
+                float loadedWeight = 0f;
+                foreach (var runtimeItem in items)
+                    if (runtimeItem.item != null) loadedWeight += runtimeItem.item.weight * runtimeItem.count;
+                weight = loadedWeight;
+                maxWeight = _saveInventory.maxWeight;
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"Failed to load inventory: {e.Message}");
+                // Optional: Create a fresh save if the file is corrupted
             }
         }
 
-        public void SwitchView(InventoryViewMode mode)
+        [System.Serializable]
+        public class SaveInventory
         {
-            viewMode = mode;
-            _currentView = (mode == InventoryViewMode.Grid) ? (IInventoryView)_gridView : _lineView;
-            Display();
-        }
-        public void Display()
-        {
-            _currentView?.DisplayItems(_items, selectedID, _cells);
-            var selected = _items[selectedID];
-            largeIconPanel.sprite = (selected != null && selected.item != null) ? selected.item.largeIconItem : null;
-            descriptionPanel.text = (selected != null && selected.item != null) ? selected.item.descriptionItem : "";
-        }
-        public void MoveSelection(InventoryNavigationDirection dir)
-        {
-            int next = _currentView.GetNextID(selectedID, dir, _items.Length, columns);
-            if (next != selectedID)
+            public float weight;
+            public float maxWeight;
+
+            public SaveItem[] items;
+            [System.Serializable]
+            public class SaveItem
             {
-                selectedID = next;
-                Display();
-            }
-        }
-        public void SelectCell(int id)
-        {
-            selectedID = id;
-            Display();
-        }
-        public void AddItem(Item item, int count = 1)
-        {
-            for (int i = 0; i < _items.Length; i++)
-            {
-                if (_items[i]?.item == item && item.isStackable)
+                public int id;
+                public int count;
+                public SaveItem(int targetID, int targetCount)
                 {
-                    _items[i].count += count;
-                    Display();
-                    return;
-                }
-            }
-            for (int i = 0; i < _items.Length; i++)
-            {
-                if (_items[i] == null || _items[i].item == itemContainer.emptyItem)
-                {
-                    _items[i] = new InventoryItem(item, count);
-                    Display();
-                    return;
+                    id = targetID;
+                    count = targetCount;
                 }
             }
         }
-        public void RemoveSelected()
-        {
-            if (_items[selectedID] != null)
-            {
-                _items[selectedID].count--;
-                if (_items[selectedID].count <= 0) _items[selectedID] = null;
-                Display();
-            }
-        }
-        // --- DRAG&DROP ---
-        public void StartDrag(int sourceID) { dragSourceID = sourceID; }
-        public void EndDrag() { dragSourceID = null; }
-        public void DropTo(int targetID)
-        {
-            if (dragSourceID.HasValue && dragSourceID.Value != targetID)
-            {
-                var tmp = _items[targetID];
-                _items[targetID] = _items[dragSourceID.Value];
-                _items[dragSourceID.Value] = tmp;
-                Display();
-            }
-            dragSourceID = null;
-        }
-        // Drag ����� ����� Inventory
-        public void DropToOtherInventory(Inventory other, int fromID, int toID)
-        {
-            var myItem = _items[fromID];
-            var otherItem = other._items[toID];
-
-            _items[fromID] = otherItem;
-            other._items[toID] = myItem;
-
-            Display();
-            other.Display();
-        }
-        // ��� ������� � ��������
-        public InventoryItem TakeItem(int index)
-        {
-            var item = _items[index];
-            _items[index] = null;
-            Display();
-            return item;
-        }
-        public void PlaceItem(int index, InventoryItem item)
-        {
-            _items[index] = item;
-            Display();
-        }
-        public void UseSelected()
-        {
-            var item = _items[selectedID];
-            if (item != null && item.item != null)
-            {
-                item.item.Use(this, selectedID);
-
-                // ���� ������� ����������� � ��������� ����������
-                if (item.item.isDropAfterInteract)
-                {
-                    RemoveSelected();
-                }
-                else
-                {
-                    Save();
-                    Display();
-                }
-            }
-        }
-        // --- ��� �������� ---
-        public void StartGamepadDrag() { dragSourceID = selectedID; }
-        public void DropGamepadDrag()
-        {
-            if (dragSourceID.HasValue && dragSourceID.Value != selectedID)
-                DropTo(selectedID);
-            dragSourceID = null;
-        }
-        // ���������� � �������� �������� ����� ������� itemContainer.Items!
-        // (������� ������ Save/Load �� ������� ��������, ������ ��������� itemContainer.Items)
-
-        public InventoryItem GetItem(int index)
-        {
-            if (index < 0 || index >= _items.Length) return null;
-            return _items[index];
-        }
-
-        public void RemoveItemAt(int index)
-        {
-            if (index < 0 || index >= _items.Length) return;
-            _items[index] = null;
-            Display();
-        }
-
     }
-}
+}

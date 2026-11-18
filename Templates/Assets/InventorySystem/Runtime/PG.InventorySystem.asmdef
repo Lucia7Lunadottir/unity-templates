@@ -1,0 +1,28 @@
+{
+    "name": "PG.InventorySystem",
+    "rootNamespace": "",
+    "references": [
+        "PG.MenuManagement",
+        "PG.Localization",
+        "PG.SaveSystem",
+        "PG.AudioManagement",
+        "PG.NotificationManagement",
+        "PG.InteractSystem",
+        "PGTween",
+        "Unity.TextMeshPro",
+        "UnityEngine.UI",
+        "Unity.InputSystem",
+        "Unity.Burst",
+        "Unity.Mathematics",
+        "Unity.Collections"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

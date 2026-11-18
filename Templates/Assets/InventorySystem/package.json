@@ -1,13 +1,9 @@
 {
   "name": "com.pg.inventory-system",
-  "version": "1.0.2",
+  "version": "2.0.0",
   "displayName": "Inventory System",
-  "description": "",
-  "unity": "2022.3",
+  "description": "Bag, items, crafting, dropped and placeable items with save, plus the items and craft menu views from World without Time. Requires com.pg.menu, com.pg.localization-system, com.pg.save-system, com.pg.audio-management, com.pg.notifications, com.pg.interact-system and com.pg.pgtween. Connects to the day cycle and to placing things in the world through InventoryBridge.",
+  "unity": "6000.6",
   "author": "Lucia Lunadottir",
-  "type": "assets",
-  "dependencies": {
-    "com.unity.addressables": "2.6.0",
-    "com.unity.inputsystem": "1.14.2"
-  }
+  "type": "assets"
 }

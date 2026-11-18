@@ -1,12 +1,39 @@
-using System.Collections.Generic;
 using UnityEngine;
+using System.Collections.Generic;
 
-namespace PG.InventorySystem
+namespace PG.InventoryManagement
 {
-    [CreateAssetMenu(menuName = "PG/Inventory/Item Container")]
+    [CreateAssetMenu(menuName = "PG/Inventory/ItemContainer")]
     public class ItemContainer : ScriptableObject
     {
-        [field:SerializeField] public List<Item> Items { get; private set; } = new List<Item>();
-        [field:SerializeField] public Item emptyItem { get; private set; }
+        [field: SerializeField] public Item[] items { get; private set; }
+
+
+        public bool CheckItem(Item targetItem)
+        {
+            foreach (Item item in items)
+            {
+                if (item == targetItem)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+        public int GetItemID(Item item)
+        {
+
+            if (item != null)
+            {
+                for (int i = 0; i < items.Length; i++)
+                {
+                    if (items[i] == item)
+                    {
+                        return i;
+                    }
+                }
+            }
+            return -1;
+        }
     }
 }
