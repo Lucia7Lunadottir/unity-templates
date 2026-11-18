@@ -1,0 +1,16 @@
+{
+  "name": "com.pg.telekinesis",
+  "version": "1.0.0",
+  "displayName": "Telekinesis",
+  "description": "Telekinesis: grab, hold, rotate, push away and throw physical objects with the camera aim. Needs com.pg.localization-system and com.pg.menu. Takes things to a bag, gives physics to loot and re-homes dropped things through TelekinesisBridge (hooks the game implements).",
+  "unity": "6000.6",
+  "author": "Lucia Lunadottir",
+  "type": "assets",
+  "samples": [
+    {
+      "displayName": "Inventory bridge",
+      "description": "Telekinesis takes items to the bag through TelekinesisBridge. Needs com.pg.inventory-system. After import remove the .txt from the file name.",
+      "path": "Samples~/InventoryBridge"
+    }
+  ]
+}

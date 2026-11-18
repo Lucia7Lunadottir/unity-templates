@@ -1,0 +1,50 @@
+using PG.InteractSystem;
+using PG.InventoryManagement;
+using UnityEngine;
+
+// Подключает телекинез из пакета com.pg.telekinesis к сумке, луту и сохранениям этой игры
+internal static class TelekinesisGameBridge
+{
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void Register()
+    {
+        TelekinesisBridge.takeHandler -= TryTake;
+        TelekinesisBridge.takeHandler += TryTake;
+        TelekinesisBridge.grabFallback -= CreateRigidbody;
+        TelekinesisBridge.grabFallback += CreateRigidbody;
+        TelekinesisBridge.objectDropped -= Rehome;
+        TelekinesisBridge.objectDropped += Rehome;
+    }
+
+    // Удержание E: предмет и размещаемый объект уходят в сумку игрока
+    private static bool TryTake(Collider collider)
+    {
+        bool taken = false;
+        if (collider.TryGetComponent(out LootItem lootItem) && Inventory.instance.AddItem(lootItem.item))
+        {
+            Object.Destroy(lootItem.gameObject);
+            taken = true;
+        }
+        if (collider.TryGetComponent(out PlaceableItemObject placeable) && Inventory.instance.AddItem(placeable.item))
+        {
+            Object.Destroy(placeable.gameObject);
+            taken = true;
+        }
+        return taken;
+    }
+
+    // У выпавшего предмета нет физики - берём её с префаба предмета
+    private static Rigidbody CreateRigidbody(Collider collider)
+    {
+        if (!collider.TryGetComponent(out LootItem lootItem)) return null;
+        lootItem.item.firstDropEntry.prefab.TryGetComponent(out Rigidbody source);
+        return ComponentExtensions.CopyRigidbodyTo(source, lootItem.gameObject);
+    }
+
+    // Предмет или проп унесли в другой чанк - перепривязываем его запись сохранения к новой сцене
+    private static void Rehome(GameObject go)
+    {
+        DroppedItemManager.RehomeIfNeeded(go);
+        if (go.TryGetComponent(out PhysicsPropSaveable prop)) prop.RehomeIfNeeded();
+    }
+}

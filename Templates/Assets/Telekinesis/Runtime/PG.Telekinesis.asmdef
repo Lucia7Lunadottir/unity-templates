@@ -1,0 +1,21 @@
+{
+    "name": "PG.Telekinesis",
+    "rootNamespace": "",
+    "references": [
+        "PG.Localization",
+        "PG.MenuManagement",
+        "Unity.InputSystem",
+        "Unity.VisualEffectGraph.Runtime",
+        "Unity.TextMeshPro",
+        "Unity.Cinemachine"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
