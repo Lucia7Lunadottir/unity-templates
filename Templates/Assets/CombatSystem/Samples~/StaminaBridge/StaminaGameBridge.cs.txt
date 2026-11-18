@@ -1,0 +1,27 @@
+using UnityEngine;
+
+// Выносливость для рывка и барьера из com.pg.combat: добавь IStaminaSource своему компоненту выносливости
+// и назначь этот компонент в поле Stamina Controller у PlayerDodge и PlayerBarrier
+public class MyStamina : MonoBehaviour, IStaminaSource
+{
+    [SerializeField] private float _max = 100f;
+    private float _value;
+    private bool _resting;
+
+    private void Awake() => _value = _max;
+
+    // Выносливость на нуле: тратить нельзя, пока не восстановится
+    public bool isResting => _resting;
+
+    public void Spend(float amount)
+    {
+        _value = Mathf.Max(0f, _value - amount);
+        if (_value <= 0f) _resting = true;
+    }
+
+    private void Update()
+    {
+        _value = Mathf.Min(_max, _value + 10f * Time.deltaTime);
+        if (_resting && _value >= _max * 0.5f) _resting = false;
+    }
+}

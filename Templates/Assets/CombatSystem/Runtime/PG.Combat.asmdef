@@ -1,0 +1,29 @@
+{
+    "name": "PG.Combat",
+    "rootNamespace": "",
+    "references": [
+        "PG.HealthSystem",
+        "PG.Buffs",
+        "Unity.TextMeshPro",
+        "UnityEngine.UI",
+        "Unity.InputSystem",
+        "Unity.Cinemachine",
+        "Unity.VisualEffectGraph.Runtime",
+        "Unity.Addressables",
+        "Unity.ResourceManager",
+        "Unity.Mathematics",
+        "Unity.Burst",
+        "PG.Core",
+        "PGTween",
+        "PG.SwarmNavigation"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -1,0 +1,17 @@
+{
+  "name": "com.pg.combat",
+  "version": "1.1.0",
+  "displayName": "Combat System",
+  "description": "Damage dealing and receiving for mobs and the player: damagers and hitboxes, knockback, charge attack, mob health and health bar, damage text, combat camera/screen feedback, enemy waves, training dummy. Health comes from com.pg.health-system. Requires com.pg.health-system, com.pg.core, com.pg.pgtween and com.pg.swarm-navigation (installed together by the Git Package Installer).",
+  "unity": "6000.6",
+  "author": "Lucia Lunadottir",
+  "type": "assets",
+  "dependencies": {},
+  "samples": [
+    {
+      "displayName": "Stamina bridge",
+      "description": "Dodge and barrier spend your stamina: implement IStaminaSource on your stamina component. After import remove the .txt from the file name.",
+      "path": "Samples~/StaminaBridge"
+    }
+  ]
+}
