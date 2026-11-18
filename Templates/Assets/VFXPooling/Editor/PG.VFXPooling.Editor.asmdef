@@ -14,7 +14,9 @@
     "overrideReferences": false,
     "precompiledReferences": [],
     "autoReferenced": true,
-    "defineConstraints": [],
+    "defineConstraints": [
+        "PG_STORY_GRAPH"
+    ],
     "versionDefines": [
         {
             "name": "com.pg.story-graph",

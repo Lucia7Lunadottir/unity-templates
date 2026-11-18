@@ -1,6 +1,6 @@
 {
   "name": "com.pg.vfx-pooling",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "displayName": "VFX Pooling",
   "description": "Pooled particle/VFX spawning (VFXPool, VFXPrefabsContainer, VFXPoolElementInvoker). Optional editor converter from com.pg.story-graph ParticlesInvoker.",
   "unity": "6000.6",
