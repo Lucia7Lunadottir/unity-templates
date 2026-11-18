@@ -1,6 +1,6 @@
 {
   "name": "com.pg.save-system",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "displayName": "Save System",
   "description": "Slot-based save system from World without Time: ISaveable auto-discovery, atomic writes, checkpoints, guid-keyed object saves, position saver and save slot UI. Requires com.pg.core and com.pg.menu (installed together by the Git Package Installer).",
   "unity": "6000.6",

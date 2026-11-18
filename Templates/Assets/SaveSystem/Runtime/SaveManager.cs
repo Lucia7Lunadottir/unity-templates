@@ -48,6 +48,7 @@ public partial class SaveManager : MonoBehaviour
         }
         return currentFolderSave;
     }
+    public static bool SlotExists(int index) => Storage.DirectoryExists(GetTargetSaveFolderPath(index, false));
     
     void Awake()
     {
