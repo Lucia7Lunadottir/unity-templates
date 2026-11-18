@@ -3,8 +3,8 @@ using UnityEditor.Timeline;
 
 namespace PG.Localization.SubtitlesCutscene
 {
-    // --- МАГИЯ НАЧИНАЕТСЯ ЗДЕСЬ ---
-    // Этот код работает только в редакторе Unity и заставляет имя обновляться
+    // --- РњРђР“РРЇ РќРђР§РРќРђР•РўРЎРЇ Р—Р”Р•РЎР¬ ---
+    // Р­С‚РѕС‚ РєРѕРґ СЂР°Р±РѕС‚Р°РµС‚ С‚РѕР»СЊРєРѕ РІ СЂРµРґР°РєС‚РѕСЂРµ Unity Рё Р·Р°СЃС‚Р°РІР»СЏРµС‚ РёРјСЏ РѕР±РЅРѕРІР»СЏС‚СЊСЃСЏ
     [CustomTimelineEditor(typeof(SubtitlesClip))]
     public class SubtitlesClipEditor : ClipEditor
     {

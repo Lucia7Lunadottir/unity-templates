@@ -23,7 +23,7 @@ namespace PG.TimelineAudio
 
         public override Playable CreatePlayable(PlayableGraph graph, GameObject owner)
         {
-            // ВАЖНО: тут мы сами выбираем нужный AudioClip
+            // Р’РђР–РќРћ: С‚СѓС‚ РјС‹ СЃР°РјРё РІС‹Р±РёСЂР°РµРј РЅСѓР¶РЅС‹Р№ AudioClip
             clip = GetClipForCurrentLanguage();
             return base.CreatePlayable(graph, owner);
         }

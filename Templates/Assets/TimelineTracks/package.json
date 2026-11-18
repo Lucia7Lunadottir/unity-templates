@@ -1,8 +1,8 @@
 {
   "name": "com.pg.timeline-tracks",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "displayName": "Timeline Tracks",
-  "description": "Custom Timeline tracks: subtitles, particle playback, particle system control and localized audio. Requires com.pg.localization-system (install it from the same repository).",
+  "description": "Custom Timeline tracks: subtitles, particle playback, particle system control, localized audio and a voice track with language selection and pony lip sync. Requires com.pg.localization-system (install it from the same repository).",
   "unity": "6000.6",
   "author": "Lucia Lunadottir",
   "type": "assets",

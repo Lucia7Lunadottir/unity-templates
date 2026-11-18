@@ -5,7 +5,8 @@
         "Unity.Timeline",
         "Unity.TextMeshPro",
         "UnityEngine.UI",
-        "PG.Localization"
+        "PG.Localization",
+        "PGTween"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

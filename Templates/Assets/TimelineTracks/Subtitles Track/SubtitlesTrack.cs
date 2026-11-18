@@ -13,5 +13,16 @@ namespace PG.Localization.SubtitlesCutscene
         {
             return ScriptPlayable<SubtitlesTrackMixer>.Create(graph, inputCount);
         }
+
+        public override void GatherProperties(PlayableDirector director, IPropertyCollector driver)
+        {
+            if (director.GetGenericBinding(this) is TMP_Text text && text)
+            {
+                driver.AddFromName(text, "m_text");
+                driver.AddFromName(text, "m_fontColor");
+            }
+
+            base.GatherProperties(director, driver);
+        }
     }
 }
