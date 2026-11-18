@@ -19,14 +19,14 @@ namespace PG.HealthSystem
 
         private bool _damageApplied;
 
-        public void OnDamage(float damage, bool ignoreDamage = false, GameObject damageObject = null)
+        public void OnDamage(float damage, bool unblockable = false, GameObject damageObject = null)
         {
             if (damagable != null)
             {
                 // Щит/кулдаун цели не пропустили удар - без крови и событий
                 _damageApplied = false;
                 damagable.damaged += OnTargetDamaged;
-                damagable.OnDamage(damage, ignoreDamage, damageObject);
+                damagable.OnDamage(damage, unblockable, damageObject);
                 damagable.damaged -= OnTargetDamaged;
                 if (!_damageApplied) return;
             }

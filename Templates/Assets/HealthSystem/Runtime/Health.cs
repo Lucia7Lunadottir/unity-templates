@@ -56,14 +56,14 @@ namespace PG.HealthSystem
             _healthSlider.maxValue = maxValue;
         }
 
-        public void OnDamage(float damage, bool ignoreDamage = false, GameObject damageObject = null)
+        public void OnDamage(float damage, bool unblockable = false, GameObject damageObject = null)
         {
-            if (!ignoreDamage && shielded)
+            if (!unblockable && shielded)
             {
                 blocked?.Invoke(damage, damageObject);
                 return;
             }
-            if (!ignoreDamage && !useDamage)
+            if (!unblockable && !useDamage)
             {
                 return;
             }
