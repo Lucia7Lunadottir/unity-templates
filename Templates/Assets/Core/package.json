@@ -1,0 +1,9 @@
+{
+  "name": "com.pg.core",
+  "version": "1.1.0",
+  "displayName": "PG Core",
+  "description": "Small shared building blocks: [TagDropdown] attribute with its drawer, GameTime (global time multiplier).",
+  "unity": "6000.6",
+  "author": "Lucia Lunadottir",
+  "type": "assets"
+}
